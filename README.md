@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="mortgagemath.svg" alt="mortgagemath logo" width="400">
+</p>
+
 # mortgagemath
 
 Correct mortgage amortization calculations, verified against real bank statements.
