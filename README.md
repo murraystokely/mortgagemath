@@ -172,6 +172,80 @@ The test suite has three layers:
 See `tests/schedules/README.md` for the full schema and the list of supported
 `kind` values.
 
+### Validated Against
+
+Every published value from these sources is reproduced exactly by the library
+(monthly payment, and any per-row or cumulative figures the source attests
+to). Sources where the library matched only a subset have been removed; this
+list contains only full matches.
+
+**Regulatory and government publications**
+
+- [CFPB sample H-25(B) Closing Disclosure](https://files.consumerfinance.gov/f/201403_cfpb_closing-disclosure_cover-H25B.pdf)
+  — $162,000 / 3.875% / 30yr / $761.78 (HALF_UP)
+- [Mississippi State University Extension Service Publication P3920, "Paying Off Your Loans: Loan Amortization"](https://extension.msstate.edu/sites/default/files/publications/P3920_web.pdf)
+  — $100,000 / 7% / 30yr / $665.30 (HALF_UP)
+
+**Open-licensed textbooks**
+
+- [OpenStax *Contemporary Mathematics*](https://openstax.org/books/contemporary-mathematics/) (CC BY 4.0)
+  - § 6.8 "The Basics of Loans" — car loan ($28,500 / 3.99% / 5yr) and home
+    loan ($136,700 / 5.75% / 15yr); the section also documents that "payment
+    to lenders is always rounded up to the next penny", which matches the
+    library's default `ROUND_UP` mode.
+  - § 6.12 "Renting and Homeownership", Example 6.110
+    ($132,650 / 4.8% / 30yr).
+  - Chapter 6 answer key — exercises 6.36, 6.78.1, 6.78.2, 6.100.1, 6.100.2,
+    6.110, 6.114.
+- [Las Positas College "Math for Liberal Arts" § 8.05 "Amortized Loans"](https://math.libretexts.org/Courses/Las_Positas_College/Math_for_Liberal_Arts/08:_Consumer_Mathematics/8.05:_Amortized_Loans)
+  (LibreTexts, CC) — examples 1 ($15,000 / 9% / 5yr) and 3
+  ($18,000 / 2% / 5yr).
+
+**Reference / encyclopedic**
+
+- [Wikipedia: Mortgage calculator](https://en.wikipedia.org/wiki/Mortgage_calculator)
+  — $200,000 / 6.5% / 30yr / $1,264.14, derived from the closed-form annuity
+  formula given in the article.
+
+**Synthetic boundary loans**
+
+Three loans constructed at exact half-cent rounding boundaries to exercise
+the three supported rounding modes (`ROUND_UP`, `ROUND_HALF_UP`,
+`ROUND_HALF_EVEN`). Constructed from $100,001.25 / 4.80% / 30yr so that
+month-1 unrounded interest equals exactly $400.005 — the boundary that
+distinguishes `HALF_UP` ($400.01) from `HALF_EVEN` ($400.00).
+
+### Sources tried and rejected
+
+Documented in commit history and noted here for transparency. Each was
+rejected because at least one published value could not be reproduced
+exactly:
+
+- LibreTexts Business Math (Olivier) "Tamara's dishwasher loan" — published
+  rows 2-5 diverge by 1 cent due to the textbook's "carry-precision with
+  missing-pennies adjustment" reconciliation we cannot match.
+- eCampus Ontario *Mathematics of Finance* Example 4.3.4 — published "balance
+  after payment 20" diverges by 1 cent.
+- OpenStax Contemporary Math § 6.8 sample table ($10,000 / 4.75% / 20yr) —
+  published cumulative interest at month 18 differs by 4 cents.
+- OpenStax *Principles of Finance* § 8.3 — published total-interest figures
+  differ by 2-12 cents.
+- Pima Open Press *Topics in Mathematics* § 6.4 — final-row residual,
+  cumulative balance drift.
+- Chase consumer-education page — published row 360 diverges from library's
+  adjusted final payment.
+- Las Positas College § 8.05 examples 2 and 4 — published total-interest /
+  total-cost figures differ.
+- OpenStax Contemporary Math § 6.12 Examples 6.111 and 6.113 — published
+  cumulative-paid and mid-loan principal/balance values differ.
+- BCcampus Business Mathematics "Kerry's Toyota Rav4" — textbook chose a
+  non-actuarial whole-dollar payment.
+- Various Canadian textbook examples (Maksim, Olivers, Chans) — use
+  semi-annual compounding required by Canadian mortgage law, incompatible
+  with the library's monthly compounding.
+- William Hart, *Mathematics of Investment* (1924) — uses mill-precision
+  (3 decimals), incompatible with cent-rounding.
+
 ### Contributing Test Fixtures
 
 To add a verified loan, create two files in `tests/schedules/`:

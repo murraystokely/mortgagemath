@@ -6,9 +6,7 @@
 # always rounded up to the next penny" — confirming the library's
 # default ROUND_UP convention for the payment.
 #
-# Library reproduces $524.75 exactly with default rounding. Row 1 is
-# straightforwardly hand-checkable: month-1 interest = 28500 * 3.99/1200
-# = 94.7625 → ROUND_HALF_UP $94.76.
+# Library reproduces $524.75 exactly with default rounding.
 
 [loan]
 principal = "28500.00"
