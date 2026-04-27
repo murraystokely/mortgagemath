@@ -1,0 +1,28 @@
+# CFPB sample H-25(B) Closing Disclosure — fictional "Ficus Bank" fixed-rate
+# loan published by the Consumer Financial Protection Bureau as a TILA-RESPA
+# Integrated Disclosure example.
+#
+# The published monthly P&I of $761.78 implies ROUND_HALF_UP for the payment
+# (unrounded value is $761.7840...; ceiling rounding would give $761.79).
+# This fixture documents that the CFPB sample uses HALF_UP, which differs
+# from the library's default of ROUND_UP (ceiling).
+#
+# Month 1 unrounded interest is exactly $523.125 — a half-cent boundary that
+# distinguishes ROUND_HALF_UP ($523.13) from ROUND_HALF_EVEN ($523.12).
+
+[loan]
+principal = "162000.00"
+annual_rate = "3.875"
+term_months = 360
+day_count = "30/360"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[source]
+kind = "regulatory_example"
+country = "US"
+label = "cfpb_h25b_ficus_bank"
+url = "https://files.consumerfinance.gov/f/201403_cfpb_closing-disclosure_cover-H25B.pdf"
+
+[expected]
+monthly_payment = "761.78"

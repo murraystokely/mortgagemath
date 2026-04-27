@@ -4,7 +4,8 @@
 
 # mortgagemath
 
-Correct mortgage amortization calculations, verified against real bank statements.
+Correct mortgage amortization calculations, validated against published
+authoritative sources.
 
 ## Why This Package?
 
@@ -15,9 +16,10 @@ resulting in off-by-one-cent discrepancies in interest and principal that grow
 more noticeable over time.
 
 **mortgagemath** takes a different approach: instead of trusting the math alone,
-we validate against an extensive test suite of real loan amortization schedules
-from different lenders. Every release is checked against actual bank statement
-data to ensure the computed schedule matches what borrowers are charged.
+we validate against a test suite of fixtures drawn from published sources —
+CFPB regulatory examples, open-licensed finance textbooks, and synthetic
+loans constructed to exercise specific rounding boundaries (half-cent interest,
+ceiling-vs-half-up payments). Each fixture declares its provenance.
 
 The library uses iterative balance tracking with configurable rounding
 conventions, adjusts the final payment to land the balance at exactly zero,
@@ -73,8 +75,11 @@ loan = LoanParams(
 | `payment_rounding` | `ROUND_UP` | Monthly payment rounded up to nearest cent (ceiling) |
 | `interest_rounding` | `ROUND_HALF_UP` | Monthly interest rounded to nearest cent (standard) |
 
-These defaults match all US residential mortgages we have verified against.
-If your lender uses a different convention, you can override them per-loan.
+Supported rounding modes for either field: `ROUND_UP` (ceiling), `ROUND_HALF_UP`,
+and `ROUND_HALF_EVEN` (banker's rounding). The defaults match the conventions
+used in the CFPB sample disclosures and most US residential mortgage servicers
+we have validated against. If your lender uses a different convention, you can
+override them per-loan.
 
 ## Day Count Conventions
 
@@ -158,15 +163,94 @@ The test suite has three layers:
 1. **Payment unit tests** -- edge cases, both day-count methods, rounding modes
 2. **Schedule invariants** -- structural properties verified across 8 different
    loan configurations ($50k--$500k, 3%--8.5%, 10--30yr terms)
-3. **Bank statement validation** -- real amortization data stored as paired
-   TOML (loan parameters) + CSV (payment schedule) fixtures, auto-discovered
-   by pytest
+3. **Authoritative-source fixtures** -- paired TOML (loan parameters) + CSV
+   (payment schedule) fixtures, auto-discovered by pytest. Each fixture
+   declares its `source.kind`: regulatory examples (CFPB sample disclosures),
+   open-licensed textbook worked examples, calculator output, synthetic
+   boundary loans, or bank statements.
+
+See `tests/schedules/README.md` for the full schema and the list of supported
+`kind` values.
+
+### Validated Against
+
+Every published value from these sources is reproduced exactly by the library
+(monthly payment, and any per-row or cumulative figures the source attests
+to). Sources where the library matched only a subset have been removed; this
+list contains only full matches.
+
+**Regulatory and government publications**
+
+- [CFPB sample H-25(B) Closing Disclosure](https://files.consumerfinance.gov/f/201403_cfpb_closing-disclosure_cover-H25B.pdf)
+  — $162,000 / 3.875% / 30yr / $761.78 (HALF_UP)
+- [Mississippi State University Extension Service Publication P3920, "Paying Off Your Loans: Loan Amortization"](https://extension.msstate.edu/sites/default/files/publications/P3920_web.pdf)
+  — $100,000 / 7% / 30yr / $665.30 (HALF_UP)
+
+**Open-licensed textbooks**
+
+- [OpenStax *Contemporary Mathematics*](https://openstax.org/books/contemporary-mathematics/) (CC BY 4.0)
+  - § 6.8 "The Basics of Loans" — car loan ($28,500 / 3.99% / 5yr) and home
+    loan ($136,700 / 5.75% / 15yr); the section also documents that "payment
+    to lenders is always rounded up to the next penny", which matches the
+    library's default `ROUND_UP` mode.
+  - § 6.12 "Renting and Homeownership", Example 6.110
+    ($132,650 / 4.8% / 30yr).
+  - Chapter 6 answer key — exercises 6.36, 6.78.1, 6.78.2, 6.100.1, 6.100.2,
+    6.110, 6.114.
+- [Las Positas College "Math for Liberal Arts" § 8.05 "Amortized Loans"](https://math.libretexts.org/Courses/Las_Positas_College/Math_for_Liberal_Arts/08:_Consumer_Mathematics/8.05:_Amortized_Loans)
+  (LibreTexts, CC) — examples 1 ($15,000 / 9% / 5yr) and 3
+  ($18,000 / 2% / 5yr).
+
+**Reference / encyclopedic**
+
+- [Wikipedia: Mortgage calculator](https://en.wikipedia.org/wiki/Mortgage_calculator)
+  — $200,000 / 6.5% / 30yr / $1,264.14, derived from the closed-form annuity
+  formula given in the article.
+
+**Synthetic boundary loans**
+
+Three loans constructed at exact half-cent rounding boundaries to exercise
+the three supported rounding modes (`ROUND_UP`, `ROUND_HALF_UP`,
+`ROUND_HALF_EVEN`). Constructed from $100,001.25 / 4.80% / 30yr so that
+month-1 unrounded interest equals exactly $400.005 — the boundary that
+distinguishes `HALF_UP` ($400.01) from `HALF_EVEN` ($400.00).
+
+### Sources tried and rejected
+
+Documented in commit history and noted here for transparency. Each was
+rejected because at least one published value could not be reproduced
+exactly:
+
+- LibreTexts Business Math (Olivier) "Tamara's dishwasher loan" — published
+  rows 2-5 diverge by 1 cent due to the textbook's "carry-precision with
+  missing-pennies adjustment" reconciliation we cannot match.
+- eCampus Ontario *Mathematics of Finance* Example 4.3.4 — published "balance
+  after payment 20" diverges by 1 cent.
+- OpenStax Contemporary Math § 6.8 sample table ($10,000 / 4.75% / 20yr) —
+  published cumulative interest at month 18 differs by 4 cents.
+- OpenStax *Principles of Finance* § 8.3 — published total-interest figures
+  differ by 2-12 cents.
+- Pima Open Press *Topics in Mathematics* § 6.4 — final-row residual,
+  cumulative balance drift.
+- Chase consumer-education page — published row 360 diverges from library's
+  adjusted final payment.
+- Las Positas College § 8.05 examples 2 and 4 — published total-interest /
+  total-cost figures differ.
+- OpenStax Contemporary Math § 6.12 Examples 6.111 and 6.113 — published
+  cumulative-paid and mid-loan principal/balance values differ.
+- BCcampus Business Mathematics "Kerry's Toyota Rav4" — textbook chose a
+  non-actuarial whole-dollar payment.
+- Various Canadian textbook examples (Maksim, Olivers, Chans) — use
+  semi-annual compounding required by Canadian mortgage law, incompatible
+  with the library's monthly compounding.
+- William Hart, *Mathematics of Investment* (1924) — uses mill-precision
+  (3 decimals), incompatible with cent-rounding.
 
 ### Contributing Test Fixtures
 
 To add a verified loan, create two files in `tests/schedules/`:
 
-**`us_30yr_conv_500_150000.toml`** (loan parameters):
+**`example_30yr_50_150000.toml`** (loan parameters):
 ```toml
 [loan]
 principal = "150000.00"
@@ -177,24 +261,24 @@ payment_rounding = "ROUND_UP"
 interest_rounding = "ROUND_HALF_UP"
 
 [source]
+kind = "regulatory_example"
 country = "US"
-state = "TX"
-label = "30yr_conventional_2023a"
-verified_by = "Your Name"
-verified_date = "2026-01-15"
+label = "30yr_conventional_5pct_150k"
+url = "https://example.gov/path/to/published/example"
 
 [expected]
 monthly_payment = "805.24"
 ```
 
-**`us_30yr_conv_500_150000.csv`** (full or partial schedule):
+**`example_30yr_50_150000.csv`** (full or partial schedule):
 ```csv
 payment,payment_amount,principal,interest,balance
 1,805.24,180.24,625.00,149819.76
 2,805.24,180.99,624.25,149638.77
 ```
 
-Do not include property addresses, lender names, or other PII.
+Do not include property addresses, lender names, or other PII. For
+`statement`-kind fixtures, also include `verified_by` and `verified_date`.
 
 ## License
 

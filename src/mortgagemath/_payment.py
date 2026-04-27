@@ -10,6 +10,7 @@ _PENNY = Decimal("0.01")
 _ROUNDING_MAP = {
     PaymentRounding.ROUND_UP: decimal.ROUND_UP,
     PaymentRounding.ROUND_HALF_UP: decimal.ROUND_HALF_UP,
+    PaymentRounding.ROUND_HALF_EVEN: decimal.ROUND_HALF_EVEN,
 }
 
 

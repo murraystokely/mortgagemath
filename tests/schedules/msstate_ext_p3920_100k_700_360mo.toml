@@ -1,0 +1,24 @@
+# Mississippi State University Extension Service publication P3920
+# "Paying Off Your Loans: Loan Amortization" — round-number 30-year
+# mortgage example.
+#
+# Publication: $100,000 at 7% APR, 30 years, monthly payment $665.30.
+# Library reproduces the payment exactly with HALF_UP rounding.
+
+[loan]
+principal = "100000.00"
+annual_rate = "7"
+term_months = 360
+day_count = "30/360"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[source]
+kind = "regulatory_example"
+country = "US"
+label = "msstate_extension_p3920"
+url = "https://extension.msstate.edu/sites/default/files/publications/P3920_web.pdf"
+notes = "Land-grant university extension publication (US public-funded). HALF_UP rounding."
+
+[expected]
+monthly_payment = "665.30"

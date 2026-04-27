@@ -1,0 +1,23 @@
+# Worked example from Las Positas College "Math for Liberal Arts" 8.05
+# (CC license; hosted on LibreTexts), example 1 — 5-year personal loan.
+#
+# Textbook: $15,000 at 9% APR, 5 years, monthly payment $311.38.
+# Library reproduces the payment exactly under default rounding.
+
+[loan]
+principal = "15000.00"
+annual_rate = "9"
+term_months = 60
+day_count = "30/360"
+payment_rounding = "ROUND_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[source]
+kind = "textbook"
+country = "US"
+label = "las_positas_8_05_ex1"
+url = "https://math.libretexts.org/Courses/Las_Positas_College/Math_for_Liberal_Arts/08:_Consumer_Mathematics/8.05:_Amortized_Loans"
+notes = "LibreTexts CC. Both ROUND_UP and HALF_UP give the same payment."
+
+[expected]
+monthly_payment = "311.38"

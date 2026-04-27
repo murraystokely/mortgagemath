@@ -1,0 +1,25 @@
+# Worked example from Wikipedia's "Mortgage calculator" article. Provides an
+# independent cross-check of monthly_payment for a round-number 30-year loan.
+# Wikipedia attests only to the payment value, so the CSV is header-only and
+# the library's row-level math is not validated by this fixture.
+#
+# Unrounded payment is $1264.1360...; both ROUND_HALF_UP and ROUND_UP (ceiling)
+# round to $1264.14, so this fixture does not discriminate payment-rounding
+# modes — it is a basic conformance check.
+
+[loan]
+principal = "200000.00"
+annual_rate = "6.5"
+term_months = 360
+day_count = "30/360"
+payment_rounding = "ROUND_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[source]
+kind = "calculator"
+country = "US"
+label = "wikipedia_mortgage_calculator"
+url = "https://en.wikipedia.org/wiki/Mortgage_calculator"
+
+[expected]
+monthly_payment = "1264.14"

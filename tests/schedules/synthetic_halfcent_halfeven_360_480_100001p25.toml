@@ -1,0 +1,27 @@
+# Synthetic boundary fixture #3: same loan as fixtures #1 and #2, but with
+# ROUND_HALF_EVEN (banker's rounding) on the interest charge.
+#
+# Month-1 unrounded interest is exactly $400.005. HALF_EVEN rounds to the
+# nearest even cent — $400.00 (vs $400.01 with HALF_UP). This is the
+# discriminating test for HALF_EVEN behaviour: row 1 principal becomes
+# $124.67 instead of $124.66, and the resulting balance differs by a cent.
+#
+# Cross-verification: month-1 interest computed exactly as 100001.25 * 0.004
+# = 400.005, which falls exactly on the half-cent and rounds to even (00).
+
+[loan]
+principal = "100001.25"
+annual_rate = "4.80"
+term_months = 360
+day_count = "30/360"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_EVEN"
+
+[source]
+kind = "synthetic"
+country = "US"
+label = "synthetic_halfcent_boundary_halfeven"
+notes = "Constructed boundary at month-1 interest = $400.005 exactly; HALF_EVEN rounds to $400.00."
+
+[expected]
+monthly_payment = "524.67"

@@ -1,0 +1,20 @@
+# OpenStax Contemporary Mathematics chapter 6 answer key, exercise 6.100.2.
+# Textbook: $41,633 at 3.9% APR, 6 years, monthly payment $649.47.
+
+[loan]
+principal = "41633.00"
+annual_rate = "3.9"
+term_months = 72
+day_count = "30/360"
+payment_rounding = "ROUND_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[source]
+kind = "textbook"
+country = "US"
+label = "openstax_contemp_6_ak_6_100_2"
+url = "https://openstax.org/books/contemporary-mathematics/pages/chapter-6"
+notes = "OpenStax Contemporary Mathematics (CC BY 4.0). Chapter 6 answer key. ROUND_UP rounding (HALF_UP gives $649.46)."
+
+[expected]
+monthly_payment = "649.47"

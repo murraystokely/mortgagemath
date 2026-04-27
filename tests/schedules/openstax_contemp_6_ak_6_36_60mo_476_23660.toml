@@ -1,0 +1,20 @@
+# OpenStax Contemporary Mathematics chapter 6 answer key, exercise 6.36.
+# Textbook: $23,660 at 4.76% APR, 5 years, monthly payment $443.90.
+
+[loan]
+principal = "23660.00"
+annual_rate = "4.76"
+term_months = 60
+day_count = "30/360"
+payment_rounding = "ROUND_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[source]
+kind = "textbook"
+country = "US"
+label = "openstax_contemp_6_ak_6_36"
+url = "https://openstax.org/books/contemporary-mathematics/pages/chapter-6"
+notes = "OpenStax Contemporary Mathematics (CC BY 4.0). Chapter 6 answer key."
+
+[expected]
+monthly_payment = "443.90"
