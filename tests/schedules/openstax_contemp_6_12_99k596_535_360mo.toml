@@ -1,0 +1,23 @@
+# OpenStax "Contemporary Mathematics" 6.12, Example 6.111 — 30-year
+# mortgage with cost summary.
+#
+# Textbook: $99,596 at 5.35% APR, 30 years, monthly payment $556.16,
+# total paid over loan life $200,217.60, financing cost $100,621.60.
+
+[loan]
+principal = "99596.00"
+annual_rate = "5.35"
+term_months = 360
+day_count = "30/360"
+payment_rounding = "ROUND_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[source]
+kind = "textbook"
+country = "US"
+label = "openstax_contemp_6_12_ex_6_111"
+url = "https://openstax.org/books/contemporary-mathematics/pages/6-12-renting-and-homeownership"
+notes = "OpenStax Contemporary Mathematics (CC BY 4.0)."
+
+[expected]
+monthly_payment = "556.16"

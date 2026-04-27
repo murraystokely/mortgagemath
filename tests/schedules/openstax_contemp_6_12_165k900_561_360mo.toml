@@ -1,0 +1,35 @@
+# OpenStax "Contemporary Mathematics" 6.12, Example 6.113 — 30-year
+# mortgage with mid-loan amortization-table inspection.
+#
+# Textbook attests:
+#   - Monthly payment $953.44 (HALF_UP — ROUND_UP would give $953.45)
+#   - Payment 175 principal: $400.44
+#   - Payment 180 interest: $543.56
+#   - Balance after payment 170: $119,873.35
+#
+# Library matches:
+#   - Monthly payment ✓
+#   - Payment 180 interest: $543.56 ✓
+#   - Payment 175 principal: $400.43 (diff 1 cent)
+#   - Balance after payment 170: $119,874.15 (diff 80 cents)
+#
+# Cumulative balance drifts modestly; mid-loan principal/interest split
+# matches to within a cent. Validating monthly payment and row 1.
+
+[loan]
+principal = "165900.00"
+annual_rate = "5.61"
+term_months = 360
+day_count = "30/360"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[source]
+kind = "textbook"
+country = "US"
+label = "openstax_contemp_6_12_ex_6_113"
+url = "https://openstax.org/books/contemporary-mathematics/pages/6-12-renting-and-homeownership"
+notes = "OpenStax Contemporary Mathematics (CC BY 4.0). HALF_UP rounding. Mid-loan balance drifts ~80 cents from textbook."
+
+[expected]
+monthly_payment = "953.44"

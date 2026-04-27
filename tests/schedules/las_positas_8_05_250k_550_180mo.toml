@@ -1,0 +1,23 @@
+# Las Positas "Math for Liberal Arts" 8.05 example 4 (option 2) —
+# 15-year mortgage in a 15-vs-30 comparison.
+#
+# Textbook: $250,000 at 5.5% APR, 15 years, monthly payment $2,042.71,
+# total cost over loan life $367,687.80.
+
+[loan]
+principal = "250000.00"
+annual_rate = "5.5"
+term_months = 180
+day_count = "30/360"
+payment_rounding = "ROUND_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[source]
+kind = "textbook"
+country = "US"
+label = "las_positas_8_05_ex4_15yr"
+url = "https://math.libretexts.org/Courses/Las_Positas_College/Math_for_Liberal_Arts/08:_Consumer_Mathematics/8.05:_Amortized_Loans"
+notes = "LibreTexts CC. Total cost column drifts ~$0.50 from textbook over 15 years."
+
+[expected]
+monthly_payment = "2042.71"
