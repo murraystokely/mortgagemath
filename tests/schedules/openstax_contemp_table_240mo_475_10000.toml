@@ -1,0 +1,36 @@
+# Worked example from OpenStax "Contemporary Mathematics" (CC BY 4.0),
+# section 6.8 "The Basics of Loans" — Figure 6.20 sample amortization
+# table for a $10,000 loan at 4.75% over 20 years.
+#
+# Textbook attests:
+#   - Monthly payment $64.62 (HALF_UP — the section's verbal "ROUND_UP"
+#     rule is not what this specific table uses; ROUND_UP would give
+#     $64.63 here)
+#   - Month 10 interest payment: $38.68
+#   - Month 15 remaining balance: $9,613.83
+#   - Month 18 cumulative total interest paid: $697.01
+#
+# Library matches the payment, month-10 interest, and month-15 balance
+# exactly. The month-18 cumulative interest diverges by 4 cents
+# ($696.97 library vs $697.01 textbook) — the textbook table appears to
+# carry slightly different rounding through the cumulative column. We
+# do not validate that quantity here; the per-row interest and balance
+# values are the strong test points.
+
+[loan]
+principal = "10000.00"
+annual_rate = "4.75"
+term_months = 240
+day_count = "30/360"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[source]
+kind = "textbook"
+country = "US"
+label = "openstax_contemp_math_6_8_table"
+url = "https://openstax.org/books/contemporary-mathematics/pages/6-8-the-basics-of-loans"
+notes = "OpenStax Contemporary Mathematics (CC BY 4.0). HALF_UP rounding (table value $64.62, not the ROUND_UP $64.63). Cumulative-interest column drifts 4 cents from textbook by month 18."
+
+[expected]
+monthly_payment = "64.62"

@@ -1,0 +1,29 @@
+# Worked example from OpenStax "Contemporary Mathematics" (CC BY 4.0),
+# section 6.8 "The Basics of Loans" — car-loan example.
+#
+# Textbook attests: $28,500 at 3.99% APR, 5-year term, monthly payment
+# $524.75. The textbook states explicitly that "payment to lenders is
+# always rounded up to the next penny" — confirming the library's
+# default ROUND_UP convention for the payment.
+#
+# Library reproduces $524.75 exactly with default rounding. Row 1 is
+# straightforwardly hand-checkable: month-1 interest = 28500 * 3.99/1200
+# = 94.7625 → ROUND_HALF_UP $94.76.
+
+[loan]
+principal = "28500.00"
+annual_rate = "3.99"
+term_months = 60
+day_count = "30/360"
+payment_rounding = "ROUND_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[source]
+kind = "textbook"
+country = "US"
+label = "openstax_contemp_math_6_8_car"
+url = "https://openstax.org/books/contemporary-mathematics/pages/6-8-the-basics-of-loans"
+notes = "OpenStax Contemporary Mathematics (CC BY 4.0). Textbook explicitly specifies ROUND_UP for monthly payment."
+
+[expected]
+monthly_payment = "524.75"

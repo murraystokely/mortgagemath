@@ -1,0 +1,24 @@
+# Worked example from OpenStax "Contemporary Mathematics" (CC BY 4.0),
+# section 6.8 "The Basics of Loans" — home-loan example.
+#
+# Textbook attests: $136,700 at 5.75% APR, 15-year term, monthly payment
+# $1,135.18. Same ROUND_UP convention as the section's car-loan example.
+# Library reproduces the payment exactly.
+
+[loan]
+principal = "136700.00"
+annual_rate = "5.75"
+term_months = 180
+day_count = "30/360"
+payment_rounding = "ROUND_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[source]
+kind = "textbook"
+country = "US"
+label = "openstax_contemp_math_6_8_home"
+url = "https://openstax.org/books/contemporary-mathematics/pages/6-8-the-basics-of-loans"
+notes = "OpenStax Contemporary Mathematics (CC BY 4.0). Same ROUND_UP convention as the car-loan example in the section."
+
+[expected]
+monthly_payment = "1135.18"

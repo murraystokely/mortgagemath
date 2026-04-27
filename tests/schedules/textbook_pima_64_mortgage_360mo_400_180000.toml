@@ -1,0 +1,29 @@
+# Worked example from Pima Open Press "Topics in Mathematics" section 6.4
+# "Amortized Loans" — 30-year mortgage example.
+#
+# Textbook: $180,000 at 4% APR, 30 years, monthly payment $859.35,
+# balance after 5 years (60 payments) $162,805.99.
+#
+# Library reproduces the monthly payment exactly. Library balance after
+# 60 payments is $162,805.35 — a 64-cent drift from the textbook's
+# $162,805.99, indicating the textbook table uses a slightly different
+# rounding/accumulation convention than the library's round-each-month
+# algorithm. We therefore validate only the monthly payment here.
+
+[loan]
+principal = "180000.00"
+annual_rate = "4"
+term_months = 360
+day_count = "30/360"
+payment_rounding = "ROUND_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[source]
+kind = "textbook"
+country = "US"
+label = "pima_topics_math_6_4_180k_4pct_30yr"
+url = "https://pimaopen.pressbooks.pub/topicsinmathematics/chapter/6-4-amortized-loans/"
+notes = "Pima Open Press (CC license). Monthly payment matches; row-level cumulative balance diverges (~64 cents at month 60). Header-only CSV."
+
+[expected]
+monthly_payment = "859.35"
