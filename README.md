@@ -174,77 +174,118 @@ See `tests/schedules/README.md` for the full schema and the list of supported
 
 ### Validated Against
 
-Every published value from these sources is reproduced exactly by the library
-(monthly payment, and any per-row or cumulative figures the source attests
-to). Sources where the library matched only a subset have been removed; this
-list contains only full matches.
+Every loan listed below is reproduced **exactly** by the library — monthly
+payment plus any per-row or cumulative figure the source attests to. The
+"Pmt rounding" column shows the rounding mode the source's published
+payment requires; many sources do not state a mode explicitly, in which
+case the cell shows the mode under which the library matches the printed
+value (where multiple modes give the same cent, the column says "any").
 
-**Regulatory and government publications**
+| Source | Loan | Monthly P&I | Pmt rounding | Int rounding |
+|---|---|---|---|---|
+| [CFPB H-25(B) sample Closing Disclosure](https://files.consumerfinance.gov/f/201403_cfpb_closing-disclosure_cover-H25B.pdf) | $162,000 / 3.875% / 30yr | $761.78 | `HALF_UP` | `HALF_UP` |
+| [MS State Extension P3920](https://extension.msstate.edu/sites/default/files/publications/P3920_web.pdf) | $100,000 / 7% / 30yr | $665.30 | `HALF_UP` | `HALF_UP` |
+| [OpenStax *Contemporary Mathematics* §6.8 — car](https://openstax.org/books/contemporary-mathematics/pages/6-8-the-basics-of-loans) ¹ | $28,500 / 3.99% / 5yr | $524.75 | `ROUND_UP` | `HALF_UP` |
+| [OpenStax *Contemporary Mathematics* §6.8 — home](https://openstax.org/books/contemporary-mathematics/pages/6-8-the-basics-of-loans) ¹ | $136,700 / 5.75% / 15yr | $1,135.18 | `ROUND_UP` | `HALF_UP` |
+| [OpenStax *Contemporary Mathematics* §6.12, Ex 6.110](https://openstax.org/books/contemporary-mathematics/pages/6-12-renting-and-homeownership) | $132,650 / 4.8% / 30yr | $695.97 | any | `HALF_UP` |
+| [OpenStax *Contemporary Mathematics* ch6 AK 6.36](https://openstax.org/books/contemporary-mathematics/pages/chapter-6) | $23,660 / 4.76% / 5yr | $443.90 | any | `HALF_UP` |
+| OpenStax *Contemporary Mathematics* ch6 AK 6.78.1 | $17,950 / 7.5% / 10yr | $213.07 | any | `HALF_UP` |
+| OpenStax *Contemporary Mathematics* ch6 AK 6.78.2 | $33,760 / 4.3% / 20yr | $209.96 | any | `HALF_UP` |
+| OpenStax *Contemporary Mathematics* ch6 AK 6.100.1 | $18,325 / 6.75% / 4yr | $436.70 | `ROUND_UP` | `HALF_UP` |
+| OpenStax *Contemporary Mathematics* ch6 AK 6.100.2 | $41,633 / 3.9% / 6yr | $649.47 | `ROUND_UP` | `HALF_UP` |
+| OpenStax *Contemporary Mathematics* ch6 AK 6.110 | $153,899 / 4.21% / 20yr | $949.72 | any | `HALF_UP` |
+| OpenStax *Contemporary Mathematics* ch6 AK 6.114 | $159,195.50 / 5.75% / 30yr | $929.03 | `ROUND_UP` | `HALF_UP` |
+| [Las Positas College §8.05, Ex 1](https://math.libretexts.org/Courses/Las_Positas_College/Math_for_Liberal_Arts/08:_Consumer_Mathematics/8.05:_Amortized_Loans) | $15,000 / 9% / 5yr | $311.38 | any | `HALF_UP` |
+| Las Positas College §8.05, Ex 3 | $18,000 / 2% / 5yr | $315.50 | any | `HALF_UP` |
+| [Wikipedia: *Mortgage calculator*](https://en.wikipedia.org/wiki/Mortgage_calculator) | $200,000 / 6.5% / 30yr | $1,264.14 | any | `HALF_UP` |
+| Synthetic — half-cent boundary at month 1 (HALF_UP) | $100,001.25 / 4.8% / 30yr | $524.67 | `HALF_UP` | `HALF_UP` |
+| Synthetic — half-cent boundary at month 1 (ROUND_UP) | $100,001.25 / 4.8% / 30yr | $524.68 | `ROUND_UP` | `HALF_UP` |
+| Synthetic — half-cent boundary at month 1 (HALF_EVEN) | $100,001.25 / 4.8% / 30yr | $524.67 | `HALF_UP` | `HALF_EVEN` ² |
 
-- [CFPB sample H-25(B) Closing Disclosure](https://files.consumerfinance.gov/f/201403_cfpb_closing-disclosure_cover-H25B.pdf)
-  — $162,000 / 3.875% / 30yr / $761.78 (HALF_UP)
-- [Mississippi State University Extension Service Publication P3920, "Paying Off Your Loans: Loan Amortization"](https://extension.msstate.edu/sites/default/files/publications/P3920_web.pdf)
-  — $100,000 / 7% / 30yr / $665.30 (HALF_UP)
+¹ OpenStax §6.8 explicitly states that "payment to lenders is always
+rounded up to the next penny" — this is the convention used by US
+residential lenders and corresponds to `ROUND_UP` in `mortgagemath`.
 
-**Open-licensed textbooks**
+² This synthetic loan is constructed so that month-1 unrounded interest
+equals exactly $400.005 — a half-cent boundary that distinguishes
+`HALF_UP` ($400.01) from `HALF_EVEN` ($400.00).
 
-- [OpenStax *Contemporary Mathematics*](https://openstax.org/books/contemporary-mathematics/) (CC BY 4.0)
-  - § 6.8 "The Basics of Loans" — car loan ($28,500 / 3.99% / 5yr) and home
-    loan ($136,700 / 5.75% / 15yr); the section also documents that "payment
-    to lenders is always rounded up to the next penny", which matches the
-    library's default `ROUND_UP` mode.
-  - § 6.12 "Renting and Homeownership", Example 6.110
-    ($132,650 / 4.8% / 30yr).
-  - Chapter 6 answer key — exercises 6.36, 6.78.1, 6.78.2, 6.100.1, 6.100.2,
-    6.110, 6.114.
-- [Las Positas College "Math for Liberal Arts" § 8.05 "Amortized Loans"](https://math.libretexts.org/Courses/Las_Positas_College/Math_for_Liberal_Arts/08:_Consumer_Mathematics/8.05:_Amortized_Loans)
-  (LibreTexts, CC) — examples 1 ($15,000 / 9% / 5yr) and 3
-  ($18,000 / 2% / 5yr).
+Sources investigated but rejected (because at least one published value
+could not be matched exactly) are documented in
+[`docs/future-work.md`](docs/future-work.md).
 
-**Reference / encyclopedic**
+## Comparison with Other Python Implementations
 
-- [Wikipedia: Mortgage calculator](https://en.wikipedia.org/wiki/Mortgage_calculator)
-  — $200,000 / 6.5% / 30yr / $1,264.14, derived from the closed-form annuity
-  formula given in the article.
+Existing Python packages take three approaches, none of which produces
+cent-accurate schedules that match how lenders actually print
+amortization tables.
 
-**Synthetic boundary loans**
+### `numpy_financial.pmt` / `ipmt` / `ppmt`
 
-Three loans constructed at exact half-cent rounding boundaries to exercise
-the three supported rounding modes (`ROUND_UP`, `ROUND_HALF_UP`,
-`ROUND_HALF_EVEN`). Constructed from $100,001.25 / 4.80% / 30yr so that
-month-1 unrounded interest equals exactly $400.005 — the boundary that
-distinguishes `HALF_UP` ($400.01) from `HALF_EVEN` ($400.00).
+Float-based; no rounding control. The function returns a negative
+floating-point value (cash-flow convention) and leaves rounding entirely
+to the caller. Two issues for cent-accurate work:
 
-### Sources tried and rejected
+1. **Float drift.** Long-term schedules accumulate sub-cent error in the
+   payment value itself; the typical user fix is `round(abs(npf.pmt(...)), 2)`
+   which uses Python's banker's-rounding (`HALF_EVEN`) regardless of what
+   the lender actually does.
+2. **No support for `ROUND_UP`.** The OpenStax §6.8 examples explicitly
+   document the US-residential convention "payment to lenders is always
+   rounded up to the next penny." `numpy_financial` + `round()` does not
+   produce that — it gives the wrong cent on **5 of 15** source-attributed
+   fixtures in this suite.
 
-Documented in commit history and noted here for transparency. Each was
-rejected because at least one published value could not be reproduced
-exactly:
+   Concrete example (OpenStax §6.8 car loan, $28,500 / 3.99% / 5yr):
 
-- LibreTexts Business Math (Olivier) "Tamara's dishwasher loan" — published
-  rows 2-5 diverge by 1 cent due to the textbook's "carry-precision with
-  missing-pennies adjustment" reconciliation we cannot match.
-- eCampus Ontario *Mathematics of Finance* Example 4.3.4 — published "balance
-  after payment 20" diverges by 1 cent.
-- OpenStax Contemporary Math § 6.8 sample table ($10,000 / 4.75% / 20yr) —
-  published cumulative interest at month 18 differs by 4 cents.
-- OpenStax *Principles of Finance* § 8.3 — published total-interest figures
-  differ by 2-12 cents.
-- Pima Open Press *Topics in Mathematics* § 6.4 — final-row residual,
-  cumulative balance drift.
-- Chase consumer-education page — published row 360 diverges from library's
-  adjusted final payment.
-- Las Positas College § 8.05 examples 2 and 4 — published total-interest /
-  total-cost figures differ.
-- OpenStax Contemporary Math § 6.12 Examples 6.111 and 6.113 — published
-  cumulative-paid and mid-loan principal/balance values differ.
-- BCcampus Business Mathematics "Kerry's Toyota Rav4" — textbook chose a
-  non-actuarial whole-dollar payment.
-- Various Canadian textbook examples (Maksim, Olivers, Chans) — use
-  semi-annual compounding required by Canadian mortgage law, incompatible
-  with the library's monthly compounding.
-- William Hart, *Mathematics of Investment* (1924) — uses mill-precision
-  (3 decimals), incompatible with cent-rounding.
+   ```python
+   import numpy_financial as npf
+   round(abs(npf.pmt(0.0399/12, 60, 28500)), 2)   # → 524.74  (wrong)
+   ```
+
+   The textbook value is **$524.75** because the section explicitly uses
+   ROUND_UP. To get this with `numpy_financial`, the user must skip
+   Python's `round()` and apply Decimal-based ceiling rounding manually.
+   `mortgagemath` puts that mode in the type system:
+
+   ```python
+   from decimal import Decimal
+   from mortgagemath import LoanParams, monthly_payment
+   monthly_payment(LoanParams(
+       principal=Decimal("28500"), annual_rate=Decimal("3.99"), term_months=60
+   ))                                              # → Decimal("524.75")
+   ```
+
+### `mortgage` (PyPI)
+
+Uses `Decimal` (good), but does not round per-row. The schedule's
+`payment`, `interest`, `principal`, and `balance` are 25+-digit Decimals;
+the final balance lands at something like `-3.4E-21` rather than exactly
+`$0.00`, and the per-row invariant `principal + interest == payment`
+holds only at full precision, not at the cent level a real bank
+statement prints.
+
+### `amortization` (PyPI)
+
+Float-based, single-function: `calculate_amortization_amount` returns a
+single rounded float. No schedule generation, no rounding control. On
+the OpenStax car loan above it returns `524.74` — the same wrong cent
+as `numpy_financial`.
+
+### What `mortgagemath` does differently
+
+- **`Decimal` end-to-end.** No floats anywhere in the payment or schedule
+  computation. Everything quantizes to two decimal places at explicitly
+  declared rounding-mode boundaries.
+- **Rounding mode is a type, not a convention.** `PaymentRounding.ROUND_UP`,
+  `ROUND_HALF_UP`, `ROUND_HALF_EVEN` are first-class enum values; the
+  fixtures table above shows precisely which mode each cited source uses.
+- **Final-payment adjustment guarantees zero balance.** `principal + interest
+  == payment` holds in every row; final balance is exactly `Decimal("0.00")`.
+- **No design borrowed from these packages.** Each one falls short of the
+  invariants this library is meant to provide; `mortgagemath` was written
+  to fill that gap. The closed-form annuity formula it shares with
+  `numpy_financial` is standard finance, not a borrowed pattern.
 
 ### Contributing Test Fixtures
 
