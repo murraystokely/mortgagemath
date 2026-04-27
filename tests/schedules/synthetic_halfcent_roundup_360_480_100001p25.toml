@@ -1,0 +1,28 @@
+# Synthetic boundary fixture #2: same loan as fixture #1, but with ROUND_UP
+# (ceiling-to-cent) payment rounding — the library's default and the
+# convention used by most US residential lenders.
+#
+# Same half-cent interest boundary at month 1 ($400.005 unrounded). Unrounded
+# payment is $524.6719..., so ceiling rounds to $524.68 (vs $524.67 with
+# HALF_UP). The diverging principal/balance in row 1 across this and the
+# paired HALF_UP fixture is what catches lender-mode mismatches.
+#
+# Cross-verification: closed-form payment formula computed at 50 digits of
+# precision; first 3 rows hand-checked against the library output.
+
+[loan]
+principal = "100001.25"
+annual_rate = "4.80"
+term_months = 360
+day_count = "30/360"
+payment_rounding = "ROUND_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[source]
+kind = "synthetic"
+country = "US"
+label = "synthetic_halfcent_boundary_roundup"
+notes = "Same loan as the HALF_UP synthetic fixture but with ceiling-rounded payment $524.68."
+
+[expected]
+monthly_payment = "524.68"

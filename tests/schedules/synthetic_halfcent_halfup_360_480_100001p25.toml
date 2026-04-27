@@ -1,0 +1,32 @@
+# Synthetic boundary fixture #1: half-cent interest boundary, HALF_UP payment.
+#
+# Loan params constructed so that month-1 unrounded interest is exactly
+# $400.005 — a half-cent boundary that distinguishes ROUND_HALF_UP from
+# ROUND_HALF_EVEN. Math:
+#
+#   r/12 = 4.80% / 12 = 0.004 (exact)
+#   month-1 interest = 100001.25 * 0.004 = 400.005 (exact)
+#
+# Unrounded payment is $524.6719..., so this fixture also exercises the
+# payment-rounding boundary: HALF_UP → $524.67 (this fixture); ROUND_UP
+# (ceiling) → $524.68 (paired fixture).
+#
+# Cross-verification: closed-form payment formula computed at 50 digits of
+# precision; first 3 rows hand-checked against the library output.
+
+[loan]
+principal = "100001.25"
+annual_rate = "4.80"
+term_months = 360
+day_count = "30/360"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[source]
+kind = "synthetic"
+country = "US"
+label = "synthetic_halfcent_boundary_halfup"
+notes = "Constructed boundary at month-1 interest = $400.005 exactly; payment rounded HALF_UP to $524.67."
+
+[expected]
+monthly_payment = "524.67"

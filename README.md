@@ -4,7 +4,8 @@
 
 # mortgagemath
 
-Correct mortgage amortization calculations, verified against real bank statements.
+Correct mortgage amortization calculations, validated against published
+authoritative sources.
 
 ## Why This Package?
 
@@ -15,9 +16,10 @@ resulting in off-by-one-cent discrepancies in interest and principal that grow
 more noticeable over time.
 
 **mortgagemath** takes a different approach: instead of trusting the math alone,
-we validate against an extensive test suite of real loan amortization schedules
-from different lenders. Every release is checked against actual bank statement
-data to ensure the computed schedule matches what borrowers are charged.
+we validate against a test suite of fixtures drawn from published sources —
+CFPB regulatory examples, open-licensed finance textbooks, and synthetic
+loans constructed to exercise specific rounding boundaries (half-cent interest,
+ceiling-vs-half-up payments). Each fixture declares its provenance.
 
 The library uses iterative balance tracking with configurable rounding
 conventions, adjusts the final payment to land the balance at exactly zero,
@@ -73,8 +75,11 @@ loan = LoanParams(
 | `payment_rounding` | `ROUND_UP` | Monthly payment rounded up to nearest cent (ceiling) |
 | `interest_rounding` | `ROUND_HALF_UP` | Monthly interest rounded to nearest cent (standard) |
 
-These defaults match all US residential mortgages we have verified against.
-If your lender uses a different convention, you can override them per-loan.
+Supported rounding modes for either field: `ROUND_UP` (ceiling), `ROUND_HALF_UP`,
+and `ROUND_HALF_EVEN` (banker's rounding). The defaults match the conventions
+used in the CFPB sample disclosures and most US residential mortgage servicers
+we have validated against. If your lender uses a different convention, you can
+override them per-loan.
 
 ## Day Count Conventions
 
@@ -158,15 +163,20 @@ The test suite has three layers:
 1. **Payment unit tests** -- edge cases, both day-count methods, rounding modes
 2. **Schedule invariants** -- structural properties verified across 8 different
    loan configurations ($50k--$500k, 3%--8.5%, 10--30yr terms)
-3. **Bank statement validation** -- real amortization data stored as paired
-   TOML (loan parameters) + CSV (payment schedule) fixtures, auto-discovered
-   by pytest
+3. **Authoritative-source fixtures** -- paired TOML (loan parameters) + CSV
+   (payment schedule) fixtures, auto-discovered by pytest. Each fixture
+   declares its `source.kind`: regulatory examples (CFPB sample disclosures),
+   open-licensed textbook worked examples, calculator output, synthetic
+   boundary loans, or bank statements.
+
+See `tests/schedules/README.md` for the full schema and the list of supported
+`kind` values.
 
 ### Contributing Test Fixtures
 
 To add a verified loan, create two files in `tests/schedules/`:
 
-**`us_30yr_conv_500_150000.toml`** (loan parameters):
+**`example_30yr_50_150000.toml`** (loan parameters):
 ```toml
 [loan]
 principal = "150000.00"
@@ -177,24 +187,24 @@ payment_rounding = "ROUND_UP"
 interest_rounding = "ROUND_HALF_UP"
 
 [source]
+kind = "regulatory_example"
 country = "US"
-state = "TX"
-label = "30yr_conventional_2023a"
-verified_by = "Your Name"
-verified_date = "2026-01-15"
+label = "30yr_conventional_5pct_150k"
+url = "https://example.gov/path/to/published/example"
 
 [expected]
 monthly_payment = "805.24"
 ```
 
-**`us_30yr_conv_500_150000.csv`** (full or partial schedule):
+**`example_30yr_50_150000.csv`** (full or partial schedule):
 ```csv
 payment,payment_amount,principal,interest,balance
 1,805.24,180.24,625.00,149819.76
 2,805.24,180.99,624.25,149638.77
 ```
 
-Do not include property addresses, lender names, or other PII.
+Do not include property addresses, lender names, or other PII. For
+`statement`-kind fixtures, also include `verified_by` and `verified_date`.
 
 ## License
 

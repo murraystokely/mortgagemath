@@ -21,14 +21,14 @@ class PaymentRounding(Enum):
 
     ROUND_UP (ceiling to nearest cent) is used by most US lenders for the
     monthly payment amount.  ROUND_HALF_UP (standard rounding) is used
-    for monthly interest calculations.
-
-    These defaults are based on verification against real bank statements
-    from multiple US lenders.
+    for monthly interest calculations.  ROUND_HALF_EVEN (banker's rounding)
+    is included so fixtures from lenders or worked examples that use it
+    can be modeled.
     """
 
     ROUND_UP = "ROUND_UP"
     ROUND_HALF_UP = "ROUND_HALF_UP"
+    ROUND_HALF_EVEN = "ROUND_HALF_EVEN"
 
 
 @dataclass(frozen=True, slots=True)

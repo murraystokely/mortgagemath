@@ -55,6 +55,17 @@ class TestMonthlyPayment:
         )
         assert monthly_payment(loan) == Decimal("645.67")
 
+    def test_round_half_even_runs(self):
+        """ROUND_HALF_EVEN must be a valid payment_rounding choice."""
+        loan = LoanParams(
+            principal=Decimal("131250"),
+            annual_rate=Decimal("4.25"),
+            term_months=360,
+            payment_rounding=PaymentRounding.ROUND_HALF_EVEN,
+        )
+        # Unrounded is 645.671...; both HALF_UP and HALF_EVEN round to 645.67.
+        assert monthly_payment(loan) == Decimal("645.67")
+
     def test_result_has_two_decimal_places(self):
         loan = LoanParams(
             principal=Decimal("100000"),
