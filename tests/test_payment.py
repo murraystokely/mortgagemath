@@ -101,21 +101,16 @@ class TestMonthlyPayment:
         )
         assert monthly_payment(short) > monthly_payment(long)
 
-    def test_actual_360_higher_than_30_360(self):
-        """Actual/360 effective rate is higher due to 365/360 factor."""
-        base = LoanParams(
-            principal=Decimal("200000"),
-            annual_rate=Decimal("6"),
-            term_months=360,
-            day_count=DayCount.THIRTY_360,
-        )
-        commercial = LoanParams(
+    def test_actual_360_raises(self):
+        """Actual/360 is reserved for future work; calling it must raise."""
+        loan = LoanParams(
             principal=Decimal("200000"),
             annual_rate=Decimal("6"),
             term_months=360,
             day_count=DayCount.ACTUAL_360,
         )
-        assert monthly_payment(commercial) > monthly_payment(base)
+        with pytest.raises(NotImplementedError, match="Actual/360"):
+            monthly_payment(loan)
 
     def test_zero_principal_raises(self):
         with pytest.raises(ValueError, match="principal must be positive"):

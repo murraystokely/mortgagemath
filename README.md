@@ -84,8 +84,7 @@ override them per-loan.
 ## Day Count Conventions
 
 US residential mortgages use 30/360 (each month is treated as 30 days, each
-year as 360). US commercial loans often use Actual/360 (actual days in month,
-360-day year), which produces a higher effective rate.
+year as 360). This is the only day-count the library currently supports.
 
 ```python
 from mortgagemath import DayCount
@@ -96,17 +95,13 @@ residential = LoanParams(
     term_months=360,
     day_count=DayCount.THIRTY_360,   # default
 )
-
-commercial = LoanParams(
-    principal=Decimal("200000"),
-    annual_rate=Decimal("6"),
-    term_months=240,
-    day_count=DayCount.ACTUAL_360,
-)
 ```
 
-Note: `amortization_schedule()` currently supports 30/360 only.
-`monthly_payment()` supports both day count conventions.
+`DayCount.ACTUAL_360` (US commercial loans) is reserved as a future feature.
+Calling `monthly_payment` or `amortization_schedule` with it raises
+`NotImplementedError`. The conventions analysis and the design questions
+that must be resolved before adding it are documented in
+[`docs/future-work.md`](docs/future-work.md).
 
 ## Schedule Guarantees
 
