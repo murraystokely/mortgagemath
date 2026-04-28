@@ -73,6 +73,9 @@ def _schedule_thirty_360(loan: LoanParams) -> list[Installment]:
     monthly_rate = loan.annual_rate / Decimal("1200")
     balance = loan.principal
     total_interest = _ZERO
+    fully_amortizing = loan.amortization_period_months is None or (
+        loan.amortization_period_months == loan.term_months
+    )
 
     schedule: list[Installment] = [
         Installment(
@@ -90,7 +93,8 @@ def _schedule_thirty_360(loan: LoanParams) -> list[Installment]:
             _PENNY, rounding=interest_rounding
         )
 
-        if i == loan.term_months:
+        if i == loan.term_months and fully_amortizing:
+            # Final payment of a fully amortizing loan: zero out balance.
             principal_pmt = balance
             actual_pmt = principal_pmt + interest
         else:
@@ -125,12 +129,18 @@ def _schedule_actual_360(loan: LoanParams) -> list[Installment]:
     interest_rounding = _ROUNDING_MAP[loan.interest_rounding]
     annual_rate = loan.annual_rate / Decimal("100")  # percent → fraction
 
-    # Unrounded closed-form payment, carried internally; displayed value rounded
+    # Unrounded closed-form payment, carried internally; displayed value rounded.
+    # Uses the amortization period (which may be larger than term_months for
+    # balloon loans) — see the LoanParams docstring.
     r = loan.annual_rate / Decimal("1200")
-    n = loan.term_months
+    n = loan._amort_periods
     factor = (1 + r) ** n
     pmt_raw = (loan.principal * r * factor) / (factor - 1)
     pmt_disp = pmt_raw.quantize(_PENNY, rounding=payment_rounding)
+
+    fully_amortizing = loan.amortization_period_months is None or (
+        loan.amortization_period_months == loan.term_months
+    )
 
     balance = loan.principal  # full-precision Decimal
     total_interest_disp = _ZERO
@@ -156,8 +166,8 @@ def _schedule_actual_360(loan: LoanParams) -> list[Installment]:
         interest_raw = balance * annual_rate * Decimal(days) / Decimal(360)
         interest_disp = interest_raw.quantize(_PENNY, rounding=interest_rounding)
 
-        if i == loan.term_months:
-            # Final payment: zero out balance exactly using full-precision
+        if i == loan.term_months and fully_amortizing:
+            # Final payment of a fully amortizing loan: zero balance exactly.
             principal_disp = balance.quantize(_PENNY, rounding=interest_rounding)
             actual_pmt = principal_disp + interest_disp
             balance = _ZERO

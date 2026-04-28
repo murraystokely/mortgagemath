@@ -30,6 +30,7 @@ def _loan_from_toml(toml_data: dict) -> LoanParams:
         payment_rounding=PaymentRounding(loan["payment_rounding"]),
         interest_rounding=PaymentRounding(loan["interest_rounding"]),
         start_date=start_date,
+        amortization_period_months=loan.get("amortization_period_months"),
     )
 
 
@@ -72,23 +73,21 @@ class TestBankSchedules:
                 f"Payment #{n}: balance {inst.balance} != {expected_balance}"
             )
 
-    def test_balance_anchors_match(self, bank_schedule):
-        """Validate any [[expected.balance_anchor]] entries.
+    def test_balloon_at_term_matches(self, bank_schedule):
+        """Validate the published balloon at term, if any.
 
-        Each anchor publishes the balance after a specific payment number.
-        Used for sources (e.g. Fannie Mae §1103) that publish cumulative
-        figures rather than per-row schedule data.
+        For balloon loans (term shorter than amortization period), the
+        unpaid principal at the loan's term is the balloon the borrower
+        owes alongside the final regular payment. Some sources (e.g.
+        Fannie Mae §1103) publish this value; the library exposes it as
+        ``schedule[term].balance``.
         """
         toml_data, _ = bank_schedule
-        anchors = toml_data.get("expected", {}).get("balance_anchor", [])
-        if not anchors:
+        balloon = toml_data.get("expected", {}).get("balloon_at_term")
+        if balloon is None:
             return
         loan = _loan_from_toml(toml_data)
         sched = amortization_schedule(loan)
-        for anchor in anchors:
-            n = int(anchor["after_payment"])
-            expected = Decimal(anchor["value"])
-            assert sched[n].balance == expected, (
-                f"Balance after payment {n}: "
-                f"{sched[n].balance} != {expected}"
-            )
+        assert sched[loan.term_months].balance == Decimal(balloon), (
+            f"Balloon at term: {sched[loan.term_months].balance} != {balloon}"
+        )

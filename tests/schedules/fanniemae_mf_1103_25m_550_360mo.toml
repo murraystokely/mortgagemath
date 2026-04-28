@@ -28,7 +28,8 @@
 [loan]
 principal = "25000000.00"
 annual_rate = "5.5"
-term_months = 360
+term_months = 120
+amortization_period_months = 360
 day_count = "actual/360"
 payment_rounding = "ROUND_HALF_UP"
 interest_rounding = "ROUND_HALF_UP"
@@ -43,10 +44,9 @@ notes = "Fannie Mae Multifamily Selling and Servicing Guide §1103 (eff. 2026-04
 
 [expected]
 monthly_payment = "141947.25"
-
-[[expected.balance_anchor]]
-after_payment = 120
-value = "20885505.83"
-# This is the implied unpaid principal balance after 120 payments, equal
-# to $25,000,000 - $4,114,494.17 (Fannie Mae §1103 published aggregate
-# principal collected over the SARM Loan term).
+balloon_at_term = "20885505.83"
+# Balloon = unpaid principal balance at the end of the 120-month SARM
+# term, equal to $25,000,000 - $4,114,494.17 (Fannie Mae §1103 published
+# aggregate principal amortization). Per Fannie Mae's §1103 worked
+# example, the borrower makes 120 monthly payments of $141,947.25 plus
+# this balloon at term.

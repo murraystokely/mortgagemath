@@ -87,20 +87,14 @@ divergences that could mask real bugs.
 
 ## Actual/360 commercial loans
 
-`monthly_payment` and `amortization_schedule` both support
-`DayCount.ACTUAL_360`, validated against the Fannie Mae Multifamily
-Selling and Servicing Guide §1103. The only remaining gap is **native
-balloon-residual support**: real commercial loans typically have a
-loan term shorter than the amortization period (e.g. 10-year SARM with
-30-year amortization), and the loan ends with a balloon at the term
-rather than amortizing to zero. The library currently still guarantees
-`Installment.balance == Decimal("0.00")` at the last row, which means
-running an Actual/360 schedule for a 360-month-amortizing loan
-produces a normal-looking schedule — but truncating it to a 120-month
-term requires the user to read off `sched[120].balance` themselves.
+`monthly_payment` and `amortization_schedule` both fully support
+`DayCount.ACTUAL_360`, including native balloon loans (term shorter
+than amortization period via `LoanParams.amortization_period_months`).
+Both monthly P&I and balloon-at-term are validated against the Fannie
+Mae Multifamily Selling and Servicing Guide §1103 example.
 
-This section documents the conventions, what the §1103 worked example
-told us, and the remaining design question (balloon support).
+This section retains the conventions analysis for future readers,
+along with the sources investigated along the way.
 
 ### Background
 
@@ -205,35 +199,23 @@ candidate conventions, both rejected:
   but `PMT` with annual rate and 25 periods is unconventional usage
   and the value is not from any of the three conventions above.
 
-### Remaining design question: native balloon support
+### Status
 
-`amortization_schedule` currently runs through `loan.term_months`
-periods and absorbs any residual into the final payment so that the
-last row's balance is exactly `$0.00`. For a $25M / 5.5% / 360-month
-ACTUAL_360 schedule, that produces a final payment of ~$1,310,840 —
-mathematically correct but practically odd.
+**Shipped:**
+- `monthly_payment` for both 30/360 and Actual/360 (validated against
+  Fannie Mae §1103: $141,947.25 monthly P&I).
+- `amortization_schedule` for Actual/360 with `start_date` and
+  full-precision balance tracking.
+- Native balloon loans via `LoanParams.amortization_period_months`
+  (validated: §1103 implied balloon of $20,885,505.83 at term 120).
 
-Real commercial loans with `loan term < amortization period` (e.g.
-10-year SARM on a 30-year amortization basis) instead **cut the
-schedule at the loan term and pay the residual as a balloon** — for
-the Fannie Mae example that means the borrower pays $141,947.25 for
-120 months and then a single $20,885,505.83 balloon at month 120.
-
-To support this natively the library would need:
-
-1. A way to express "term shorter than amortization period" in
-   `LoanParams` (e.g., separate `term_months` and
-   `amortization_period_months` fields).
-2. A relaxed `amortization_schedule` contract: schedule has
-   `term_months` rows, last row's `balance` may be non-zero, and
-   `Installment` may need a separate `balloon_payment` field.
-
-Until then, users wanting balloon behavior should run the schedule
-with `term_months = amortization_period_months` and slice the result
-at the loan term, reading `sched[loan_term].balance` as the balloon.
-
-If a reader knows of a federal regulator, GSE, or commercial-banking
-textbook publication that provides a fully numbered Actual/360
-**balloon-mortgage** schedule (calendar dates plus per-month interest,
-principal, balance values, plus an explicit balloon payment at term),
-please open an issue with the link.
+**Possible follow-ups** (not blocking; here for the record):
+- Per-row Actual/360 schedule fixture validating each of the first
+  several months' interest, principal, and balance against a published
+  numbered table. The §1103 example only publishes monthly P&I and
+  aggregate principal — not row-level data — so we'd need a different
+  source. PropertyMetrics' worked example publishes month-1 interest
+  ($8,611.11 for January) but the rest of its schedule is not numbered
+  publicly.
+- Balloon mortgage examples from CMBS prospectus supplements or other
+  CRE finance references with full numbered schedules.

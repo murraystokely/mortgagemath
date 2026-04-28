@@ -40,7 +40,9 @@ class LoanParams:
         principal: Original loan amount (e.g. Decimal("131250.00")).
         annual_rate: Annual interest rate as a percentage
             (e.g. Decimal("4.25") for 4.25%).
-        term_months: Loan term in months (e.g. 360 for 30 years).
+        term_months: Loan term in months — the number of payments the
+            schedule will produce (e.g. 360 for a 30-year fully
+            amortizing residential mortgage; 120 for a 10-year SARM).
         day_count: Day-count convention. Defaults to 30/360.
         payment_rounding: How to round the monthly payment to the nearest
             cent. Defaults to ROUND_UP.
@@ -53,6 +55,20 @@ class LoanParams:
             Per Fannie Mae §1103, an issue date of December 1, 2018
             produces a first payment on January 1, 2019 with period 1
             spanning December 2018 (31 days).
+        amortization_period_months: Period over which the closed-form
+            payment is computed. ``None`` (the default) means it equals
+            ``term_months`` — i.e., the loan amortizes fully over its
+            term. Set this larger than ``term_months`` for **balloon
+            loans**: the level monthly payment is computed as if the
+            loan amortized over ``amortization_period_months``, but the
+            schedule terminates after ``term_months`` payments, with the
+            unpaid principal at term equal to ``Installment.balance``
+            on the final row (this is the borrower's balloon payment).
+            Per the Fannie Mae §1103 Tier 2 SARM example, a 10-year
+            ($120 months) SARM on a 30-year (360 months) amortization
+            basis is expressed as ``term_months=120,
+            amortization_period_months=360``; the published balloon at
+            term 120 is $20,885,505.83.
     """
 
     principal: Decimal
@@ -62,6 +78,12 @@ class LoanParams:
     payment_rounding: PaymentRounding = PaymentRounding.ROUND_UP
     interest_rounding: PaymentRounding = PaymentRounding.ROUND_HALF_UP
     start_date: date | None = None
+    amortization_period_months: int | None = None
+
+    @property
+    def _amort_periods(self) -> int:
+        """Periods used for the closed-form payment formula."""
+        return self.amortization_period_months or self.term_months
 
 
 @dataclass(frozen=True, slots=True)

@@ -55,7 +55,7 @@ def monthly_payment(loan: LoanParams) -> Decimal:
 
     rounding = _ROUNDING_MAP[loan.payment_rounding]
     r = loan.annual_rate / Decimal("1200")
-    n = loan.term_months
+    n = loan._amort_periods
     payment = loan.principal * r * (1 + r) ** n / ((1 + r) ** n - 1)
 
     return payment.quantize(_PENNY, rounding=rounding)
