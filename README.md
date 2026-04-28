@@ -4,8 +4,22 @@
 
 # mortgagemath
 
-Correct mortgage amortization calculations, validated against published
-authoritative sources.
+![PyPI](...)
+![Python 3.11+](...)
+![Tests](...)
+![License](...)
+![Downloads](...)
+
+Cent-accurate mortgage amortization schedules for Python — validated against CFPB, Fannie Mae, textbooks, and real-world published examples.
+
+## Ideal For
+
+- Fintech / mortgage software
+- Loan calculators
+- Real-estate underwriting tools
+- Audit / reconciliation workflows
+- Financial educators
+- Anyone frustrated by 1-cent discrepancies
 
 ## Why This Package?
 
