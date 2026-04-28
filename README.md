@@ -184,11 +184,11 @@ commercial_balloon = LoanParams(             # 10-yr SARM on 30-yr amort
 ```
 
 `monthly_payment()` works identically for both day-counts: the level
-monthly P&I is the standard closed-form annuity value. Fannie Mae's
-Multifamily Selling and Servicing Guide §1103 calls this the
-"calculated actual/360 fixed rate payment" and uses the same formula —
-no 365/360 rate bump (validated against the §1103 worked example:
-$25M / 5.5% / 30yr → $141,947.25).
+monthly P&I is the standard closed-form annuity value. [Fannie Mae's
+Multifamily Selling and Servicing Guide §1103](https://mfguide.fanniemae.com/node/5286)
+calls this the "calculated actual/360 fixed rate payment" and uses the
+same formula — no 365/360 rate bump (validated against the §1103 worked
+example: $25M / 5.5% / 30yr → $141,947.25).
 
 `amortization_schedule()` produces different per-row figures by mode:
 
