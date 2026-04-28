@@ -1,0 +1,183 @@
+name: Mortgage example doesn't match
+description: Submit a published or real-world loan whose values mortgagemath doesn't reproduce to the cent.
+title: "[example] <source short name>: <one-line summary>"
+labels: ["cent-mismatch", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file this!
+
+        Submissions go straight into the validation suite when reproducible.
+        If the library can't match the published values exactly, the case
+        gets documented in `docs/future-work.md` instead so the gap is
+        visible to future contributors.
+
+        **Before submitting**: please scrub any personally identifying
+        information from the loan details — addresses, lender names,
+        account numbers, borrower names. Loan parameters alone (principal,
+        rate, term, schedule rows) are fine.
+
+  - type: input
+    id: source_name
+    attributes:
+      label: Source
+      description: Where this example comes from. Examples — "CFPB H-25(B) sample disclosure", "Fannie Mae Multifamily Guide §1103", "OpenStax Contemporary Mathematics §6.8 (car)", "Wells Fargo statement (private)".
+      placeholder: "Lender / book / regulator name + section"
+    validations:
+      required: true
+
+  - type: input
+    id: source_url
+    attributes:
+      label: Source URL
+      description: Direct link to the published example. Use "N/A — private statement" for bank statements that aren't online.
+      placeholder: "https://… or 'N/A — private statement'"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: source_kind
+    attributes:
+      label: Source kind
+      description: Which provenance category this fits — see `tests/schedules/README.md` for definitions.
+      options:
+        - regulatory_example  (CFPB, VA, Fed, HUD)
+        - gse_guide  (Fannie Mae, Freddie Mac)
+        - textbook  (open-licensed or public-domain)
+        - calculator  (lender calculator output)
+        - statement  (real bank/servicer statement)
+        - synthetic  (constructed boundary case)
+    validations:
+      required: true
+
+  - type: input
+    id: principal
+    attributes:
+      label: Principal
+      description: Original loan amount.
+      placeholder: "162000.00"
+    validations:
+      required: true
+
+  - type: input
+    id: annual_rate
+    attributes:
+      label: Annual interest rate (%)
+      description: Stated annual rate as a percent.
+      placeholder: "3.875"
+    validations:
+      required: true
+
+  - type: input
+    id: term_months
+    attributes:
+      label: Term in months
+      description: Number of monthly payments the schedule produces. For balloon loans, this is the loan term (not the amortization period).
+      placeholder: "360"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: day_count
+    attributes:
+      label: Day count
+      options:
+        - "30/360"
+        - "actual/360"
+      default: 0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: payment_rounding
+    attributes:
+      label: Payment rounding mode
+      description: How the lender / source rounds the monthly P&I to a cent.
+      options:
+        - ROUND_UP  (ceiling — most US residential lenders)
+        - ROUND_HALF_UP
+        - ROUND_HALF_EVEN  (banker's rounding)
+        - "Don't know"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: interest_rounding
+    attributes:
+      label: Interest rounding mode
+      description: How the lender / source rounds each month's interest accrual.
+      options:
+        - ROUND_HALF_UP  (most common)
+        - ROUND_HALF_EVEN
+        - ROUND_UP
+        - "Don't know"
+    validations:
+      required: true
+
+  - type: input
+    id: start_date
+    attributes:
+      label: Start date (YYYY-MM-DD) — required for Actual/360 only
+      description: Issue date / first interest-accrual period. Leave blank for 30/360.
+      placeholder: "2018-12-01"
+
+  - type: input
+    id: amortization_period_months
+    attributes:
+      label: Amortization period in months — balloon loans only
+      description: For balloon loans, the longer amortization basis used to compute the level payment. Leave blank if equal to term.
+      placeholder: "360"
+
+  - type: input
+    id: monthly_payment
+    attributes:
+      label: Published monthly P&I payment
+      description: The level monthly principal-and-interest payment shown by the source.
+      placeholder: "761.78"
+    validations:
+      required: true
+
+  - type: input
+    id: balloon_at_term
+    attributes:
+      label: Balloon at term — balloon loans only
+      description: Unpaid principal balance owed at end of term, if the loan has a balloon.
+      placeholder: "20885505.83"
+
+  - type: textarea
+    id: schedule_rows
+    attributes:
+      label: Per-row schedule data (optional)
+      description: |
+        If the source publishes any per-row figures, paste them here in CSV format with this header:
+        `payment,payment_amount,principal,interest,balance`.
+        Only include rows the source actually publishes — don't synthesize rows.
+      render: csv
+      placeholder: |
+        payment,payment_amount,principal,interest,balance
+        1,761.78,238.65,523.13,161761.35
+        2,761.78,239.43,522.35,161521.92
+
+  - type: textarea
+    id: discrepancy
+    attributes:
+      label: What mortgagemath returned vs. what the source says
+      description: |
+        Be specific about which value(s) diverged. Examples:
+        • "monthly_payment returned 761.79 but the source quotes 761.78"
+        • "sched[5].interest is 1 cent low — library returned 522.34, source shows 522.35"
+        • "sched[120].balance is $0.06 off the published balloon"
+        • "I ran the source through mortgagemath and got the wrong total interest, but I don't know which row is responsible"
+        Include any error message or stack trace if the library raised. If you don't have specific numbers from the library, just describe the discrepancy in words.
+      placeholder: "monthly_payment returned ... but the source publishes ..."
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: pii
+    attributes:
+      label: Privacy
+      options:
+        - label: I confirm this submission contains no personally identifying information (no addresses, lender names, account numbers, or borrower names).
+          required: true
