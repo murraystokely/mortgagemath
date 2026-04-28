@@ -1,0 +1,60 @@
+name: release
+
+on:
+  # Run automatically on every pushed v* tag (the normal release path).
+  push:
+    tags:
+      - "v*"
+  # Also runnable manually so the in-flight v0.1.0 tag (created before this
+  # workflow existed) can be published. After v0.1.0 ships, the tag-push
+  # trigger above is the only path that should be used in practice.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to build and publish (e.g. v0.1.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Build and publish to PyPI
+    runs-on: ubuntu-latest
+
+    # Bind to a GitHub Environment named "pypi". Optional but recommended:
+    # configure required reviewers / wait timers on the environment in
+    # repo settings if you'd like a manual approval gate before each
+    # release. Trusted Publisher lookup on PyPI must reference the same
+    # environment name.
+    environment:
+      name: pypi
+      url: https://pypi.org/project/mortgagemath/
+
+    permissions:
+      # Required for PyPI Trusted Publishing (OIDC token issuance).
+      id-token: write
+
+    steps:
+      - name: Check out source at the tag being released
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.13"
+
+      - name: Build sdist + wheel
+        run: uv build
+
+      - name: Inspect built artifacts
+        run: |
+          ls -la dist/
+          echo "--- SHA-256 ---"
+          sha256sum dist/*
+
+      - name: Publish to PyPI (Trusted Publisher / OIDC)
+        run: uv publish
