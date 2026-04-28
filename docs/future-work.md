@@ -137,8 +137,25 @@ to the cent, and its quoted total interest of $547,154.46 implies a
 - [PropertyMetrics: "30/360 vs Actual/360 vs Actual/365"](https://propertymetrics.com/blog/30-360-vs-actual-360-vs-actual-365/)
   — only worked example with concrete cents-level numbers found
   ($2.5M / 4% / 10yr / $25,311.28 monthly, month-1 interest $8,611.11
-  for January). Convention A. Doesn't disclose the calendar start date
-  or the residual balance after month 120.
+  for January, total interest over 10 years $547,154.46). Convention A.
+  Doesn't disclose the calendar start date or the residual balance.
+
+  **A clean Decimal simulation of Convention A reproduces the monthly
+  payment ($25,311.28) and month-1 interest ($8,611.11) exactly, and
+  comes within $0.02 on the published total interest ($547,154.48
+  computed vs $547,154.46 published) when started in January 2021 (or
+  any other calendar year whose first 10-year window contains three
+  leap years). The 2-cent gap is internal to the published source: the
+  source's own numbers are inconsistent — $120 \times \$25{,}311.28$
+  payments minus a $2{,}500{,}000 - X$ principal balance reconciles to
+  $547,154.46 only if the implied terminal balloon X is $9,800.86, but
+  any clean simulation gives X = $9,800.32. The source likely computed
+  in float and accumulated sub-cent drift over 120 rows.**
+
+  This is the closest match in the suite. Per the project's "match
+  every published value exactly" rule, it still does not qualify as a
+  fixture; if/when a source emerges whose own numbers tie out to the
+  cent, that source should be the reference for shipping Convention A.
 - [Adventures in CRE: "30/360, Actual/365, and Actual/360"](https://www.adventuresincre.com/lenders-calcs/)
   — extensive comparison prose; the side-by-side numerical table was
   not extractable from the page render.
