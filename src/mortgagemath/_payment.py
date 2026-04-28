@@ -50,7 +50,29 @@ def monthly_payment(loan: LoanParams) -> Decimal:
         raise ValueError(f"principal must be positive, got {loan.principal}")
     if loan.term_months <= 0:
         raise ValueError(f"term_months must be positive, got {loan.term_months}")
-    if loan.day_count not in (DayCount.THIRTY_360, DayCount.ACTUAL_360):
+    if loan.annual_rate <= 0:
+        raise ValueError(
+            f"annual_rate must be positive, got {loan.annual_rate}. "
+            f"For zero-interest loans, the closed-form annuity formula "
+            f"is undefined; compute principal/term_months yourself."
+        )
+    if loan.amortization_period_months is not None:
+        if loan.amortization_period_months <= 0:
+            raise ValueError(
+                f"amortization_period_months must be positive when set, "
+                f"got {loan.amortization_period_months}"
+            )
+        if loan.amortization_period_months < loan.term_months:
+            raise ValueError(
+                f"amortization_period_months ({loan.amortization_period_months}) "
+                f"must be >= term_months ({loan.term_months}). A shorter "
+                f"amortization basis would over-amortize and drive the "
+                f"balance negative before the term ends."
+            )
+    if loan.day_count not in (DayCount.THIRTY_360, DayCount.ACTUAL_360):  # pragma: no cover
+        # Defensive: DayCount is an enum, so any non-enum value would have
+        # already failed at LoanParams construction. Guards against future
+        # enum additions that don't immediately update this dispatch.
         raise ValueError(f"unsupported day_count: {loan.day_count}")
 
     rounding = _ROUNDING_MAP[loan.payment_rounding]

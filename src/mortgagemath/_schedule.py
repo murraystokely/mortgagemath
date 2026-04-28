@@ -64,7 +64,7 @@ def amortization_schedule(loan: LoanParams) -> list[Installment]:
                 "(the issue date / first interest-accrual period)"
             )
         return _schedule_actual_360(loan)
-    raise ValueError(f"unsupported day_count: {loan.day_count}")
+    raise ValueError(f"unsupported day_count: {loan.day_count}")  # pragma: no cover
 
 
 def _schedule_thirty_360(loan: LoanParams) -> list[Installment]:
@@ -125,9 +125,12 @@ def _schedule_actual_360(loan: LoanParams) -> list[Installment]:
     §1103: $25M / 5.5% / 30yr / Actual/360, issue date 2018-12-01,
     aggregate principal over first 120 payments = $4,114,494.17 (exact).
     """
-    payment_rounding = _ROUNDING_MAP[loan.payment_rounding]
     interest_rounding = _ROUNDING_MAP[loan.interest_rounding]
     annual_rate = loan.annual_rate / Decimal("100")  # percent → fraction
+
+    # Validate via monthly_payment (which enforces rate/term/amort guards)
+    # and reuse its rounded display value.
+    pmt_disp = monthly_payment(loan)
 
     # Unrounded closed-form payment, carried internally; displayed value rounded.
     # Uses the amortization period (which may be larger than term_months for
@@ -136,7 +139,6 @@ def _schedule_actual_360(loan: LoanParams) -> list[Installment]:
     n = loan._amort_periods
     factor = (1 + r) ** n
     pmt_raw = (loan.principal * r * factor) / (factor - 1)
-    pmt_disp = pmt_raw.quantize(_PENNY, rounding=payment_rounding)
 
     fully_amortizing = loan.amortization_period_months is None or (
         loan.amortization_period_months == loan.term_months
