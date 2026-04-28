@@ -8,7 +8,6 @@ from mortgagemath import DayCount, LoanParams, PaymentRounding, monthly_payment
 
 
 class TestMonthlyPayment:
-
     def test_30yr_425(self):
         """$131,250 at 4.25% for 30yr = $645.68."""
         loan = LoanParams(
@@ -117,65 +116,79 @@ class TestMonthlyPayment:
 
     def test_zero_principal_raises(self):
         with pytest.raises(ValueError, match="principal must be positive"):
-            monthly_payment(LoanParams(
-                principal=Decimal("0"),
-                annual_rate=Decimal("5"),
-                term_months=360,
-            ))
+            monthly_payment(
+                LoanParams(
+                    principal=Decimal("0"),
+                    annual_rate=Decimal("5"),
+                    term_months=360,
+                )
+            )
 
     def test_negative_principal_raises(self):
         with pytest.raises(ValueError, match="principal must be positive"):
-            monthly_payment(LoanParams(
-                principal=Decimal("-100000"),
-                annual_rate=Decimal("5"),
-                term_months=360,
-            ))
+            monthly_payment(
+                LoanParams(
+                    principal=Decimal("-100000"),
+                    annual_rate=Decimal("5"),
+                    term_months=360,
+                )
+            )
 
     def test_zero_term_raises(self):
         with pytest.raises(ValueError, match="term_months must be positive"):
-            monthly_payment(LoanParams(
-                principal=Decimal("100000"),
-                annual_rate=Decimal("5"),
-                term_months=0,
-            ))
+            monthly_payment(
+                LoanParams(
+                    principal=Decimal("100000"),
+                    annual_rate=Decimal("5"),
+                    term_months=0,
+                )
+            )
 
     def test_zero_rate_raises(self):
         """Closed-form annuity is undefined at r=0; reject explicitly
         rather than letting Decimal raise InvalidOperation."""
         with pytest.raises(ValueError, match="annual_rate must be positive"):
-            monthly_payment(LoanParams(
-                principal=Decimal("12000"),
-                annual_rate=Decimal("0"),
-                term_months=12,
-            ))
+            monthly_payment(
+                LoanParams(
+                    principal=Decimal("12000"),
+                    annual_rate=Decimal("0"),
+                    term_months=12,
+                )
+            )
 
     def test_negative_rate_raises(self):
         with pytest.raises(ValueError, match="annual_rate must be positive"):
-            monthly_payment(LoanParams(
-                principal=Decimal("12000"),
-                annual_rate=Decimal("-3"),
-                term_months=12,
-            ))
+            monthly_payment(
+                LoanParams(
+                    principal=Decimal("12000"),
+                    annual_rate=Decimal("-3"),
+                    term_months=12,
+                )
+            )
 
     def test_amort_period_less_than_term_raises(self):
         """A shorter amortization basis than the term would over-amortize
         and drive the balance negative — meaningless input."""
         with pytest.raises(ValueError, match="must be >= term_months"):
-            monthly_payment(LoanParams(
-                principal=Decimal("100000"),
-                annual_rate=Decimal("5"),
-                term_months=120,
-                amortization_period_months=60,
-            ))
+            monthly_payment(
+                LoanParams(
+                    principal=Decimal("100000"),
+                    annual_rate=Decimal("5"),
+                    term_months=120,
+                    amortization_period_months=60,
+                )
+            )
 
     def test_amort_period_zero_raises(self):
         with pytest.raises(ValueError, match="amortization_period_months must be positive"):
-            monthly_payment(LoanParams(
-                principal=Decimal("100000"),
-                annual_rate=Decimal("5"),
-                term_months=120,
-                amortization_period_months=0,
-            ))
+            monthly_payment(
+                LoanParams(
+                    principal=Decimal("100000"),
+                    annual_rate=Decimal("5"),
+                    term_months=120,
+                    amortization_period_months=0,
+                )
+            )
 
     def test_amort_period_equal_to_term_matches_default(self):
         """Setting amortization_period_months explicitly to term_months
