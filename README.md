@@ -84,7 +84,8 @@ override them per-loan.
 ## Day Count Conventions
 
 US residential mortgages use 30/360 (each month is treated as 30 days, each
-year as 360). This is the only day-count the library currently supports.
+year as 360); US commercial loans often use Actual/360 (interest accrues
+on the actual calendar days in each month, divided by 360).
 
 ```python
 from mortgagemath import DayCount
@@ -95,13 +96,27 @@ residential = LoanParams(
     term_months=360,
     day_count=DayCount.THIRTY_360,   # default
 )
+
+commercial = LoanParams(
+    principal=Decimal("25000000"),
+    annual_rate=Decimal("5.5"),
+    term_months=360,
+    day_count=DayCount.ACTUAL_360,
+)
 ```
 
-`DayCount.ACTUAL_360` (US commercial loans) is reserved as a future feature.
-Calling `monthly_payment` or `amortization_schedule` with it raises
-`NotImplementedError`. The conventions analysis and the design questions
-that must be resolved before adding it are documented in
-[`docs/future-work.md`](docs/future-work.md).
+`monthly_payment()` works for both day-counts. The level monthly P&I is
+the standard closed-form annuity value in either convention — that is
+what Fannie Mae's Multifamily Selling and Servicing Guide §1103 calls
+the "calculated actual/360 fixed rate payment", validated against the
+§1103 worked example ($25M / 5.5% / 30yr → $141,947.25).
+
+`amortization_schedule()` currently supports 30/360 only. True Actual/360
+schedule generation (variable interest each month based on actual calendar
+days, plus balloon-residual handling for terms shorter than the
+amortization period) requires a `start_date` field on `LoanParams` that
+the library does not yet have — see
+[`docs/future-work.md`](docs/future-work.md) for the design questions.
 
 ## Schedule Guarantees
 
@@ -179,6 +194,7 @@ value (where multiple modes give the same cent, the column says "any").
 | Source | Loan | Monthly P&I | Pmt rounding | Int rounding |
 |---|---|---|---|---|
 | [CFPB H-25(B) sample Closing Disclosure](https://files.consumerfinance.gov/f/201403_cfpb_closing-disclosure_cover-H25B.pdf) | $162,000 / 3.875% / 30yr | $761.78 | `HALF_UP` | `HALF_UP` |
+| [Fannie Mae Multifamily Guide §1103, Tier 2 SARM example](https://mfguide.fanniemae.com/node/5286) ³ | $25,000,000 / 5.5% / 30yr (Actual/360) | $141,947.25 | `HALF_UP` | `HALF_UP` |
 | [MS State Extension P3920](https://extension.msstate.edu/sites/default/files/publications/P3920_web.pdf) | $100,000 / 7% / 30yr | $665.30 | `HALF_UP` | `HALF_UP` |
 | [OpenStax *Contemporary Mathematics* §6.8 — car](https://openstax.org/books/contemporary-mathematics/pages/6-8-the-basics-of-loans) ¹ | $28,500 / 3.99% / 5yr | $524.75 | `ROUND_UP` | `HALF_UP` |
 | [OpenStax *Contemporary Mathematics* §6.8 — home](https://openstax.org/books/contemporary-mathematics/pages/6-8-the-basics-of-loans) ¹ | $136,700 / 5.75% / 15yr | $1,135.18 | `ROUND_UP` | `HALF_UP` |
@@ -204,6 +220,15 @@ residential lenders and corresponds to `ROUND_UP` in `mortgagemath`.
 ² This synthetic loan is constructed so that month-1 unrounded interest
 equals exactly $400.005 — a half-cent boundary that distinguishes
 `HALF_UP` ($400.01) from `HALF_EVEN` ($400.00).
+
+³ The Fannie Mae §1103 worked example anchors the level monthly P&I via
+its published debt service constant (6.8134680% × $25M / 12 = $141,947.25),
+which equals the standard closed-form annuity formula. Fannie Mae's
+"calculated actual/360 fixed rate payment" does **not** use a bumped
+365/360 rate — the same closed-form applies to both day counts and
+the convention only affects the schedule's per-month interest accrual.
+The library reproduces this $141,947.25 exactly. Full schedule generation
+for ACTUAL_360 is not yet shipped — see `docs/future-work.md`.
 
 Sources investigated but rejected (because at least one published value
 could not be matched exactly) are documented in

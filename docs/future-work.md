@@ -87,10 +87,16 @@ divergences that could mask real bugs.
 
 ## Actual/360 commercial loans
 
-`DayCount.ACTUAL_360` exists in the public enum but every entry point
-that takes a `LoanParams` raises `NotImplementedError` if it sees it.
-This section explains why and lays out the design questions that must
-be answered before the feature can ship.
+`monthly_payment` supports `DayCount.ACTUAL_360`, validated against the
+Fannie Mae Multifamily Selling and Servicing Guide §1103. Schedule
+generation (`amortization_schedule`) is still deferred — the
+`LoanParams` dataclass does not yet carry a `start_date`, and the
+library's amortizing-loan contract (final balance == 0) does not
+match commercial loans where the term is shorter than the amortization
+period (a balloon residual remains at term).
+
+This section explains the conventions, what the §1103 worked example
+told us, and the design questions still open for full schedule support.
 
 ### Background
 
@@ -109,25 +115,24 @@ leap year, 366/360 ≈ 1.67% higher.
 This is fundamentally different from 30/360, which fixes every period
 at 30 days and ignores calendar effects.
 
-### Why we don't ship a single canonical formula
+### The payment formula (now validated): Convention A
 
-Several conventions coexist in the wild for the **monthly payment**
-that goes with an Actual/360 schedule:
+The library implements **Convention A** for `monthly_payment`:
 
-| Convention | Payment formula | Schedule | Result at term |
-|---|---|---|---|
-| **A. 30/360-equivalent payment** | Closed-form with `r = annual / 12` | Each month uses actual days × rate / 360 | Loan **does not** fully amortize; small balloon residual remains at term (≈1.39% × residual interest accrual annually) |
-| **B. Bumped-rate payment** | Closed-form with `r = annual × 365/360 / 12` | Each month uses actual days × rate / 360 | Loan amortizes approximately, with sub-cent residual reconciled into the final payment (depends on how leap years align with the term) |
-| **C. Constant-day approximation** | Closed-form with `r = annual × 365/360 / 12` | Each month uses 30 days × rate / 360 (i.e. 30/360 with bumped rate) | Loan fully amortizes deterministically (no calendar dependency) |
+> Payment = standard closed-form annuity with `r = annual / 12`, no
+> bumped rate. The Actual/360 designation affects only how the schedule
+> accrues interest, not how the level monthly payment is computed.
 
-Convention C is the simplest and is what the library's previous
-implementation of `monthly_payment` for Actual/360 used. We removed it
-because we could not find an authoritative published example whose
-quoted payment matched that formula. The example most often cited
-(PropertyMetrics, $2.5M / 4% / 10yr, monthly $25,311.28) uses
-Convention A — its quoted payment equals the 30/360 closed-form value
-to the cent, and its quoted total interest of $547,154.46 implies a
-~$9,800 residual balloon at month 120.
+This is what Fannie Mae's §1103 calls the "calculated actual/360 fixed
+rate payment". The §1103 worked example ($25M / 5.5% / 30yr → DSC
+6.8134680% → P&I $141,947.25) uses exactly this formula. Two earlier
+candidate conventions, both rejected:
+
+| Convention | Payment formula | Status |
+|---|---|---|
+| **A. Closed-form, no bump** ✓ | `r = annual / 12` | Adopted; matches Fannie Mae §1103 and PropertyMetrics |
+| **B. Bumped-rate** ✗ | `r = annual × 365/360 / 12` | Rejected — gave $25,377.35 vs PropertyMetrics' $25,311.28 and $143,147.75 vs Fannie Mae's implied $141,947.25 |
+| **C. Bumped-rate + 30-day schedule** ✗ | bumped + constant 30-day month | Rejected — same payment value as B; no source matched |
 
 ### Sources investigated
 
@@ -159,9 +164,29 @@ to the cent, and its quoted total interest of $547,154.46 implies a
 - [Adventures in CRE: "30/360, Actual/365, and Actual/360"](https://www.adventuresincre.com/lenders-calcs/)
   — extensive comparison prose; the side-by-side numerical table was
   not extractable from the page render.
-- [Fannie Mae Multifamily Guide §204.02 A — Actual/360](https://mfguide.fanniemae.com/node/7941)
-  — references the methodology in its table of contents but the
-  rendered page did not surface specific worked-example numbers.
+- [Fannie Mae Multifamily Selling and Servicing Guide §1103 — Actual
+  Amortization Calculation](https://mfguide.fanniemae.com/node/5286)
+  (Effective April 3, 2026) — Tier 2 SARM Loan worked example with
+  $25M principal, 5.5% gross note rate, 10-year term, 30-year
+  amortization, issue date Dec 1, 2018, first payment Jan 1, 2019.
+
+  Published values:
+  - Debt service constant: 6.8134680% → implied monthly P&I $141,947.25.
+  - Aggregate principal amortization over 120 payments: $4,114,494.17.
+  - Fixed monthly principal installment (after dividing by 120): $34,287.45.
+
+  **Library reproduces $141,947.25 exactly via the standard closed-form
+  annuity formula** — that is the value validated by the
+  `fanniemae_mf_1103_25m_550_360mo` fixture. A standalone Decimal
+  simulation also reproduces $4,114,494.17 to the cent (period 1 = Dec
+  2018, full-precision payment, full-precision day-counted interest);
+  this validates Convention A's schedule mechanics, but the library
+  cannot ship that schedule until `LoanParams` carries a `start_date`
+  field and `amortization_schedule` accepts a non-zero terminal balance
+  (balloon).
+- [Fannie Mae Multifamily Guide §204.02 A — Actual/360 Interest
+  Calculation Method](https://mfguide.fanniemae.com/node/7941) — sibling
+  page; gives the formula text but no numerical example.
 - [Bank Iowa 365/360 Loan Calculator](https://bankiowa.bank/additional-resources/calculators/365-360-loan-calculator)
   — confirms in prose that "Interest is calculated monthly at 1/360th
   of the annual rate times the number of days in the month on the
@@ -175,28 +200,33 @@ to the cent, and its quoted total interest of $547,154.46 implies a
   but `PMT` with annual rate and 25 periods is unconventional usage
   and the value is not from any of the three conventions above.
 
-### Design questions to answer before implementing
+### Design questions still open for schedule generation
 
-1. **Which payment-derivation convention?** A, B, or C? An authoritative
-   published source must demonstrate the chosen formula with reproducible
-   numerics.
-2. **Calendar dates on `LoanParams`.** Conventions A and B require knowing
-   the actual days in each month, which requires either a `start_date`
-   field or per-period day arrays. Convention C does not.
-3. **Terminal-balance handling.** Convention A produces a balloon residual.
-   Should the schedule end with that residual, or should the final
-   payment absorb it, or should we require the user to declare the
-   intended resolution?
-4. **Leap years.** Convention B's amortization is exact only in
-   non-leap years. Real schedules straddle leap years — does the final
-   payment absorb the leap-year extra interest?
-5. **Validation.** No fixture lands in the suite until we identify a
-   published worked example whose every numeric value (payment, every
-   per-month interest, every balance, totals, terminal balance) the
-   library reproduces exactly. Without such a source, we should not
-   ship Actual/360 support.
+1. **Calendar dates on `LoanParams`.** Convention A's schedule requires
+   knowing the actual days in each month, which requires either a
+   `start_date` field on `LoanParams` or per-period day arrays. The
+   Fannie Mae §1103 example used issue date Dec 1, 2018 and first
+   payment Jan 1, 2019 — period 1 covers December 2018 (the issue-date
+   month).
+2. **Terminal-balance handling.** Commercial Actual/360 loans typically
+   amortize on a longer schedule than their term (e.g., 30-year
+   amortization with 10-year term and balloon). The library's current
+   `Installment`-based contract assumes balance ends at exactly $0.00 —
+   needs to either accept a balloon residual or require the user to
+   declare the intended resolution.
+3. **Schedule API surface.** `amortization_schedule` currently produces
+   a complete amortizing schedule. For commercial use the library may
+   need to produce one of: full amortizing schedule (all payments, zero
+   balance at amortization period), term-only schedule (payments through
+   loan term, balloon at end), or both modes.
+4. **Validated test fixture for the schedule.** We have an internally
+   validated standalone simulation that reproduces Fannie Mae's
+   aggregate principal $4,114,494.17 to the cent. Once schedule
+   generation ships, the §1103 example becomes the corresponding
+   row-level fixture.
 
 If a reader knows of a federal regulator, GSE, or commercial-banking
 textbook publication that provides a fully numbered Actual/360
-amortization schedule (with calendar dates and either no residual or
-an explicitly stated balloon), please open an issue with the link.
+amortization schedule (calendar dates plus per-month interest, principal,
+and balance values, with explicitly stated terminal balance), please
+open an issue with the link.

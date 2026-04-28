@@ -1,0 +1,46 @@
+# Worked example from the Fannie Mae Multifamily Selling and Servicing
+# Guide, Part III, Chapter 11, Section 1103 "Actual Amortization
+# Calculation" (effective April 3, 2026).
+#
+# The section computes a hypothetical actual/360 fixed-rate Mortgage Loan
+# as the input for SARM Loan amortization. Published values:
+#
+#   - Mortgage Loan amount: $25,000,000
+#   - Gross Note Rate: 5.500%
+#   - Amortization period: 30 years (360 monthly installments)
+#   - Loan term: 10 years (the SARM term, irrelevant to monthly_payment)
+#   - Issue date: December 1, 2018
+#   - First loan payment: January 1, 2019
+#   - Debt service constant: 6.8134680%
+#   - Aggregate principal amortization over 120 payments: $4,114,494.17
+#   - Fixed monthly principal installment: $34,287.45
+#
+# The library's monthly_payment reproduces the implied $141,947.25
+# (= $25M × 6.8134680% / 12) exactly. The "calculated actual/360 fixed
+# rate payment" is the standard closed-form annuity value; Fannie Mae
+# does not bump the rate.
+#
+# A standalone simulation (not in the library yet) reproduces the
+# aggregate principal $4,114,494.17 to the cent when run with full-
+# precision payment, full-precision day-counted interest, and period 1
+# spanning December 2018. Schedule generation requires a start_date
+# field on LoanParams plus balloon-residual handling, neither of which
+# is implemented yet — see docs/future-work.md.
+
+[loan]
+principal = "25000000.00"
+annual_rate = "5.5"
+term_months = 360
+day_count = "actual/360"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[source]
+kind = "gse_guide"
+country = "US"
+label = "fanniemae_mf_guide_1103_tier2_sarm_example"
+url = "https://mfguide.fanniemae.com/node/5286"
+notes = "Fannie Mae Multifamily Selling and Servicing Guide §1103 (eff. 2026-04-03). Tier 2 SARM worked example. monthly_payment matches the implied DSC; full schedule deferred (no calendar-aware schedule support yet)."
+
+[expected]
+monthly_payment = "141947.25"
