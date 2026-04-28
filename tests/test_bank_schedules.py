@@ -35,7 +35,6 @@ def _loan_from_toml(toml_data: dict) -> LoanParams:
 
 
 class TestBankSchedules:
-
     def test_monthly_payment_matches(self, bank_schedule):
         """The computed monthly payment must match the TOML expected value."""
         toml_data, _ = bank_schedule

@@ -35,7 +35,7 @@ def amortization_schedule(loan: LoanParams) -> list[Installment]:
        month containing the start date.
     2. The unrounded closed-form payment is carried internally; each
        month's interest is computed in full Decimal precision as
-       ``balance × annual_rate × days_in_month / 360``.
+       ``balance * annual_rate * days_in_month / 360``.
     3. Display values (``payment``, ``interest``, ``principal``) are
        rounded to the cent; the running balance internally is unrounded.
     4. The final payment is adjusted to land balance at exactly zero.
@@ -89,9 +89,7 @@ def _schedule_thirty_360(loan: LoanParams) -> list[Installment]:
     ]
 
     for i in range(1, loan.term_months + 1):
-        interest = (balance * monthly_rate).quantize(
-            _PENNY, rounding=interest_rounding
-        )
+        interest = (balance * monthly_rate).quantize(_PENNY, rounding=interest_rounding)
 
         if i == loan.term_months and fully_amortizing:
             # Final payment of a fully amortizing loan: zero out balance.
@@ -158,6 +156,9 @@ def _schedule_actual_360(loan: LoanParams) -> list[Installment]:
         )
     ]
 
+    # Public dispatch in amortization_schedule() guarantees start_date is set
+    # for ACTUAL_360; assert documents the invariant for the type checker.
+    assert loan.start_date is not None
     sd = loan.start_date
     for i in range(1, loan.term_months + 1):
         # Period i covers the calendar month at offset (i-1) from start_date
@@ -177,7 +178,7 @@ def _schedule_actual_360(loan: LoanParams) -> list[Installment]:
         else:
             actual_pmt = pmt_disp
             principal_disp = pmt_disp - interest_disp
-            balance -= (pmt_raw - interest_raw)  # carry full precision
+            balance -= pmt_raw - interest_raw  # carry full precision
             balance_disp = balance.quantize(_PENNY, rounding=interest_rounding)
 
         total_interest_disp += interest_disp

@@ -5,6 +5,7 @@
 # mortgagemath
 
 [![tests](https://github.com/murraystokely/mortgagemath/actions/workflows/tests.yml/badge.svg)](https://github.com/murraystokely/mortgagemath/actions/workflows/tests.yml)
+[![lint](https://github.com/murraystokely/mortgagemath/actions/workflows/lint.yml/badge.svg)](https://github.com/murraystokely/mortgagemath/actions/workflows/lint.yml)
 [![coverage](./coverage.svg)](./coverage.svg)
 [![PyPI](https://img.shields.io/pypi/v/mortgagemath.svg)](https://pypi.org/project/mortgagemath/)
 [![Python 3.11+](https://img.shields.io/pypi/pyversions/mortgagemath.svg)](https://pypi.org/project/mortgagemath/)
