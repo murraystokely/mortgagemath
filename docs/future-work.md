@@ -87,16 +87,20 @@ divergences that could mask real bugs.
 
 ## Actual/360 commercial loans
 
-`monthly_payment` supports `DayCount.ACTUAL_360`, validated against the
-Fannie Mae Multifamily Selling and Servicing Guide §1103. Schedule
-generation (`amortization_schedule`) is still deferred — the
-`LoanParams` dataclass does not yet carry a `start_date`, and the
-library's amortizing-loan contract (final balance == 0) does not
-match commercial loans where the term is shorter than the amortization
-period (a balloon residual remains at term).
+`monthly_payment` and `amortization_schedule` both support
+`DayCount.ACTUAL_360`, validated against the Fannie Mae Multifamily
+Selling and Servicing Guide §1103. The only remaining gap is **native
+balloon-residual support**: real commercial loans typically have a
+loan term shorter than the amortization period (e.g. 10-year SARM with
+30-year amortization), and the loan ends with a balloon at the term
+rather than amortizing to zero. The library currently still guarantees
+`Installment.balance == Decimal("0.00")` at the last row, which means
+running an Actual/360 schedule for a 360-month-amortizing loan
+produces a normal-looking schedule — but truncating it to a 120-month
+term requires the user to read off `sched[120].balance` themselves.
 
-This section explains the conventions, what the §1103 worked example
-told us, and the design questions still open for full schedule support.
+This section documents the conventions, what the §1103 worked example
+told us, and the remaining design question (balloon support).
 
 ### Background
 
@@ -175,15 +179,16 @@ candidate conventions, both rejected:
   - Aggregate principal amortization over 120 payments: $4,114,494.17.
   - Fixed monthly principal installment (after dividing by 120): $34,287.45.
 
-  **Library reproduces $141,947.25 exactly via the standard closed-form
-  annuity formula** — that is the value validated by the
-  `fanniemae_mf_1103_25m_550_360mo` fixture. A standalone Decimal
-  simulation also reproduces $4,114,494.17 to the cent (period 1 = Dec
-  2018, full-precision payment, full-precision day-counted interest);
-  this validates Convention A's schedule mechanics, but the library
-  cannot ship that schedule until `LoanParams` carries a `start_date`
-  field and `amortization_schedule` accepts a non-zero terminal balance
-  (balloon).
+  **Library reproduces both anchors exactly.** The
+  `fanniemae_mf_1103_25m_550_360mo` fixture validates the implied
+  monthly P&I ($141,947.25), and a `[[expected.balance_anchor]]` entry
+  validates the implied balance after 120 payments ($20,885,505.83 =
+  $25M − $4,114,494.17). The schedule itself is generated with
+  `start_date = 2018-12-01`, full-precision balance tracking, and
+  day-counted interest; the per-row cents-rounded values would only
+  approximate the aggregate (sum-of-rounded-rows = $4,114,494.11), but
+  the **internal full-precision balance** at row 120 rounds to exactly
+  $20,885,505.83, which is the cleanest validation anchor.
 - [Fannie Mae Multifamily Guide §204.02 A — Actual/360 Interest
   Calculation Method](https://mfguide.fanniemae.com/node/7941) — sibling
   page; gives the formula text but no numerical example.
@@ -200,33 +205,35 @@ candidate conventions, both rejected:
   but `PMT` with annual rate and 25 periods is unconventional usage
   and the value is not from any of the three conventions above.
 
-### Design questions still open for schedule generation
+### Remaining design question: native balloon support
 
-1. **Calendar dates on `LoanParams`.** Convention A's schedule requires
-   knowing the actual days in each month, which requires either a
-   `start_date` field on `LoanParams` or per-period day arrays. The
-   Fannie Mae §1103 example used issue date Dec 1, 2018 and first
-   payment Jan 1, 2019 — period 1 covers December 2018 (the issue-date
-   month).
-2. **Terminal-balance handling.** Commercial Actual/360 loans typically
-   amortize on a longer schedule than their term (e.g., 30-year
-   amortization with 10-year term and balloon). The library's current
-   `Installment`-based contract assumes balance ends at exactly $0.00 —
-   needs to either accept a balloon residual or require the user to
-   declare the intended resolution.
-3. **Schedule API surface.** `amortization_schedule` currently produces
-   a complete amortizing schedule. For commercial use the library may
-   need to produce one of: full amortizing schedule (all payments, zero
-   balance at amortization period), term-only schedule (payments through
-   loan term, balloon at end), or both modes.
-4. **Validated test fixture for the schedule.** We have an internally
-   validated standalone simulation that reproduces Fannie Mae's
-   aggregate principal $4,114,494.17 to the cent. Once schedule
-   generation ships, the §1103 example becomes the corresponding
-   row-level fixture.
+`amortization_schedule` currently runs through `loan.term_months`
+periods and absorbs any residual into the final payment so that the
+last row's balance is exactly `$0.00`. For a $25M / 5.5% / 360-month
+ACTUAL_360 schedule, that produces a final payment of ~$1,310,840 —
+mathematically correct but practically odd.
+
+Real commercial loans with `loan term < amortization period` (e.g.
+10-year SARM on a 30-year amortization basis) instead **cut the
+schedule at the loan term and pay the residual as a balloon** — for
+the Fannie Mae example that means the borrower pays $141,947.25 for
+120 months and then a single $20,885,505.83 balloon at month 120.
+
+To support this natively the library would need:
+
+1. A way to express "term shorter than amortization period" in
+   `LoanParams` (e.g., separate `term_months` and
+   `amortization_period_months` fields).
+2. A relaxed `amortization_schedule` contract: schedule has
+   `term_months` rows, last row's `balance` may be non-zero, and
+   `Installment` may need a separate `balloon_payment` field.
+
+Until then, users wanting balloon behavior should run the schedule
+with `term_months = amortization_period_months` and slice the result
+at the loan term, reading `sched[loan_term].balance` as the balloon.
 
 If a reader knows of a federal regulator, GSE, or commercial-banking
 textbook publication that provides a fully numbered Actual/360
-amortization schedule (calendar dates plus per-month interest, principal,
-and balance values, with explicitly stated terminal balance), please
-open an issue with the link.
+**balloon-mortgage** schedule (calendar dates plus per-month interest,
+principal, balance values, plus an explicit balloon payment at term),
+please open an issue with the link.

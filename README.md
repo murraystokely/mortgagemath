@@ -88,6 +88,7 @@ year as 360); US commercial loans often use Actual/360 (interest accrues
 on the actual calendar days in each month, divided by 360).
 
 ```python
+from datetime import date
 from mortgagemath import DayCount
 
 residential = LoanParams(
@@ -102,21 +103,39 @@ commercial = LoanParams(
     annual_rate=Decimal("5.5"),
     term_months=360,
     day_count=DayCount.ACTUAL_360,
+    start_date=date(2018, 12, 1),    # required for Actual/360
 )
 ```
 
-`monthly_payment()` works for both day-counts. The level monthly P&I is
-the standard closed-form annuity value in either convention — that is
-what Fannie Mae's Multifamily Selling and Servicing Guide §1103 calls
-the "calculated actual/360 fixed rate payment", validated against the
-§1103 worked example ($25M / 5.5% / 30yr → $141,947.25).
+`monthly_payment()` works identically for both day-counts: the level
+monthly P&I is the standard closed-form annuity value. Fannie Mae's
+Multifamily Selling and Servicing Guide §1103 calls this the
+"calculated actual/360 fixed rate payment" and uses the same formula —
+no 365/360 rate bump (validated against the §1103 worked example:
+$25M / 5.5% / 30yr → $141,947.25).
 
-`amortization_schedule()` currently supports 30/360 only. True Actual/360
-schedule generation (variable interest each month based on actual calendar
-days, plus balloon-residual handling for terms shorter than the
-amortization period) requires a `start_date` field on `LoanParams` that
-the library does not yet have — see
-[`docs/future-work.md`](docs/future-work.md) for the design questions.
+`amortization_schedule()` produces different per-row figures by mode:
+
+| Mode | Period interest | Balance tracking |
+|---|---|---|
+| `THIRTY_360` (default) | `balance × rate / 12` (constant) | round-each-balance |
+| `ACTUAL_360` | `balance × rate × days_in_month / 360` (variable) | full-precision internal, displayed values rounded to cents |
+
+`ACTUAL_360` requires `start_date` (the issue date / first
+interest-accrual period). Period 1 covers the calendar month containing
+that date; the first payment is due on the same day-of-month one month
+later. This matches the Fannie Mae §1103 example: issue date
+`2018-12-01` → period 1 spans December 2018 (31 days) → first payment
+January 1, 2019. Validated against §1103's published aggregate
+principal over 120 payments ($4,114,494.17, equivalent to a balance of
+$20,885,505.83 at row 120).
+
+For commercial loans where the term is shorter than the amortization
+period (e.g., 10-year SARM with 30-year amortization), the schedule's
+final row absorbs whatever residual remains — the library still
+guarantees `Installment.balance == Decimal("0.00")` at the last row.
+Native balloon-residual support (final balance ≠ 0) is on the roadmap;
+see [`docs/future-work.md`](docs/future-work.md).
 
 ## Schedule Guarantees
 

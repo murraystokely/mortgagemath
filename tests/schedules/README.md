@@ -31,6 +31,35 @@ For non-`statement` kinds, include a `url` field pointing to the source
 document. For `synthetic`, include a `notes` field explaining the boundary
 condition and how the expected values were independently verified.
 
+## TOML schema
+
+### `[loan]` (required)
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `principal`, `annual_rate` | string (Decimal) | Always quote — not a float |
+| `term_months` | integer | |
+| `day_count` | `"30/360"` or `"actual/360"` | |
+| `payment_rounding`, `interest_rounding` | `"ROUND_UP"`, `"ROUND_HALF_UP"`, `"ROUND_HALF_EVEN"` | |
+| `start_date` | `"YYYY-MM-DD"` | Required for `actual/360` (issue date / first interest-accrual period); ignored otherwise |
+
+### `[expected]` (required)
+
+```toml
+[expected]
+monthly_payment = "141947.25"   # always required
+
+[[expected.balance_anchor]]
+after_payment = 120
+value = "20885505.83"
+```
+
+`monthly_payment` is the closed-form annuity payment value the library
+must reproduce. Optional `[[expected.balance_anchor]]` entries each
+publish the unpaid principal balance after a specific payment number —
+used for sources (e.g. Fannie Mae §1103) that publish cumulative
+figures rather than per-row schedule data.
+
 ## Contributing
 
 To add a new verified loan:

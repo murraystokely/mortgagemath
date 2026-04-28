@@ -4,6 +4,7 @@ Test fixtures are auto-discovered from tests/schedules/*.toml + *.csv
 pairs. See tests/schedules/README.md for the fixture format.
 """
 
+from datetime import date
 from decimal import Decimal
 
 from mortgagemath import (
@@ -18,6 +19,9 @@ from mortgagemath import (
 def _loan_from_toml(toml_data: dict) -> LoanParams:
     """Build a LoanParams from a TOML fixture's [loan] section."""
     loan = toml_data["loan"]
+    start_date = loan.get("start_date")
+    if isinstance(start_date, str):
+        start_date = date.fromisoformat(start_date)
     return LoanParams(
         principal=Decimal(loan["principal"]),
         annual_rate=Decimal(loan["annual_rate"]),
@@ -25,6 +29,7 @@ def _loan_from_toml(toml_data: dict) -> LoanParams:
         day_count=DayCount(loan["day_count"]),
         payment_rounding=PaymentRounding(loan["payment_rounding"]),
         interest_rounding=PaymentRounding(loan["interest_rounding"]),
+        start_date=start_date,
     )
 
 
@@ -38,16 +43,11 @@ class TestBankSchedules:
         assert monthly_payment(loan) == expected
 
     def test_schedule_matches_csv(self, bank_schedule):
-        """Every row in the CSV must match the computed schedule.
-
-        Skips fixtures whose CSV is header-only AND whose day_count is
-        not yet supported by ``amortization_schedule`` (e.g., ACTUAL_360);
-        their monthly_payment is still validated by the companion test.
-        """
+        """Every row in the CSV must match the computed schedule."""
         toml_data, csv_rows = bank_schedule
+        if not csv_rows:
+            return  # header-only CSV; only monthly_payment is validated
         loan = _loan_from_toml(toml_data)
-        if not csv_rows and toml_data["loan"]["day_count"] != "30/360":
-            return  # nothing to validate; schedule generator not implemented
         sched = amortization_schedule(loan)
 
         for row in csv_rows:
@@ -70,4 +70,25 @@ class TestBankSchedules:
             )
             assert inst.balance == expected_balance, (
                 f"Payment #{n}: balance {inst.balance} != {expected_balance}"
+            )
+
+    def test_balance_anchors_match(self, bank_schedule):
+        """Validate any [[expected.balance_anchor]] entries.
+
+        Each anchor publishes the balance after a specific payment number.
+        Used for sources (e.g. Fannie Mae §1103) that publish cumulative
+        figures rather than per-row schedule data.
+        """
+        toml_data, _ = bank_schedule
+        anchors = toml_data.get("expected", {}).get("balance_anchor", [])
+        if not anchors:
+            return
+        loan = _loan_from_toml(toml_data)
+        sched = amortization_schedule(loan)
+        for anchor in anchors:
+            n = int(anchor["after_payment"])
+            expected = Decimal(anchor["value"])
+            assert sched[n].balance == expected, (
+                f"Balance after payment {n}: "
+                f"{sched[n].balance} != {expected}"
             )

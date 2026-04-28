@@ -1,6 +1,7 @@
 """Types for mortgage calculations."""
 
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
 from enum import Enum
 
@@ -45,6 +46,13 @@ class LoanParams:
             cent. Defaults to ROUND_UP.
         interest_rounding: How to round each month's interest charge.
             Defaults to ROUND_HALF_UP.
+        start_date: Date of the first interest-accrual period (the issue
+            date). Required for ACTUAL_360 schedules; ignored for 30/360.
+            Period 1 covers the calendar month containing this date and
+            the first payment is due on the same day of the next month.
+            Per Fannie Mae §1103, an issue date of December 1, 2018
+            produces a first payment on January 1, 2019 with period 1
+            spanning December 2018 (31 days).
     """
 
     principal: Decimal
@@ -53,6 +61,7 @@ class LoanParams:
     day_count: DayCount = DayCount.THIRTY_360
     payment_rounding: PaymentRounding = PaymentRounding.ROUND_UP
     interest_rounding: PaymentRounding = PaymentRounding.ROUND_HALF_UP
+    start_date: date | None = None
 
 
 @dataclass(frozen=True, slots=True)
