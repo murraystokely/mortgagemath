@@ -22,6 +22,12 @@ classifiers = [
     "Topic :: Office/Business :: Financial",
 ]
 
+[project.urls]
+Homepage = "https://github.com/murraystokely/mortgagemath"
+Repository = "https://github.com/murraystokely/mortgagemath"
+Issues = "https://github.com/murraystokely/mortgagemath/issues"
+Documentation = "https://github.com/murraystokely/mortgagemath#readme"
+
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
 
