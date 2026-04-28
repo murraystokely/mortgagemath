@@ -4,7 +4,7 @@
 
 # mortgagemath
 
-[![tests](https://github.com/Peach-Homes-LLC/mortgagemath/actions/workflows/tests.yml/badge.svg)](https://github.com/Peach-Homes-LLC/mortgagemath/actions/workflows/tests.yml)
+[![tests](https://github.com/murraystokely/mortgagemath/actions/workflows/tests.yml/badge.svg)](https://github.com/murraystokely/mortgagemath/actions/workflows/tests.yml)
 [![coverage](./coverage.svg)](./coverage.svg)
 [![PyPI](https://img.shields.io/pypi/v/mortgagemath.svg)](https://pypi.org/project/mortgagemath/)
 [![Python 3.11+](https://img.shields.io/pypi/pyversions/mortgagemath.svg)](https://pypi.org/project/mortgagemath/)
