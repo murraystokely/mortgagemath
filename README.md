@@ -11,9 +11,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Downloads](https://static.pepy.tech/badge/mortgagemath/month)](https://pepy.tech/project/mortgagemath)
 
-Cent-accurate mortgage amortization schedules for Python — validated against CFPB, Fannie Mae, textbooks, and real-world published examples.
+Cent-accurate mortgage amortization for Python — validated against CFPB, Fannie Mae, and published real-world examples.
 
-## Ideal For
+## Use Cases
 
 - Fintech / mortgage software
 - Loan calculators
@@ -49,6 +49,10 @@ print(sched[104].principal)          # Decimal("260.27")
 print(sched[104].interest)           # Decimal("385.41")
 ```
 
+Returns a cent-accurate payment and lender-style amortization schedule.
+
+If this solves a problem for you, please star the repo ⭐
+
 ## Why This Package?
 
 Most mortgage libraries compute formulas.
@@ -77,6 +81,31 @@ Fannie Mae publications, and financial literature.
 | Published-source validation | ✅ | No |
 | Balloon / commercial loans | ✅ | Rare |
 | Full amortization schedule | ✅ | Mixed |
+
+## Compared to Typical Alternatives
+
+Many mortgage libraries rely on floats, limited rounding controls, or do not generate lender-style amortization schedules.
+
+mortgagemath focuses on:
+
+- Decimal math end-to-end
+- Configurable lender rounding
+- Exact zero ending balances
+- Full amortization schedules
+- Published-source validation
+
+## Accuracy Validation
+
+Validated against published examples from:
+
+- CFPB sample disclosures
+- Fannie Mae multifamily guides
+- OpenStax textbooks
+- LibreTexts examples
+- Boundary rounding test cases
+
+See [`docs/accuracy.md`](docs/accuracy.md) for the full source table and
+cent-accurate results.
 
 ## Rounding Conventions
 
@@ -232,93 +261,7 @@ The test suite has three layers:
 See `tests/schedules/README.md` for the full schema and the list of supported
 `kind` values.
 
-## Accuracy Validation
-
-Validated against published examples from:
-
-- CFPB sample disclosures
-- Fannie Mae multifamily guides
-- OpenStax textbooks
-- LibreTexts examples
-- Boundary rounding test cases
-
-See [`docs/accuracy.md`](docs/accuracy.md) for the full source table and
-cent-accurate results.
-
-## Comparison with Other Python Implementations
-
-Existing Python packages take three approaches, none of which produces
-cent-accurate schedules that match how lenders actually print
-amortization tables.
-
-### `numpy_financial.pmt` / `ipmt` / `ppmt`
-
-Float-based; no rounding control. The function returns a negative
-floating-point value (cash-flow convention) and leaves rounding entirely
-to the caller. Two issues for cent-accurate work:
-
-1. **Float drift.** Long-term schedules accumulate sub-cent error in the
-   payment value itself; the typical user fix is `round(abs(npf.pmt(...)), 2)`
-   which uses Python's banker's-rounding (`HALF_EVEN`) regardless of what
-   the lender actually does.
-2. **No support for `ROUND_UP`.** The OpenStax §6.8 examples explicitly
-   document the US-residential convention "payment to lenders is always
-   rounded up to the next penny." `numpy_financial` + `round()` does not
-   produce that — it gives the wrong cent on **5 of 15** source-attributed
-   fixtures in this suite.
-
-   Concrete example (OpenStax §6.8 car loan, $28,500 / 3.99% / 5yr):
-
-   ```python
-   import numpy_financial as npf
-   round(abs(npf.pmt(0.0399/12, 60, 28500)), 2)   # → 524.74  (wrong)
-   ```
-
-   The textbook value is **$524.75** because the section explicitly uses
-   ROUND_UP. To get this with `numpy_financial`, the user must skip
-   Python's `round()` and apply Decimal-based ceiling rounding manually.
-   `mortgagemath` puts that mode in the type system:
-
-   ```python
-   from decimal import Decimal
-   from mortgagemath import LoanParams, monthly_payment
-   monthly_payment(LoanParams(
-       principal=Decimal("28500"), annual_rate=Decimal("3.99"), term_months=60
-   ))                                              # → Decimal("524.75")
-   ```
-
-### `mortgage` (PyPI)
-
-Uses `Decimal` (good), but does not round per-row. The schedule's
-`payment`, `interest`, `principal`, and `balance` are 25+-digit Decimals;
-the final balance lands at something like `-3.4E-21` rather than exactly
-`$0.00`, and the per-row invariant `principal + interest == payment`
-holds only at full precision, not at the cent level a real bank
-statement prints.
-
-### `amortization` (PyPI)
-
-Float-based, single-function: `calculate_amortization_amount` returns a
-single rounded float. No schedule generation, no rounding control. On
-the OpenStax car loan above it returns `524.74` — the same wrong cent
-as `numpy_financial`.
-
-### What `mortgagemath` does differently
-
-- **`Decimal` end-to-end.** No floats anywhere in the payment or schedule
-  computation. Everything quantizes to two decimal places at explicitly
-  declared rounding-mode boundaries.
-- **Rounding mode is a type, not a convention.** `PaymentRounding.ROUND_UP`,
-  `ROUND_HALF_UP`, `ROUND_HALF_EVEN` are first-class enum values; the
-  fixtures table above shows precisely which mode each cited source uses.
-- **Final-payment adjustment guarantees zero balance.** `principal + interest
-  == payment` holds in every row; final balance is exactly `Decimal("0.00")`.
-- **No design borrowed from these packages.** Each one falls short of the
-  invariants this library is meant to provide; `mortgagemath` was written
-  to fill that gap. The closed-form annuity formula it shares with
-  `numpy_financial` is standard finance, not a borrowed pattern.
-
-### Contributing Test Fixtures
+## Contributing Test Fixtures
 
 To add a verified loan, create two files in `tests/schedules/`:
 
@@ -355,5 +298,3 @@ Do not include property addresses, lender names, or other PII. For
 ## License
 
 MIT
-
-If this saved you time, please star the repo ⭐
