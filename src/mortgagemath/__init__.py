@@ -1,7 +1,7 @@
-"""mortgagemath — correct mortgage amortization calculations.
+"""Cent-accurate mortgage amortization for Python.
 
-Verified against real bank statements. Zero dependencies beyond the
-Python standard library.
+Validated against published CFPB and Fannie Mae examples.
+Zero runtime dependencies — only the standard library.
 """
 
 from mortgagemath._payment import monthly_payment
