@@ -107,6 +107,26 @@ Validated against published examples from:
 See [`docs/accuracy.md`](docs/accuracy.md) for the full source table and
 cent-accurate results.
 
+## Reporting a discrepancy
+
+Found a published example or a real lender statement that `mortgagemath`
+doesn't reproduce to the cent? Two paths:
+
+- **Reporters / users** — open an issue using the
+  [Mortgage example doesn't match](.github/ISSUE_TEMPLATE/mortgage-example.yml)
+  template. It walks through the loan parameters and any per-row data
+  the source publishes; the discrepancy then either lands in the
+  validation suite (if reproducible) or in
+  [`docs/future-work.md`](docs/future-work.md) (if not). No need to
+  run `pytest` locally.
+- **Contributors who can run pytest locally** — see
+  [Contributing Test Fixtures](#contributing-test-fixtures) below for
+  the direct PR path.
+
+For unrelated bugs or feature requests, use the general
+[Bug or feature request](.github/ISSUE_TEMPLATE/bug-or-feature.yml)
+template.
+
 ## Rounding Conventions
 
 Banks round the monthly payment and each month's interest to the nearest cent,
@@ -263,7 +283,12 @@ See `tests/schedules/README.md` for the full schema and the list of supported
 
 ## Contributing Test Fixtures
 
-To add a verified loan, create two files in `tests/schedules/`:
+This is the direct-PR path. If you can't run `pytest` locally, the
+[Mortgage example doesn't match](.github/ISSUE_TEMPLATE/mortgage-example.yml)
+issue template is the easier route — paste the published values and a
+maintainer will land the fixture for you.
+
+To add a verified loan as a PR, create two files in `tests/schedules/`:
 
 **`example_30yr_50_150000.toml`** (loan parameters):
 ```toml

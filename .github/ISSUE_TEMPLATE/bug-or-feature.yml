@@ -1,0 +1,48 @@
+name: Bug or feature request
+description: Anything that isn't a "this published mortgage example doesn't reproduce" submission.
+title: "[bug|feature] <one-line summary>"
+labels: ["triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For specific lender / textbook / regulator examples that don't
+        match `mortgagemath` to the cent, please use the
+        **"Mortgage example doesn't match"** template instead — it's
+        structured to land directly in the validation suite.
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - Bug — something is wrong with existing behavior
+        - Feature request — new capability / API addition
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened, or what you'd like to be able to do.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction (bugs only)
+      description: |
+        Minimal Python snippet that reproduces the bug, with the actual
+        vs. expected output. Include `mortgagemath` version
+        (`pip show mortgagemath`) and Python version.
+      render: python
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional context (optional)
+      description: Anything else worth flagging — links, prior discussion, why this matters.
