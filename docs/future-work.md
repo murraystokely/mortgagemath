@@ -83,5 +83,139 @@ divergences that could mask real bugs.
   algorithm, the design should be reconsidered.
 - Investigate semi-annual / annual compounding to support Canadian
   mortgages and certain bond/annuity examples.
-- Investigate Actual/360 schedule generation. `monthly_payment()`
-  already supports it; `amortization_schedule()` raises on it.
+- See "Actual/360 commercial loans" below.
+
+## Actual/360 commercial loans
+
+`monthly_payment` and `amortization_schedule` both fully support
+`DayCount.ACTUAL_360`, including native balloon loans (term shorter
+than amortization period via `LoanParams.amortization_period_months`).
+Both monthly P&I and balloon-at-term are validated against the Fannie
+Mae Multifamily Selling and Servicing Guide §1103 example.
+
+This section retains the conventions analysis for future readers,
+along with the sources investigated along the way.
+
+### Background
+
+Actual/360 (also called "365/360") is the dominant interest-accrual
+convention for US commercial real-estate, business, and money-market
+loans. The standard formula for the period interest is:
+
+> Interest = Principal × AnnualRate × DaysInPeriod / 360
+
+For monthly amortizing loans, "DaysInPeriod" is the **actual number of
+calendar days** between consecutive payment dates — typically 28, 29,
+30, or 31. Over a non-leap year, total days are 365 and the effective
+rate is 365/360 ≈ 1.39% higher than the stated nominal rate. Over a
+leap year, 366/360 ≈ 1.67% higher.
+
+This is fundamentally different from 30/360, which fixes every period
+at 30 days and ignores calendar effects.
+
+### The payment formula (now validated): Convention A
+
+The library implements **Convention A** for `monthly_payment`:
+
+> Payment = standard closed-form annuity with `r = annual / 12`, no
+> bumped rate. The Actual/360 designation affects only how the schedule
+> accrues interest, not how the level monthly payment is computed.
+
+This is what Fannie Mae's §1103 calls the "calculated actual/360 fixed
+rate payment". The §1103 worked example ($25M / 5.5% / 30yr → DSC
+6.8134680% → P&I $141,947.25) uses exactly this formula. Two earlier
+candidate conventions, both rejected:
+
+| Convention | Payment formula | Status |
+|---|---|---|
+| **A. Closed-form, no bump** ✓ | `r = annual / 12` | Adopted; matches Fannie Mae §1103 and PropertyMetrics |
+| **B. Bumped-rate** ✗ | `r = annual × 365/360 / 12` | Rejected — gave $25,377.35 vs PropertyMetrics' $25,311.28 and $143,147.75 vs Fannie Mae's implied $141,947.25 |
+| **C. Bumped-rate + 30-day schedule** ✗ | bumped + constant 30-day month | Rejected — same payment value as B; no source matched |
+
+### Sources investigated
+
+- [Wikipedia: *Day count convention*](https://en.wikipedia.org/wiki/Day_count_convention)
+  — defines the formula `DayCountFactor = ActualDays(Date1, Date2) / 360`
+  but gives no full worked amortization example with a monthly payment.
+- [PropertyMetrics: "30/360 vs Actual/360 vs Actual/365"](https://propertymetrics.com/blog/30-360-vs-actual-360-vs-actual-365/)
+  — only worked example with concrete cents-level numbers found
+  ($2.5M / 4% / 10yr / $25,311.28 monthly, month-1 interest $8,611.11
+  for January, total interest over 10 years $547,154.46). Convention A.
+  Doesn't disclose the calendar start date or the residual balance.
+
+  **A clean Decimal simulation of Convention A reproduces the monthly
+  payment ($25,311.28) and month-1 interest ($8,611.11) exactly, and
+  comes within $0.02 on the published total interest ($547,154.48
+  computed vs $547,154.46 published) when started in January 2021 (or
+  any other calendar year whose first 10-year window contains three
+  leap years). The 2-cent gap is internal to the published source: the
+  source's own numbers are inconsistent — $120 \times \$25{,}311.28$
+  payments minus a $2{,}500{,}000 - X$ principal balance reconciles to
+  $547,154.46 only if the implied terminal balloon X is $9,800.86, but
+  any clean simulation gives X = $9,800.32. The source likely computed
+  in float and accumulated sub-cent drift over 120 rows.**
+
+  This is the closest match in the suite. Per the project's "match
+  every published value exactly" rule, it still does not qualify as a
+  fixture; if/when a source emerges whose own numbers tie out to the
+  cent, that source should be the reference for shipping Convention A.
+- [Adventures in CRE: "30/360, Actual/365, and Actual/360"](https://www.adventuresincre.com/lenders-calcs/)
+  — extensive comparison prose; the side-by-side numerical table was
+  not extractable from the page render.
+- [Fannie Mae Multifamily Selling and Servicing Guide §1103 — Actual
+  Amortization Calculation](https://mfguide.fanniemae.com/node/5286)
+  (Effective April 3, 2026) — Tier 2 SARM Loan worked example with
+  $25M principal, 5.5% gross note rate, 10-year term, 30-year
+  amortization, issue date Dec 1, 2018, first payment Jan 1, 2019.
+
+  Published values:
+  - Debt service constant: 6.8134680% → implied monthly P&I $141,947.25.
+  - Aggregate principal amortization over 120 payments: $4,114,494.17.
+  - Fixed monthly principal installment (after dividing by 120): $34,287.45.
+
+  **Library reproduces both anchors exactly.** The
+  `fanniemae_mf_1103_25m_550_360mo` fixture validates the implied
+  monthly P&I ($141,947.25), and a `[[expected.balance_anchor]]` entry
+  validates the implied balance after 120 payments ($20,885,505.83 =
+  $25M − $4,114,494.17). The schedule itself is generated with
+  `start_date = 2018-12-01`, full-precision balance tracking, and
+  day-counted interest; the per-row cents-rounded values would only
+  approximate the aggregate (sum-of-rounded-rows = $4,114,494.11), but
+  the **internal full-precision balance** at row 120 rounds to exactly
+  $20,885,505.83, which is the cleanest validation anchor.
+- [Fannie Mae Multifamily Guide §204.02 A — Actual/360 Interest
+  Calculation Method](https://mfguide.fanniemae.com/node/7941) — sibling
+  page; gives the formula text but no numerical example.
+- [Bank Iowa 365/360 Loan Calculator](https://bankiowa.bank/additional-resources/calculators/365-360-loan-calculator)
+  — confirms in prose that "Interest is calculated monthly at 1/360th
+  of the annual rate times the number of days in the month on the
+  current outstanding balance" (variable-days convention). No worked
+  example.
+- [Vorys: "365/360 Interest Calculation: Latest Developments in Ohio
+  Case Law"](https://www.vorys.com/publication-365-360-Interest-Calculation-Latest-Developments-in-Ohio-Case-Law-Provide-Guidance-in-Interest-Calculation-Methods)
+  — legal analysis confirming the 1.389% effective-rate differential;
+  no worked numerical example.
+- Chandoo Excel forum — quotes `=PMT(0.06,25,1000000)/12 = $6,518.89`,
+  but `PMT` with annual rate and 25 periods is unconventional usage
+  and the value is not from any of the three conventions above.
+
+### Status
+
+**Shipped:**
+- `monthly_payment` for both 30/360 and Actual/360 (validated against
+  Fannie Mae §1103: $141,947.25 monthly P&I).
+- `amortization_schedule` for Actual/360 with `start_date` and
+  full-precision balance tracking.
+- Native balloon loans via `LoanParams.amortization_period_months`
+  (validated: §1103 implied balloon of $20,885,505.83 at term 120).
+
+**Possible follow-ups** (not blocking; here for the record):
+- Per-row Actual/360 schedule fixture validating each of the first
+  several months' interest, principal, and balance against a published
+  numbered table. The §1103 example only publishes monthly P&I and
+  aggregate principal — not row-level data — so we'd need a different
+  source. PropertyMetrics' worked example publishes month-1 interest
+  ($8,611.11 for January) but the rest of its schedule is not numbered
+  publicly.
+- Balloon mortgage examples from CMBS prospectus supplements or other
+  CRE finance references with full numbered schedules.

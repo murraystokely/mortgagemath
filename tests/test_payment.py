@@ -101,21 +101,19 @@ class TestMonthlyPayment:
         )
         assert monthly_payment(short) > monthly_payment(long)
 
-    def test_actual_360_higher_than_30_360(self):
-        """Actual/360 effective rate is higher due to 365/360 factor."""
-        base = LoanParams(
-            principal=Decimal("200000"),
-            annual_rate=Decimal("6"),
-            term_months=360,
-            day_count=DayCount.THIRTY_360,
-        )
-        commercial = LoanParams(
-            principal=Decimal("200000"),
-            annual_rate=Decimal("6"),
+    def test_actual_360_uses_closed_form(self):
+        """Actual/360 monthly payment uses the same closed-form annuity
+        formula as 30/360. Validated against Fannie Mae Multifamily Selling
+        and Servicing Guide §1103 (Tier 2 SARM example: $25M / 5.5% / 30yr
+        → DSC 6.8134680% → monthly P&I $141,947.25)."""
+        loan = LoanParams(
+            principal=Decimal("25000000"),
+            annual_rate=Decimal("5.5"),
             term_months=360,
             day_count=DayCount.ACTUAL_360,
+            payment_rounding=PaymentRounding.ROUND_HALF_UP,
         )
-        assert monthly_payment(commercial) > monthly_payment(base)
+        assert monthly_payment(loan) == Decimal("141947.25")
 
     def test_zero_principal_raises(self):
         with pytest.raises(ValueError, match="principal must be positive"):

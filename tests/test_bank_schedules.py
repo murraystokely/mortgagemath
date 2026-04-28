@@ -4,6 +4,7 @@ Test fixtures are auto-discovered from tests/schedules/*.toml + *.csv
 pairs. See tests/schedules/README.md for the fixture format.
 """
 
+from datetime import date
 from decimal import Decimal
 
 from mortgagemath import (
@@ -18,6 +19,9 @@ from mortgagemath import (
 def _loan_from_toml(toml_data: dict) -> LoanParams:
     """Build a LoanParams from a TOML fixture's [loan] section."""
     loan = toml_data["loan"]
+    start_date = loan.get("start_date")
+    if isinstance(start_date, str):
+        start_date = date.fromisoformat(start_date)
     return LoanParams(
         principal=Decimal(loan["principal"]),
         annual_rate=Decimal(loan["annual_rate"]),
@@ -25,6 +29,8 @@ def _loan_from_toml(toml_data: dict) -> LoanParams:
         day_count=DayCount(loan["day_count"]),
         payment_rounding=PaymentRounding(loan["payment_rounding"]),
         interest_rounding=PaymentRounding(loan["interest_rounding"]),
+        start_date=start_date,
+        amortization_period_months=loan.get("amortization_period_months"),
     )
 
 
@@ -40,6 +46,8 @@ class TestBankSchedules:
     def test_schedule_matches_csv(self, bank_schedule):
         """Every row in the CSV must match the computed schedule."""
         toml_data, csv_rows = bank_schedule
+        if not csv_rows:
+            return  # header-only CSV; only monthly_payment is validated
         loan = _loan_from_toml(toml_data)
         sched = amortization_schedule(loan)
 
@@ -64,3 +72,22 @@ class TestBankSchedules:
             assert inst.balance == expected_balance, (
                 f"Payment #{n}: balance {inst.balance} != {expected_balance}"
             )
+
+    def test_balloon_at_term_matches(self, bank_schedule):
+        """Validate the published balloon at term, if any.
+
+        For balloon loans (term shorter than amortization period), the
+        unpaid principal at the loan's term is the balloon the borrower
+        owes alongside the final regular payment. Some sources (e.g.
+        Fannie Mae §1103) publish this value; the library exposes it as
+        ``schedule[term].balance``.
+        """
+        toml_data, _ = bank_schedule
+        balloon = toml_data.get("expected", {}).get("balloon_at_term")
+        if balloon is None:
+            return
+        loan = _loan_from_toml(toml_data)
+        sched = amortization_schedule(loan)
+        assert sched[loan.term_months].balance == Decimal(balloon), (
+            f"Balloon at term: {sched[loan.term_months].balance} != {balloon}"
+        )

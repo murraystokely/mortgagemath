@@ -84,10 +84,11 @@ override them per-loan.
 ## Day Count Conventions
 
 US residential mortgages use 30/360 (each month is treated as 30 days, each
-year as 360). US commercial loans often use Actual/360 (actual days in month,
-360-day year), which produces a higher effective rate.
+year as 360); US commercial loans often use Actual/360 (interest accrues
+on the actual calendar days in each month, divided by 360).
 
 ```python
+from datetime import date
 from mortgagemath import DayCount
 
 residential = LoanParams(
@@ -97,16 +98,49 @@ residential = LoanParams(
     day_count=DayCount.THIRTY_360,   # default
 )
 
-commercial = LoanParams(
-    principal=Decimal("200000"),
-    annual_rate=Decimal("6"),
-    term_months=240,
+commercial_balloon = LoanParams(             # 10-yr SARM on 30-yr amort
+    principal=Decimal("25000000"),
+    annual_rate=Decimal("5.5"),
+    term_months=120,                          # 10 years of payments
+    amortization_period_months=360,           # closed-form on 30-yr basis
     day_count=DayCount.ACTUAL_360,
+    start_date=date(2018, 12, 1),
 )
 ```
 
-Note: `amortization_schedule()` currently supports 30/360 only.
-`monthly_payment()` supports both day count conventions.
+`monthly_payment()` works identically for both day-counts: the level
+monthly P&I is the standard closed-form annuity value. Fannie Mae's
+Multifamily Selling and Servicing Guide §1103 calls this the
+"calculated actual/360 fixed rate payment" and uses the same formula —
+no 365/360 rate bump (validated against the §1103 worked example:
+$25M / 5.5% / 30yr → $141,947.25).
+
+`amortization_schedule()` produces different per-row figures by mode:
+
+| Mode | Period interest | Balance tracking |
+|---|---|---|
+| `THIRTY_360` (default) | `balance × rate / 12` (constant) | round-each-balance |
+| `ACTUAL_360` | `balance × rate × days_in_month / 360` (variable) | full-precision internal, displayed values rounded to cents |
+
+`ACTUAL_360` requires `start_date` (the issue date / first
+interest-accrual period). Period 1 covers the calendar month containing
+that date; the first payment is due on the same day-of-month one month
+later. This matches the Fannie Mae §1103 example: issue date
+`2018-12-01` → period 1 spans December 2018 (31 days) → first payment
+January 1, 2019. Validated against §1103's published aggregate
+principal over 120 payments ($4,114,494.17, equivalent to a balance of
+$20,885,505.83 at row 120).
+
+For commercial loans where the term is shorter than the amortization
+period — e.g. a 10-year SARM on a 30-year amortization basis — set
+`amortization_period_months` to the longer value. The closed-form
+payment is computed against `amortization_period_months`; the
+schedule produces `term_months` rows, and the final row's `balance`
+is the **balloon** the borrower owes alongside the last regular
+payment. Per the Fannie Mae §1103 example, $25M / 5.5% / `term_months
+= 120` / `amortization_period_months = 360` / `start_date =
+2018-12-01` produces a $141,947.25 monthly P&I for 120 months and a
+balloon of $20,885,505.83 at term — both validated to the cent.
 
 ## Schedule Guarantees
 
@@ -184,6 +218,7 @@ value (where multiple modes give the same cent, the column says "any").
 | Source | Loan | Monthly P&I | Pmt rounding | Int rounding |
 |---|---|---|---|---|
 | [CFPB H-25(B) sample Closing Disclosure](https://files.consumerfinance.gov/f/201403_cfpb_closing-disclosure_cover-H25B.pdf) | $162,000 / 3.875% / 30yr | $761.78 | `HALF_UP` | `HALF_UP` |
+| [Fannie Mae Multifamily Guide §1103, Tier 2 SARM example](https://mfguide.fanniemae.com/node/5286) ³ | $25,000,000 / 5.5% / 10yr term, 30yr amort, Actual/360 | $141,947.25 + $20,885,505.83 balloon | `HALF_UP` | `HALF_UP` |
 | [MS State Extension P3920](https://extension.msstate.edu/sites/default/files/publications/P3920_web.pdf) | $100,000 / 7% / 30yr | $665.30 | `HALF_UP` | `HALF_UP` |
 | [OpenStax *Contemporary Mathematics* §6.8 — car](https://openstax.org/books/contemporary-mathematics/pages/6-8-the-basics-of-loans) ¹ | $28,500 / 3.99% / 5yr | $524.75 | `ROUND_UP` | `HALF_UP` |
 | [OpenStax *Contemporary Mathematics* §6.8 — home](https://openstax.org/books/contemporary-mathematics/pages/6-8-the-basics-of-loans) ¹ | $136,700 / 5.75% / 15yr | $1,135.18 | `ROUND_UP` | `HALF_UP` |
@@ -209,6 +244,18 @@ residential lenders and corresponds to `ROUND_UP` in `mortgagemath`.
 ² This synthetic loan is constructed so that month-1 unrounded interest
 equals exactly $400.005 — a half-cent boundary that distinguishes
 `HALF_UP` ($400.01) from `HALF_EVEN` ($400.00).
+
+³ The Fannie Mae §1103 worked example covers a Tier 2 SARM Loan: $25M
+principal, 10-year term, 30-year amortization basis, Actual/360, issue
+date 2018-12-01. Fannie Mae publishes a debt service constant
+(6.8134680% × $25M ÷ 12 = $141,947.25 monthly P&I) and an aggregate
+principal amortization of $4,114,494.17 over the 120-month SARM term —
+which implies a balloon of $20,885,505.83 at the end of month 120. The
+library reproduces both anchors exactly with `term_months = 120,
+amortization_period_months = 360, day_count = ACTUAL_360, start_date =
+2018-12-01`. The closed-form annuity formula uses the 30-year basis;
+Fannie Mae does **not** apply a 365/360 rate bump — the day-count
+convention only affects how the schedule accrues interest each month.
 
 Sources investigated but rejected (because at least one published value
 could not be matched exactly) are documented in
