@@ -4,11 +4,12 @@
 
 # mortgagemath
 
-![PyPI](...)
-![Python 3.11+](...)
-![Tests](...)
-![License](...)
-![Downloads](...)
+[![tests](https://github.com/Peach-Homes-LLC/mortgagemath/actions/workflows/tests.yml/badge.svg)](https://github.com/Peach-Homes-LLC/mortgagemath/actions/workflows/tests.yml)
+[![coverage](./coverage.svg)](./coverage.svg)
+[![PyPI](https://img.shields.io/pypi/v/mortgagemath.svg)](https://pypi.org/project/mortgagemath/)
+[![Python 3.11+](https://img.shields.io/pypi/pyversions/mortgagemath.svg)](https://pypi.org/project/mortgagemath/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Downloads](https://static.pepy.tech/badge/mortgagemath/month)](https://pepy.tech/project/mortgagemath)
 
 Cent-accurate mortgage amortization schedules for Python — validated against CFPB, Fannie Mae, textbooks, and real-world published examples.
 
@@ -385,3 +386,5 @@ Do not include property addresses, lender names, or other PII. For
 ## License
 
 MIT
+
+If this saved you time, please star the repo ⭐
