@@ -32,6 +32,18 @@ pip install mortgagemath
 Requires Python 3.11+. Zero runtime dependencies -- only the standard library
 (`decimal`, `dataclasses`, `enum`).
 
+To verify a fresh install reproduces the same reference values the test suite
+validates, run:
+
+```
+python -m mortgagemath
+```
+
+This recomputes a CFPB sample Closing Disclosure, the Goldstein §10.3 Example 1
+carry-precision schedule, and the Fannie Mae §1103 Tier 2 SARM monthly payment
+plus balloon-at-term. Exits 0 if every value matches the published source
+exactly, 1 otherwise.
+
 ## Quick Start
 
 ```python
