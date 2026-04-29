@@ -10,7 +10,7 @@
 [![PyPI](https://img.shields.io/pypi/v/mortgagemath.svg)](https://pypi.org/project/mortgagemath/)
 [![Python 3.11+](https://img.shields.io/pypi/pyversions/mortgagemath.svg)](https://pypi.org/project/mortgagemath/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Downloads](https://static.pepy.tech/badge/mortgagemath/month)](https://pepy.tech/project/mortgagemath)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/mortgagemath?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/mortgagemath)
 
 Cent-accurate mortgage amortization for Python — validated against CFPB, Fannie Mae, and published real-world examples.
 
