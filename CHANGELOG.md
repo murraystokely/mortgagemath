@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.1] - 2026-04-29
 
+### Added
+
+- `python -m mortgagemath` runs a built-in post-install self-check
+  that recomputes a small set of well-known reference values (CFPB
+  H-25(B), Goldstein §10.3 Example 1 carry-precision schedule, and
+  Fannie Mae §1103 monthly P&I + balloon at term) and reports
+  pass/fail. Exits 0 on success, 1 on any mismatch — useful for
+  verifying that a freshly-installed wheel matches the same numbers
+  the test suite validates, without needing to clone the repo.
+- `mortgagemath.__version__` is now sourced from
+  `importlib.metadata.version("mortgagemath")` instead of a
+  hard-coded string, so it always agrees with the installed package
+  metadata.
+
 ### Changed
 
 - PyPI Trove classifier promoted from `Development Status :: 4 - Beta`
