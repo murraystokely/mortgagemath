@@ -12,6 +12,7 @@ value (where multiple modes give the same cent, the column says "any").
 | [CFPB H-25(B) sample Closing Disclosure](https://files.consumerfinance.gov/f/201403_cfpb_closing-disclosure_cover-H25B.pdf) | $162,000 / 3.875% / 30yr | $761.78 | `HALF_UP` | `HALF_UP` |
 | [Fannie Mae Multifamily Guide §1103, Tier 2 SARM example](https://mfguide.fanniemae.com/node/5286) ³ | $25,000,000 / 5.5% / 10yr term, 30yr amort, Actual/360 | $141,947.25 + $20,885,505.83 balloon | `HALF_UP` | `HALF_UP` |
 | [Geltner et al., *Commercial RE Analysis*, Ch 20 Exhibit 20-6 (CPM)](https://s3-eu-west-1.amazonaws.com/s3-euw1-ap-pe-ws4-cws-documents.ri-prod/9781041076391/online-chapters/9781041081197_Online_content.pdf) ⁴ | $1,000,000 / 12% / 30yr | $10,286.13 | `HALF_UP` | `HALF_UP` (carry-precision) |
+| [Goldstein et al., *Finite Mathematics and Its Applications* (12 ed.), §10.3 Ex 1 + Table 1](https://www.pearsonhighered.com/assets/samplechapter/0/1/3/4/0134437764.pdf) ⁵ | $563 / 12% / 5mo | $116.00 | `HALF_UP` | `HALF_UP` (carry-precision) |
 | [MS State Extension P3920](https://extension.msstate.edu/sites/default/files/publications/P3920_web.pdf) | $100,000 / 7% / 30yr | $665.30 | `HALF_UP` | `HALF_UP` |
 | [OpenStax *Contemporary Mathematics* §6.8 — car](https://openstax.org/books/contemporary-mathematics/pages/6-8-the-basics-of-loans) ¹ | $28,500 / 3.99% / 5yr | $524.75 | `ROUND_UP` | `HALF_UP` |
 | [OpenStax *Contemporary Mathematics* §6.8 — home](https://openstax.org/books/contemporary-mathematics/pages/6-8-the-basics-of-loans) ¹ | $136,700 / 5.75% / 15yr | $1,135.18 | `ROUND_UP` | `HALF_UP` |
@@ -62,6 +63,22 @@ arithmetic (`9983.61 + 302.51 = 9983.62 ≠ 10286.13` for row 358;
 returns the mathematically-consistent values; those two rows are
 omitted from the fixture CSV but documented in
 `tests/test_schedule.py::TestGeltnerCPM`.
+
+⁵ Goldstein et al. is a widely-adopted college-level *Finite
+Mathematics and Its Applications* textbook (Pearson, 12th edition).
+Section 10.3 opens with a 5-row amortization "Table 1" before any
+formulas are introduced, so every cell of the schedule is published
+explicitly — interest, principal, and unpaid balance for each of the
+5 months. The library reproduces all 15 cells exactly (plus the
+$116.00 monthly payment and a final balance of zero) under
+`BalanceTracking.CARRY_PRECISION`, the same Excel-default mode that
+matches Geltner above. Section 10.3 Example 2 (a $112,475 / 9% / 30yr
+mortgage with $905.00 monthly P&I) matches the library's monthly
+payment exactly, but its published balances are computed via the
+closed-form annuity present-value formula with the rounded $905
+payment, which drifts a few cents from any row-by-row schedule (3¢ on
+the balance after payment 312); for that reason the per-row anchors
+are not committed.
 
 Sources investigated but rejected (because at least one published value
 could not be matched exactly) are documented in

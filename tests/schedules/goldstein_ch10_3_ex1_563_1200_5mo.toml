@@ -1,0 +1,33 @@
+# Goldstein, Schneider, Lay, Asmar.
+# "Finite Mathematics and Its Applications" (12th ed.), Pearson 2018.
+# Chapter 10 "The Mathematics of Finance," Section 10.3 "Amortization of
+# Loans." Sample chapter posted by the publisher.
+#
+# Example 1 (TV loan): $563 at 12% nominal annual rate compounded
+# monthly, 5-month term, monthly payment $116.00.
+#
+# Section 10.3 opens with Table 1, which prints the full 5-row schedule
+# (interest, principal, unpaid balance) before deriving any formulas.
+# The library reproduces the monthly payment and every cell of every
+# row exactly under BalanceTracking.CARRY_PRECISION + ROUND_HALF_UP.
+# (The textbook's row 4 balance $114.85 is the carry-precision residue;
+# round-each-balance walks to $114.86 and ends with a 1-cent residual.)
+
+[loan]
+principal = "563.00"
+annual_rate = "12"
+term_months = 5
+day_count = "30/360"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+balance_tracking = "carry_precision"
+
+[source]
+kind = "textbook"
+country = "US"
+label = "goldstein_finite_math_ch10_3_ex1"
+url = "https://www.pearsonhighered.com/assets/samplechapter/0/1/3/4/0134437764.pdf"
+notes = "Goldstein et al., Finite Mathematics and Its Applications, 12th ed., Pearson 2018. Section 10.3 Example 1 + Table 1 — full 5-row schedule, every cell published. Library matches all rows exactly with carry-precision."
+
+[expected]
+monthly_payment = "116.00"
