@@ -11,6 +11,7 @@ value (where multiple modes give the same cent, the column says "any").
 |---|---|---|---|---|
 | [CFPB H-25(B) sample Closing Disclosure](https://files.consumerfinance.gov/f/201403_cfpb_closing-disclosure_cover-H25B.pdf) | $162,000 / 3.875% / 30yr | $761.78 | `HALF_UP` | `HALF_UP` |
 | [Fannie Mae Multifamily Guide §1103, Tier 2 SARM example](https://mfguide.fanniemae.com/node/5286) ³ | $25,000,000 / 5.5% / 10yr term, 30yr amort, Actual/360 | $141,947.25 + $20,885,505.83 balloon | `HALF_UP` | `HALF_UP` |
+| [Geltner et al., *Commercial RE Analysis*, Ch 20 Exhibit 20-6 (CPM)](https://s3-eu-west-1.amazonaws.com/s3-euw1-ap-pe-ws4-cws-documents.ri-prod/9781041076391/online-chapters/9781041081197_Online_content.pdf) ⁴ | $1,000,000 / 12% / 30yr | $10,286.13 | `HALF_UP` | `HALF_UP` (carry-precision) |
 | [MS State Extension P3920](https://extension.msstate.edu/sites/default/files/publications/P3920_web.pdf) | $100,000 / 7% / 30yr | $665.30 | `HALF_UP` | `HALF_UP` |
 | [OpenStax *Contemporary Mathematics* §6.8 — car](https://openstax.org/books/contemporary-mathematics/pages/6-8-the-basics-of-loans) ¹ | $28,500 / 3.99% / 5yr | $524.75 | `ROUND_UP` | `HALF_UP` |
 | [OpenStax *Contemporary Mathematics* §6.8 — home](https://openstax.org/books/contemporary-mathematics/pages/6-8-the-basics-of-loans) ¹ | $136,700 / 5.75% / 15yr | $1,135.18 | `ROUND_UP` | `HALF_UP` |
@@ -48,6 +49,19 @@ amortization_period_months = 360, day_count = ACTUAL_360, start_date =
 2018-12-01`. The closed-form annuity formula uses the 30-year basis;
 Fannie Mae does **not** apply a 365/360 rate bump — the day-count
 convention only affects how the schedule accrues interest each month.
+
+⁴ Geltner et al. is a graduate-level commercial real-estate finance
+textbook (lead author MIT-affiliated). Chapter 20 Exhibit 20-6 publishes
+9 specific schedule rows for the Constant-Payment Mortgage example;
+the library reproduces 7 of them exactly under
+`BalanceTracking.CARRY_PRECISION` + `ROUND_HALF_UP`. The 2 unmatched
+rows (358 and 360) contain editorial inconsistencies in the textbook
+where `principal + interest != payment` by 1 cent — verifiable
+arithmetic (`9983.61 + 302.51 = 9983.62 ≠ 10286.13` for row 358;
+`10184.28 + 101.84 = 10286.12 ≠ 10286.13` for row 360). The library
+returns the mathematically-consistent values; those two rows are
+omitted from the fixture CSV but documented in
+`tests/test_schedule.py::TestGeltnerCPM`.
 
 Sources investigated but rejected (because at least one published value
 could not be matched exactly) are documented in

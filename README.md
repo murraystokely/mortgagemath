@@ -101,6 +101,7 @@ Validated against published examples from:
 
 - CFPB sample disclosures
 - Fannie Mae multifamily guides
+- Geltner et al., *Commercial Real Estate Analysis* (graduate CRE finance text)
 - OpenStax textbooks
 - LibreTexts examples
 - Boundary rounding test cases
@@ -156,6 +157,41 @@ and `ROUND_HALF_EVEN` (banker's rounding). The defaults match the conventions
 used in the CFPB sample disclosures and most US residential mortgage servicers
 we have validated against. If your lender uses a different convention, you can
 override them per-loan.
+
+## Balance Tracking
+
+Different sources propagate the running balance between schedule rows
+differently. `mortgagemath` supports both common conventions via the
+`balance_tracking` field on `LoanParams`:
+
+| Mode | Algorithm | Used by |
+|------|-----------|---------|
+| `BalanceTracking.ROUND_EACH` (default) | Each row rounds the balance to cents; next row's interest computes from the rounded balance | Most US residential lenders; CFPB sample disclosures |
+| `BalanceTracking.CARRY_PRECISION` | Unrounded balance carried internally; per-row values rounded for display only | Excel-default; graduate-level CRE finance textbooks (Geltner, LibreTexts, eCampus) |
+
+For long-horizon loans the two algorithms diverge by single-digit cents
+on each row, with the displayed total interest sometimes drifting by a
+few dollars over a 30-year term. Both modes preserve `principal +
+interest == payment` per row and land balance at exactly $0.00 on the
+final row of a fully-amortizing loan.
+
+```python
+from mortgagemath import BalanceTracking, LoanParams, PaymentRounding
+
+# A loan to be compared against a Geltner-style worked schedule
+loan = LoanParams(
+    principal=Decimal("1000000"),
+    annual_rate=Decimal("12"),
+    term_months=360,
+    payment_rounding=PaymentRounding.ROUND_HALF_UP,
+    interest_rounding=PaymentRounding.ROUND_HALF_UP,
+    balance_tracking=BalanceTracking.CARRY_PRECISION,
+)
+```
+
+`ACTUAL_360` schedules always use carry-precision internally (day-counted
+interest accrual is only meaningful with full balance precision); the
+`balance_tracking` field is ignored in that case.
 
 ## Day Count Conventions
 

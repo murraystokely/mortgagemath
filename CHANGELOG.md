@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-26
+
+### Added
+
+- `BalanceTracking` enum and `LoanParams.balance_tracking` field, with
+  values `ROUND_EACH` (the default — US residential lender convention,
+  unchanged from prior releases) and `CARRY_PRECISION` (Excel-default
+  carry-precision: full-precision balance carried internally between
+  rows, per-row figures rounded to cents only for display). Affects
+  30/360 schedules; Actual/360 schedules already used carry-precision
+  unconditionally.
+- Test fixture for the [Geltner et al. *Commercial Real Estate
+  Analysis*](https://s3-eu-west-1.amazonaws.com/s3-euw1-ap-pe-ws4-cws-documents.ri-prod/9781041076391/online-chapters/9781041081197_Online_content.pdf)
+  Chapter 20 Exhibit 20-6 CPM example ($1M / 12% / 30yr → monthly P&I
+  $10,286.13). The library reproduces 7 of the 9 published rows
+  exactly under `BalanceTracking.CARRY_PRECISION`; the two remaining
+  rows contain editorial arithmetic typos in the textbook itself
+  (verified: `principal + interest != payment` in the published
+  values). See `docs/accuracy.md` and
+  `tests/test_schedule.py::TestGeltnerCPM`.
+
 ## [0.1.1] - 2026-04-29
 
 ### Fixed

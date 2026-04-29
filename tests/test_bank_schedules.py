@@ -8,6 +8,7 @@ from datetime import date
 from decimal import Decimal
 
 from mortgagemath import (
+    BalanceTracking,
     DayCount,
     LoanParams,
     PaymentRounding,
@@ -22,6 +23,7 @@ def _loan_from_toml(toml_data: dict) -> LoanParams:
     start_date = loan.get("start_date")
     if isinstance(start_date, str):
         start_date = date.fromisoformat(start_date)
+    balance_tracking_str = loan.get("balance_tracking", "round_each")
     return LoanParams(
         principal=Decimal(loan["principal"]),
         annual_rate=Decimal(loan["annual_rate"]),
@@ -31,6 +33,7 @@ def _loan_from_toml(toml_data: dict) -> LoanParams:
         interest_rounding=PaymentRounding(loan["interest_rounding"]),
         start_date=start_date,
         amortization_period_months=loan.get("amortization_period_months"),
+        balance_tracking=BalanceTracking(balance_tracking_str),
     )
 
 

@@ -52,6 +52,31 @@ class PaymentRounding(Enum):
     ROUND_HALF_EVEN = "ROUND_HALF_EVEN"
 
 
+class BalanceTracking(Enum):
+    """How the running balance is tracked between schedule rows.
+
+    ROUND_EACH (the default) is how most US residential lender statements
+    are computed: each month's balance is rounded to cents, and next
+    month's interest is computed from that rounded balance.  Validated
+    against CFPB sample disclosures and most published bank statements.
+
+    CARRY_PRECISION carries the unrounded balance internally between rows
+    and rounds only for display.  This is the Excel-default behavior and
+    the convention used by graduate-level CRE finance textbooks (Geltner
+    et al., LibreTexts Olivier, eCampus Ontario).  For long-horizon loans
+    the two algorithms diverge by single-digit cents at each row, with
+    the displayed total interest sometimes drifting by a few dollars
+    over a 30-year term.
+
+    The ACTUAL_360 day-count always uses CARRY_PRECISION internally
+    regardless of this field, because day-counted interest accrual is
+    only meaningful with full balance precision.
+    """
+
+    ROUND_EACH = "round_each"
+    CARRY_PRECISION = "carry_precision"
+
+
 @dataclass(frozen=True, slots=True)
 class LoanParams:
     """Parameters defining a fixed-rate mortgage.
@@ -89,6 +114,13 @@ class LoanParams:
             basis is expressed as ``term_months=120,
             amortization_period_months=360``; the published balloon at
             term 120 is $20,885,505.83.
+        balance_tracking: How the running balance propagates between
+            rows. ``ROUND_EACH`` (default) is the round-each-month
+            convention used by US residential lenders and validated
+            against CFPB sample disclosures. ``CARRY_PRECISION`` is the
+            Excel-default convention used by graduate-level CRE finance
+            textbooks (Geltner, LibreTexts, eCampus). Ignored for
+            ACTUAL_360 day count, which always uses carry-precision.
     """
 
     principal: Decimal
@@ -99,6 +131,7 @@ class LoanParams:
     interest_rounding: PaymentRounding = PaymentRounding.ROUND_HALF_UP
     start_date: date | None = None
     amortization_period_months: int | None = None
+    balance_tracking: BalanceTracking = BalanceTracking.ROUND_EACH
 
     @property
     def _amort_periods(self) -> int:
