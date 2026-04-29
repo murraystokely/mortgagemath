@@ -6,6 +6,26 @@ from decimal import Decimal
 from enum import Enum
 
 
+class EarlyPayoffWarning(UserWarning):
+    """Schedule terminated before ``term_months`` due to rounding overpayment.
+
+    For very small principals, the cent-rounded monthly payment can overpay
+    the closed-form value by enough that the schedule fully amortizes before
+    the requested term.  When this happens, ``amortization_schedule`` truncates
+    the schedule at the actual payoff month (with the final row trued up to
+    land balance at exactly zero) and emits this warning.
+
+    Filter via the standard :mod:`warnings` machinery::
+
+        import warnings
+        from mortgagemath import EarlyPayoffWarning
+
+        warnings.filterwarnings("ignore", category=EarlyPayoffWarning)
+        # or, to promote it to an exception:
+        warnings.simplefilter("error", EarlyPayoffWarning)
+    """
+
+
 class DayCount(Enum):
     """Day-count convention for interest calculation.
 

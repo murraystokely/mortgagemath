@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-04-29
+
+### Fixed
+
+- `amortization_schedule()` no longer walks the balance past zero for
+  very small principals.  When 30/360 round-each-balance accounting
+  amortizes a loan before `term_months` due to monthly payment
+  rounding overpayment, the schedule is now truncated at the actual
+  payoff month with the final row trued up to land balance at exactly
+  `$0.00`.  Reference example: `$20 / 4.4% / 30yr` previously produced
+  360 rows with the balance walking from `$0.02` (month 300) through
+  `−$7.18` (month 359) before a `−$7.21` "payment" trued it up; it now
+  produces 302 rows ending cleanly at month 301.
+
+### Added
+
+- `EarlyPayoffWarning` (a `UserWarning` subclass) is emitted when the
+  schedule truncates due to rounding overpayment.  Filterable via the
+  standard `warnings` module.  Exported from the top-level package.
+
 ## [0.1.0] - 2026-04-28
 
 First public release.

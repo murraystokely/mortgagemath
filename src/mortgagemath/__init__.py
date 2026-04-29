@@ -6,12 +6,19 @@ Zero runtime dependencies — only the standard library.
 
 from mortgagemath._payment import monthly_payment
 from mortgagemath._schedule import amortization_schedule
-from mortgagemath._types import DayCount, Installment, LoanParams, PaymentRounding
+from mortgagemath._types import (
+    DayCount,
+    EarlyPayoffWarning,
+    Installment,
+    LoanParams,
+    PaymentRounding,
+)
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 __all__ = [
     "DayCount",
+    "EarlyPayoffWarning",
     "Installment",
     "LoanParams",
     "PaymentRounding",
