@@ -1,5 +1,6 @@
 """Structural invariant tests for amortization_schedule()."""
 
+import warnings
 from datetime import date
 from decimal import Decimal
 
@@ -7,6 +8,7 @@ import pytest
 
 from mortgagemath import (
     DayCount,
+    EarlyPayoffWarning,
     LoanParams,
     PaymentRounding,
     amortization_schedule,
@@ -228,3 +230,107 @@ class TestScheduleEdgeCases:
         b = amortization_schedule(LoanParams(**common, amortization_period_months=360))
         for ia, ib in zip(a, b, strict=True):
             assert ia == ib
+
+
+class TestEarlyPayoffFromRounding:
+    """Tiny principals can pay off early because ROUND_UP overpays each month.
+
+    Reference example: $20 / 4.4% / 30yr.
+
+    * Closed-form monthly P&I is $0.100152.
+    * ROUND_UP rounds it to $0.11.
+    * That extra $0.0098/month accumulates: by month 300 the balance is
+      $0.02; the standard $0.11 payment in month 301 would drive the
+      balance to -$0.09.
+    * With round-each-balance accounting (30/360), nothing in the math
+      catches this — without the early-payoff guard the schedule keeps
+      generating $0.11 payments against an ever-more-negative balance
+      out to month 360.
+
+    The library now detects this, truncates the schedule with the final
+    row trued up to land balance at exactly $0.00, and emits an
+    :class:`EarlyPayoffWarning`.
+    """
+
+    LOAN = LoanParams(
+        principal=Decimal("20"),
+        annual_rate=Decimal("4.4"),
+        term_months=360,
+    )
+
+    def test_emits_warning(self):
+        with pytest.warns(EarlyPayoffWarning, match="paid off at month"):
+            amortization_schedule(self.LOAN)
+
+    def test_schedule_truncates_before_term(self):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", EarlyPayoffWarning)
+            sched = amortization_schedule(self.LOAN)
+        # term + 1 = 361.  Early payoff produces a strictly shorter schedule.
+        assert len(sched) < 361
+        # Pinned: at the documented per-month overpayment ($0.0098), the loan
+        # amortizes at month 301 — well before the 360-month term.
+        assert sched[-1].number == 301
+
+    def test_final_balance_is_exactly_zero(self):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", EarlyPayoffWarning)
+            sched = amortization_schedule(self.LOAN)
+        assert sched[-1].balance == Decimal("0.00")
+
+    def test_balance_decreases_monotonically(self):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", EarlyPayoffWarning)
+            sched = amortization_schedule(self.LOAN)
+        # No row may walk past zero — that was the symptom of the bug.
+        for i in range(1, len(sched)):
+            assert sched[i].balance < sched[i - 1].balance
+            assert sched[i].balance >= Decimal("0.00")
+
+    def test_principal_plus_interest_equals_payment(self):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", EarlyPayoffWarning)
+            sched = amortization_schedule(self.LOAN)
+        for inst in sched[1:]:
+            assert inst.principal + inst.interest == inst.payment
+
+    def test_total_principal_equals_original_amount(self):
+        """Even truncated, the sum of principal payments equals principal."""
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", EarlyPayoffWarning)
+            sched = amortization_schedule(self.LOAN)
+        total = sum(inst.principal for inst in sched[1:])
+        assert total == self.LOAN.principal
+
+    def test_final_payment_is_partial(self):
+        """The truncating row is a partial payment, not the standard $0.11."""
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", EarlyPayoffWarning)
+            sched = amortization_schedule(self.LOAN)
+        last = sched[-1]
+        assert last.payment < Decimal("0.11")
+        assert last.payment > Decimal("0.00")
+
+    def test_round_half_up_avoids_truncation(self):
+        """ROUND_HALF_UP doesn't overpay every month, so no early payoff."""
+        loan = LoanParams(
+            principal=Decimal("20"),
+            annual_rate=Decimal("4.4"),
+            term_months=360,
+            payment_rounding=PaymentRounding.ROUND_HALF_UP,
+        )
+        with warnings.catch_warnings():
+            # If a warning leaked we'd want to know — make it an error.
+            warnings.simplefilter("error", EarlyPayoffWarning)
+            sched = amortization_schedule(loan)
+        # ROUND_HALF_UP rounds $0.100152 → $0.10; loan never fully amortizes
+        # at that payment, so the final payment trues up at month 360.
+        assert len(sched) == 361
+
+    def test_warning_is_filterable(self):
+        """Standard warnings filtering should suppress the warning."""
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=EarlyPayoffWarning)
+            # No warning should propagate; the schedule still truncates.
+            sched = amortization_schedule(self.LOAN)
+        assert sched[-1].balance == Decimal("0.00")

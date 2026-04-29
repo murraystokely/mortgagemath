@@ -2,10 +2,17 @@
 
 import calendar
 import decimal
+import warnings
 from decimal import Decimal
 
 from mortgagemath._payment import monthly_payment
-from mortgagemath._types import DayCount, Installment, LoanParams, PaymentRounding
+from mortgagemath._types import (
+    DayCount,
+    EarlyPayoffWarning,
+    Installment,
+    LoanParams,
+    PaymentRounding,
+)
 
 _PENNY = Decimal("0.01")
 _ZERO = Decimal("0.00")
@@ -43,6 +50,12 @@ def amortization_schedule(loan: LoanParams) -> list[Installment]:
     Both modes guarantee ``principal + interest == payment`` for every
     installment and a final balance of exactly ``$0.00``.
 
+    For very small principals the cent-rounded monthly payment can
+    overpay the closed-form value by enough that the loan amortizes
+    before the requested term.  In that case the schedule is truncated
+    at the actual payoff month and an :class:`EarlyPayoffWarning` is
+    emitted; ``len(schedule)`` will be smaller than ``term_months + 1``.
+
     Args:
         loan: Loan parameters.
 
@@ -54,6 +67,11 @@ def amortization_schedule(loan: LoanParams) -> list[Installment]:
         ValueError: If principal or term_months is not positive, the
             day_count is unsupported, or ACTUAL_360 is requested without
             a start_date.
+
+    Warns:
+        EarlyPayoffWarning: When 30/360 round-each-balance accounting
+            amortizes the loan before ``term_months`` due to monthly
+            payment overpayment from rounding.
     """
     if loan.day_count == DayCount.THIRTY_360:
         return _schedule_thirty_360(loan)
@@ -91,8 +109,19 @@ def _schedule_thirty_360(loan: LoanParams) -> list[Installment]:
     for i in range(1, loan.term_months + 1):
         interest = (balance * monthly_rate).quantize(_PENNY, rounding=interest_rounding)
 
-        if i == loan.term_months and fully_amortizing:
-            # Final payment of a fully amortizing loan: zero out balance.
+        is_scheduled_final = i == loan.term_months and fully_amortizing
+        # Round-each-balance accounting can pay off a tiny loan early.
+        # Example: $20 / 4.4% / 30yr.  The closed-form payment is $0.10018,
+        # ROUND_UP rounds it to $0.11.  That extra $0.0098/month
+        # accumulates over the schedule; balance crosses zero at month 301
+        # instead of 360.  Without the guard below the schedule kept
+        # generating $0.11 payments against a now-negative balance.  When
+        # the standard payment would amortize the remaining balance in
+        # this row, we treat it as an early payoff: pay exactly the
+        # remaining balance + interest, land balance at $0, truncate.
+        will_pay_off_early = (not is_scheduled_final) and (pmt - interest >= balance)
+
+        if is_scheduled_final or will_pay_off_early:
             principal_pmt = balance
             actual_pmt = principal_pmt + interest
         else:
@@ -112,6 +141,18 @@ def _schedule_thirty_360(loan: LoanParams) -> list[Installment]:
                 balance=balance,
             )
         )
+
+        if will_pay_off_early:
+            warnings.warn(
+                f"Loan paid off at month {i} of term_months={loan.term_months}; "
+                f"schedule truncated. The {loan.payment_rounding.value} monthly "
+                f"payment of {pmt} overpays the closed-form value enough to "
+                f"amortize the loan early. For very small principals, consider "
+                f"PaymentRounding.ROUND_HALF_UP.",
+                EarlyPayoffWarning,
+                stacklevel=2,
+            )
+            break
 
     return schedule
 
