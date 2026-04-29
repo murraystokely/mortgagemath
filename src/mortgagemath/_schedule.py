@@ -7,6 +7,7 @@ from decimal import Decimal
 
 from mortgagemath._payment import monthly_payment
 from mortgagemath._types import (
+    BalanceTracking,
     DayCount,
     EarlyPayoffWarning,
     Installment,
@@ -86,6 +87,12 @@ def amortization_schedule(loan: LoanParams) -> list[Installment]:
 
 
 def _schedule_thirty_360(loan: LoanParams) -> list[Installment]:
+    if loan.balance_tracking == BalanceTracking.CARRY_PRECISION:
+        return _schedule_thirty_360_carry_precision(loan)
+    return _schedule_thirty_360_round_each(loan)
+
+
+def _schedule_thirty_360_round_each(loan: LoanParams) -> list[Installment]:
     pmt = monthly_payment(loan)
     interest_rounding = _ROUNDING_MAP[loan.interest_rounding]
     monthly_rate = loan.annual_rate / Decimal("1200")
@@ -153,6 +160,77 @@ def _schedule_thirty_360(loan: LoanParams) -> list[Installment]:
                 stacklevel=2,
             )
             break
+
+    return schedule
+
+
+def _schedule_thirty_360_carry_precision(loan: LoanParams) -> list[Installment]:
+    """30/360 schedule with full-precision balance carried between rows.
+
+    Excel-default convention used by graduate-level CRE finance textbooks:
+    the unrounded closed-form payment and unrounded per-row interest are
+    carried internally; per-row displayed values are rounded to cents.
+    Per-row ``principal + interest == payment`` invariant still holds; the
+    final payment may differ from the regular payment by 1-2 cents to
+    land balance at exactly $0.00.
+    """
+    interest_rounding = _ROUNDING_MAP[loan.interest_rounding]
+    monthly_rate = loan.annual_rate / Decimal("1200")
+
+    # Validate via monthly_payment (enforces guards) and reuse rounded display.
+    pmt_disp = monthly_payment(loan)
+
+    # Unrounded closed-form payment, carried internally.
+    n = loan._amort_periods
+    factor = (1 + monthly_rate) ** n
+    pmt_raw = (loan.principal * monthly_rate * factor) / (factor - 1)
+
+    fully_amortizing = loan.amortization_period_months is None or (
+        loan.amortization_period_months == loan.term_months
+    )
+
+    balance = loan.principal  # full-precision Decimal
+    total_interest_disp = _ZERO
+
+    schedule: list[Installment] = [
+        Installment(
+            number=0,
+            payment=_ZERO,
+            interest=_ZERO,
+            principal=_ZERO,
+            total_interest=_ZERO,
+            balance=balance,
+        )
+    ]
+
+    for i in range(1, loan.term_months + 1):
+        interest_raw = balance * monthly_rate
+        interest_disp = interest_raw.quantize(_PENNY, rounding=interest_rounding)
+
+        if i == loan.term_months and fully_amortizing:
+            # Final payment of a fully amortizing loan: zero balance exactly.
+            principal_disp = balance.quantize(_PENNY, rounding=interest_rounding)
+            actual_pmt = principal_disp + interest_disp
+            balance = _ZERO
+            balance_disp = _ZERO
+        else:
+            actual_pmt = pmt_disp
+            principal_disp = pmt_disp - interest_disp
+            balance -= pmt_raw - interest_raw  # carry full precision
+            balance_disp = balance.quantize(_PENNY, rounding=interest_rounding)
+
+        total_interest_disp += interest_disp
+
+        schedule.append(
+            Installment(
+                number=i,
+                payment=actual_pmt,
+                interest=interest_disp,
+                principal=principal_disp,
+                total_interest=total_interest_disp,
+                balance=balance_disp,
+            )
+        )
 
     return schedule
 

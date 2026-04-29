@@ -3,10 +3,12 @@
 import warnings
 from datetime import date
 from decimal import Decimal
+from typing import ClassVar
 
 import pytest
 
 from mortgagemath import (
+    BalanceTracking,
     DayCount,
     EarlyPayoffWarning,
     LoanParams,
@@ -334,3 +336,151 @@ class TestEarlyPayoffFromRounding:
             # No warning should propagate; the schedule still truncates.
             sched = amortization_schedule(self.LOAN)
         assert sched[-1].balance == Decimal("0.00")
+
+
+class TestCarryPrecisionInvariants:
+    """Same parametric invariants as TestScheduleInvariants, but with the
+    Excel-default carry-precision balance-tracking mode."""
+
+    @pytest.mark.parametrize("principal, rate, term", LOAN_PARAMS)
+    def test_principal_plus_interest_equals_payment(self, principal, rate, term):
+        loan = LoanParams(
+            principal=principal,
+            annual_rate=rate,
+            term_months=term,
+            balance_tracking=BalanceTracking.CARRY_PRECISION,
+        )
+        for inst in amortization_schedule(loan)[1:]:
+            assert inst.principal + inst.interest == inst.payment
+
+    @pytest.mark.parametrize("principal, rate, term", LOAN_PARAMS)
+    def test_final_balance_is_zero(self, principal, rate, term):
+        loan = LoanParams(
+            principal=principal,
+            annual_rate=rate,
+            term_months=term,
+            balance_tracking=BalanceTracking.CARRY_PRECISION,
+        )
+        sched = amortization_schedule(loan)
+        assert sched[-1].balance == Decimal("0.00")
+
+    @pytest.mark.parametrize("principal, rate, term", LOAN_PARAMS)
+    def test_balance_decreases_monotonically(self, principal, rate, term):
+        loan = LoanParams(
+            principal=principal,
+            annual_rate=rate,
+            term_months=term,
+            balance_tracking=BalanceTracking.CARRY_PRECISION,
+        )
+        sched = amortization_schedule(loan)
+        for i in range(1, len(sched)):
+            assert sched[i].balance < sched[i - 1].balance
+
+    @pytest.mark.parametrize("principal, rate, term", LOAN_PARAMS)
+    def test_total_interest_accumulates(self, principal, rate, term):
+        loan = LoanParams(
+            principal=principal,
+            annual_rate=rate,
+            term_months=term,
+            balance_tracking=BalanceTracking.CARRY_PRECISION,
+        )
+        sched = amortization_schedule(loan)
+        running = Decimal("0.00")
+        for inst in sched[1:]:
+            running += inst.interest
+            assert inst.total_interest == running
+
+    @pytest.mark.parametrize("principal, rate, term", LOAN_PARAMS)
+    def test_modes_agree_on_payment_interest_principal_at_row_1(self, principal, rate, term):
+        """Both modes produce identical payment, interest, and principal at
+        row 1. The displayed balance can differ by fractional cents because
+        round-each updates by ``principal - round(principal_pmt)`` while
+        carry-precision updates by ``principal - (raw_pmt - raw_interest)``;
+        the gap is bounded above by half a cent."""
+        common = dict(principal=principal, annual_rate=rate, term_months=term)
+        a = amortization_schedule(LoanParams(**common))[1]
+        b = amortization_schedule(
+            LoanParams(**common, balance_tracking=BalanceTracking.CARRY_PRECISION)
+        )[1]
+        assert a.payment == b.payment
+        assert a.interest == b.interest
+        assert a.principal == b.principal
+        assert abs(a.balance - b.balance) <= Decimal("0.01")
+
+
+class TestGeltnerCPM:
+    """Validate against Geltner et al., *Commercial Real Estate Analysis*
+    (Routledge online supplement 9781041081197), Chapter 20 Exhibit 20-6.
+
+    Loan parameters: $1M / 12% / 30yr CPM. Geltner publishes 9 specific
+    rows. The library reproduces 7 of them exactly under
+    BalanceTracking.CARRY_PRECISION + ROUND_HALF_UP rounding.
+
+    Two of Geltner's published rows contain editorial inconsistencies
+    where the printed table violates ``principal + interest == payment``
+    (verifiable arithmetic):
+
+      Row 358: PMT=$10,286.13, INT=$302.51, AMORT=$9,983.61.
+                $9,983.61 + $302.51 = $9,983.62 ≠ $10,286.13.
+      Row 360: PMT=$10,286.13, INT=$101.84, AMORT=$10,184.28.
+                $10,184.28 + $101.84 = $10,286.12 ≠ $10,286.13.
+
+    The library cannot match those two cells without breaking the
+    invariant; library values are mathematically correct.
+    """
+
+    LOAN = LoanParams(
+        principal=Decimal("1000000"),
+        annual_rate=Decimal("12"),
+        term_months=360,
+        payment_rounding=PaymentRounding.ROUND_HALF_UP,
+        interest_rounding=PaymentRounding.ROUND_HALF_UP,
+        balance_tracking=BalanceTracking.CARRY_PRECISION,
+    )
+
+    # The 7 rows where every published cell matches every library cell.
+    PUBLISHED_ROWS: ClassVar[list[tuple[int, str, str, str, str]]] = [
+        # (n, payment, principal, interest, balance)
+        (1, "10286.13", "286.13", "10000.00", "999713.87"),
+        (2, "10286.13", "288.99", "9997.14", "999424.89"),
+        (3, "10286.13", "291.88", "9994.25", "999133.01"),
+        (180, "10286.13", "1698.57", "8587.56", "857057.13"),
+        (291, "10286.13", "5125.73", "5160.40", "510913.93"),
+        (292, "10286.13", "5176.99", "5109.14", "505736.94"),
+        (359, "10286.13", "10083.45", "202.68", "10184.28"),
+    ]
+
+    def test_monthly_payment(self):
+        from mortgagemath import monthly_payment
+
+        assert monthly_payment(self.LOAN) == Decimal("10286.13")
+
+    @pytest.mark.parametrize("n, pmt, prn, intr, bal", PUBLISHED_ROWS)
+    def test_published_row(self, n, pmt, prn, intr, bal):
+        sched = amortization_schedule(self.LOAN)
+        inst = sched[n]
+        assert inst.payment == Decimal(pmt)
+        assert inst.principal == Decimal(prn)
+        assert inst.interest == Decimal(intr)
+        assert inst.balance == Decimal(bal)
+
+    def test_textbook_row_358_typo(self):
+        """Geltner publishes AMORT=$9,983.61 but $10,286.13 - $302.51 = $9,983.62.
+        Library returns the mathematically correct $9,983.62."""
+        sched = amortization_schedule(self.LOAN)
+        inst = sched[358]
+        # Mathematically correct values (these don't match Geltner's row 358 AMORT).
+        assert inst.payment == Decimal("10286.13")
+        assert inst.interest == Decimal("302.51")
+        assert inst.principal == Decimal("9983.62")  # NOT 9983.61 as printed
+        assert inst.balance == Decimal("20267.73")
+
+    def test_textbook_row_360_typo(self):
+        """Geltner publishes PMT=$10,286.13 but $10,184.28 + $101.84 = $10,286.12.
+        Library returns the mathematically correct $10,286.12."""
+        sched = amortization_schedule(self.LOAN)
+        inst = sched[360]
+        assert inst.payment == Decimal("10286.12")  # NOT 10286.13 as printed
+        assert inst.interest == Decimal("101.84")
+        assert inst.principal == Decimal("10184.28")
+        assert inst.balance == Decimal("0.00")

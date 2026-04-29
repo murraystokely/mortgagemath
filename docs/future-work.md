@@ -74,70 +74,50 @@ divergences that could mask real bugs.
 
 ## Possible future work
 
-- Investigate whether a configurable `BalanceTracking.CARRY_PRECISION`
-  mode could be designed to match the LibreTexts dishwasher schedule
-  (or any other authoritative source whose algorithm is fully
-  specified). Past investigation rejected this — the textbooks we
-  could read used per-line reconciliations we could not pin down — but
-  the case has strengthened: **three independent textbooks** now use
-  Excel-default carry-precision and the library's round-each-balance
-  cannot reproduce them at the row level. See "Carry-precision
-  textbooks" below.
 - Investigate semi-annual / annual compounding to support Canadian
   mortgages and certain bond/annuity examples.
 - See "Actual/360 commercial loans" below.
-- See "Carry-precision textbooks" below.
+- See "Carry-precision textbooks" below for sources that still don't
+  match even with `BalanceTracking.CARRY_PRECISION`.
 
 ## Carry-precision textbooks
 
-Three independent open / published textbooks all express their worked
-amortization examples in Excel-default **carry-precision** form
-(unrounded balance carried internally between rows; per-row figures
-rounded to cents only for display). The library uses round-each-balance,
-matching how most US residential lenders' statements are actually
-printed. The two algorithms differ at row 2 onward and the gap
-accumulates.
+`BalanceTracking.CARRY_PRECISION` shipped in v0.2 — the unrounded
+balance is carried internally between rows and per-row figures are
+rounded to cents only for display. This matches how Excel's
+`PMT`/`IPMT`/`PPMT` worksheet model and most graduate-level CRE
+finance textbooks compute amortization. The library's default
+remains `BalanceTracking.ROUND_EACH`, matching how most US
+residential lenders' statements are printed.
 
-The three sources, in order of authority:
+**Validated against:**
 
 - **Geltner et al., *Commercial Real Estate Analysis for Investment,
   Finance, and Development*** (Routledge, online supplement
   9781041081197, Chapter 20 "Mortgage Basics II"). The graduate-level
   CRE finance textbook (lead author MIT-affiliated). Worked CPM
-  example: $1M / 12% / 30yr → monthly P&I $10,286.13 (matches
-  library exactly), Exhibit 20-6 publishes 9 specific rows; carry-
-  precision matches 7 of 8 published-and-not-row-1 rows; library's
-  round-each-balance matches only row 1. The chapter also
-  references a $1M / 8% / 30yr loan with monthly P&I $7,337.65
-  (matches) and OLB at month 120 of $877,247 (library gives
-  $877,246.25, off $1 even when rounded to dollars), and a refinance
-  loan $991,348 / 7% / 30yr with monthly P&I $6,595.46 (matches)
-  and OLB at month 72 of $918,896 (library $918,896.11).
+  example: $1M / 12% / 30yr → monthly P&I $10,286.13 and 7 of 9
+  published Exhibit 20-6 rows match exactly with
+  `BalanceTracking.CARRY_PRECISION`. The 2 unmatched rows (358 and
+  360) contain editorial arithmetic typos in the textbook itself.
+  See `tests/schedules/geltner_ch20_cpm_1m_1200_360mo.{toml,csv}`
+  and `docs/accuracy.md`.
+
+**Still investigated but not matching even with carry-precision:**
 
 - **LibreTexts Business Math** (Olivier), §13.03 "Tamara's dishwasher
-  loan." Already documented above.
-
-- **eCampus Ontario *Mathematics of Finance*** Example 4.3.4. Already
-  documented above.
-
-What this implies for the design question: the previous decision to
-defer `BalanceTracking.CARRY_PRECISION` was made when only the
-LibreTexts dishwasher example surfaced, and the textbook's per-line
-"missing pennies" reconciliation could not be pinned down precisely.
-Geltner is much cleaner — Excel `PMT(rate, n, PV)` and the four
-standard amortization rules with full-precision balance accumulation.
-A simulation of Convention A (carry-precision balance, rounded
-display) reproduces 7 of 8 Geltner Exhibit 20-6 rows exactly; the
-8th is a 1-cent rounding-noise drift, plus a final-row inconsistency
-inside Geltner's own published values (PMT shown $10,286.13 but
-P + I sums to $10,286.12).
-
-If a `BalanceTracking.CARRY_PRECISION` mode is added in a future
-release, the Geltner CPM example becomes a strong validation fixture
-(probably with the 8th-row 1-cent gap still documented, since it's
-inside the textbook's own rounding). That would unlock both Geltner
-and the previously-investigated LibreTexts/eCampus examples in a
-single feature.
+  loan" ($895.94 / 5.9% / 6mo). Carry-precision matches the monthly
+  payment and total interest; per-row figures still diverge because
+  the textbook's algorithm includes a per-line "missing pennies"
+  reconciliation that we could not reverse-engineer from the
+  published prose. Not committed as a fixture.
+- **eCampus Ontario *Mathematics of Finance*** Example 4.3.4
+  ($308,000 / 4.62% / 180mo). Carry-precision matches the monthly
+  payment; the published "balance after payment 20" still differs by
+  a single cent ($283,323.39 published vs $283,323.40 computed).
+  Likely an editorial rounding inside the textbook — close enough
+  that the per-row tables would mostly match, but not committed as a
+  fixture per the "every published value exact" rule.
 
 ## Actual/360 commercial loans
 

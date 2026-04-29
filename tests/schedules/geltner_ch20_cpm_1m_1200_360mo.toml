@@ -1,0 +1,42 @@
+# Geltner, Miller, van de Minne, Eichholtz, Lindenthal, and Shen.
+# "Commercial Real Estate Analysis for Investment, Finance, and Development."
+# Routledge online supplement (ISBN 9781041081197), Chapter 20:
+# "Mortgage Basics II — Payments, Yields, and Values."
+# Exhibit 20-6: Constant-Payment Mortgage (CPM).
+#
+# Loan: $1,000,000 at 12% nominal annual rate, 30-year term, monthly
+# payments. Schedule reproduced under
+# BalanceTracking.CARRY_PRECISION + ROUND_HALF_UP rounding (Geltner uses
+# Excel-default carry-precision throughout the worked examples).
+#
+# Anchored values from the published exhibit: monthly P&I $10,286.13
+# plus 9 specific schedule rows. The library matches monthly_payment
+# and 7 of 9 rows exactly; CSV below contains those 7. The remaining 2
+# (rows 358 and 360) contain editorial inconsistencies in the textbook
+# itself where `principal + interest != payment` by 1 cent. The
+# library's mathematically-consistent values for those rows are
+# documented in test_schedule.py::TestGeltnerCPM. Specifically:
+#
+#   Row 358: textbook PMT=$10,286.13, INT=$302.51, AMORT=$9,983.61.
+#            $9,983.61 + $302.51 = $9,983.62 ≠ $10,286.13.
+#   Row 360: textbook PMT=$10,286.13, INT=$101.84, AMORT=$10,184.28.
+#            $10,184.28 + $101.84 = $10,286.12 ≠ $10,286.13.
+
+[loan]
+principal = "1000000.00"
+annual_rate = "12"
+term_months = 360
+day_count = "30/360"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+balance_tracking = "carry_precision"
+
+[source]
+kind = "textbook"
+country = "US"
+label = "geltner_ch20_exhibit_20_6_cpm"
+url = "https://s3-eu-west-1.amazonaws.com/s3-euw1-ap-pe-ws4-cws-documents.ri-prod/9781041076391/online-chapters/9781041081197_Online_content.pdf"
+notes = "Geltner et al. graduate-level CRE finance text (Routledge online supplement). Exhibit 20-6 publishes 9 specific rows; library reproduces 7 exactly. The 2 omitted rows (358 and 360) contain textbook-side arithmetic inconsistencies documented in TestGeltnerCPM."
+
+[expected]
+monthly_payment = "10286.13"
