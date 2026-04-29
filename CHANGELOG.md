@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-04-29
+
+### Changed
+
+- PyPI Trove classifier promoted from `Development Status :: 4 - Beta`
+  to `Development Status :: 5 - Production/Stable`. The library has
+  been validated against every published source it ships fixtures for
+  (CFPB H-25(B), Fannie Mae §1103, Geltner CRE textbook, Goldstein
+  *Finite Mathematics*, OpenStax, Las Positas, MS State Extension, and
+  synthetic boundary cases), exposes a stable public API, and is
+  on-channel via PyPI and conda-forge.
+
 ## [0.2.0] - 2026-04-29
 
 Add support for Excel-style carry-precision balance tracking and adds
