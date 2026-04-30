@@ -46,6 +46,26 @@ condition and how the expected values were independently verified.
 | `balance_tracking` | `"round_each"` (default) or `"carry_precision"` | Round-each-balance is the US-residential-lender convention; carry-precision is Excel-default and used by graduate CRE finance textbooks. Ignored for `actual/360` (always carry-precision). |
 | `compounding` | `"monthly"` (default), `"semi_annual"`, or `"annual"` | How the annual rate compounds. `"semi_annual"` is the Canadian *Interest Act* §6 convention — quoted `j_2` is per year compounded semi-annually. |
 | `payment_frequency` | `"monthly"` (default), `"semi_monthly"`, `"biweekly"`, `"weekly"`, `"quarterly"`, `"annual"` | Cadence of payments. `term_months * payments_per_year` must be divisible by 12. |
+| `rate_schedule` | array of tables (optional) | ARM rate-change schedule; see below. |
+
+#### `[[loan.rate_schedule]]` (ARMs)
+
+Optional array-of-tables for adjustable-rate mortgages.  Each entry
+declares one rate change:
+
+```toml
+[[loan.rate_schedule]]
+effective_payment_number = 61   # 1-indexed; new rate applies starting at this payment
+new_annual_rate = "7.2"         # Decimal string — quote like `annual_rate`
+recast = true                   # optional, default true; false keeps prior level payment
+```
+
+Constraints (validated by ``LoanParams.__post_init__``): entries must
+have ``effective_payment_number >= 2``, strictly increasing, and
+``<= total_payments``.  ARM is currently restricted to
+``day_count = "30/360"`` and to fully-amortizing loans
+(``amortization_period_months`` either omitted or equal to
+``term_months``).
 
 ### `[expected]` (required)
 

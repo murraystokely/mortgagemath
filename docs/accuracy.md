@@ -11,6 +11,7 @@ value (where multiple modes give the same cent, the column says "any").
 |---|---|---|---|---|
 | [CFPB H-25(B) sample Closing Disclosure](https://files.consumerfinance.gov/f/201403_cfpb_closing-disclosure_cover-H25B.pdf) | $162,000 / 3.875% / 30yr | $761.78 | `HALF_UP` | `HALF_UP` |
 | [Fannie Mae Multifamily Guide §1103, Tier 2 SARM example](https://mfguide.fanniemae.com/node/5286) ³ | $25,000,000 / 5.5% / 10yr term, 30yr amort, Actual/360 | $141,947.25 + $20,885,505.83 balloon | `HALF_UP` | `HALF_UP` |
+| [Reg Z, 12 CFR Part 1026, Appendix H, Sample H-14 (Variable-Rate Mortgage)](https://www.ecfr.gov/current/title-12/chapter-X/part-1026/appendix-Appendix%20H%20to%20Part%201026) ⁷ | $10,000 / 17.41% initial / 30yr 1/1 ARM (1-yr CMT + 3pp, 2pp annual cap, 5pp lifetime cap) | $145.90 + 14 annual recasts through year 15 | `HALF_UP` | `HALF_UP` |
 | [Geltner et al., *Commercial RE Analysis*, Ch 20 Exhibit 20-6 (CPM)](https://s3-eu-west-1.amazonaws.com/s3-euw1-ap-pe-ws4-cws-documents.ri-prod/9781041076391/online-chapters/9781041081197_Online_content.pdf) ⁴ | $1,000,000 / 12% / 30yr | $10,286.13 | `HALF_UP` | `HALF_UP` (carry-precision) |
 | [Goldstein et al., *Finite Mathematics and Its Applications* (12 ed.), §10.3 Ex 1 + Table 1](https://www.pearsonhighered.com/assets/samplechapter/0/1/3/4/0134437764.pdf) ⁵ | $563 / 12% / 5mo | $116.00 | `HALF_UP` | `HALF_UP` (carry-precision) |
 | [Olivier *Business Math* §13.4 — Chans first term](https://math.libretexts.org/Bookshelves/Applied_Mathematics/Business_Math_(Olivier)/13:_Understanding_Amortization_and_its_Applications/13.04:_Special_Application_-_Mortgages) ⁶ | $350,100 / j_2 = 4.9% / 3yr term, 20yr amort, monthly | $2,281.73 + balloon $316,593.49 | `HALF_UP` | `HALF_UP` (semi-annual) |
@@ -83,6 +84,27 @@ closed-form annuity present-value formula with the rounded $905
 payment, which drifts a few cents from any row-by-row schedule (3¢ on
 the balance after payment 312); for that reason the per-row anchors
 are not committed.
+
+⁷ Reg Z (12 CFR Part 1026 Appendix H Sample H-14) is a regulatory
+worked example of an Adjustable-Rate Mortgage. Per $10,000 the table
+publishes 15 years of historical rate adjustments under actual
+1-year CMT values from 1982–1996; the periodic 2pp annual cap binds
+at years 2 and 4 (1983, 1985), and the 5pp symmetric lifetime cap
+binds from year 5 onward (1986–1996). The library reproduces all
+published anchors — year-1 P&I $145.90, year-end balances
+$9,989.37 / $9,969.66 / $9,945.51 / $9,903.70 / $9,848.94, and the
+year-15 terminal balance $8,700.37 — exactly under
+``BalanceTracking.ROUND_EACH`` + ``ROUND_HALF_UP``. The
+year-by-year recast formula matches Reg Z's annual-payment-
+adjustment language, including the years where the lifetime cap
+holds the rate fixed but the payment still recasts on the new
+remaining balance. The fixture's ``[[loan.rate_schedule]]`` entries
+encode the post-cap rates explicitly; the cap-derivation table is
+documented in the fixture TOML's ``notes`` field. A separate
+``IndexedRateSchedule`` API that derives post-cap rates from raw
+index history was considered but deferred — only one published
+source motivates it today, falling below the project's
+complexity-threshold rule for adding new modes.
 
 ⁶ The Olivier *Business Math* (CC-BY-NC-SA, LibreTexts) and eCampus
 Ontario *Mathematics of Finance* (CC-BY 4.0) Canadian-mortgage worked

@@ -3,7 +3,13 @@
 import decimal
 from decimal import Decimal, localcontext
 
-from mortgagemath._types import Compounding, DayCount, LoanParams, PaymentRounding
+from mortgagemath._types import (
+    Compounding,
+    DayCount,
+    LoanParams,
+    PaymentFrequency,
+    PaymentRounding,
+)
 
 _PENNY = Decimal("0.01")
 _ONE = Decimal("1")
@@ -18,6 +24,36 @@ _ROUNDING_MAP = {
 }
 
 
+def _periodic_rate_for(
+    annual_rate: Decimal,
+    compounding: Compounding,
+    payment_frequency: PaymentFrequency,
+) -> Decimal:
+    """Periodic rate for an arbitrary annual rate + compounding + cadence.
+
+    The same math as :func:`_periodic_rate` but parameterized so that
+    ARM rate-change recasts can derive the new periodic rate without
+    constructing a synthetic ``LoanParams``.
+    """
+    ppy = Decimal(payment_frequency.payments_per_year)
+    if compounding == Compounding.MONTHLY:
+        # Preserves v0.2.x exactness when ppy=12: annual / (100 * 12) = annual / 1200.
+        return annual_rate / (_HUNDRED * ppy)
+    if compounding == Compounding.SEMI_ANNUAL:
+        # j_2 quoted as percent → semi-annual rate fraction is annual / 200.
+        # Periodic rate solves (1+r)^ppy = (1 + j_2/200)^2.
+        with localcontext() as ctx:
+            ctx.prec = 50
+            half_period = _ONE + annual_rate / _TWO_HUNDRED
+            return half_period ** (_TWO / ppy) - _ONE
+    if compounding == Compounding.ANNUAL:
+        # Annual rate is quoted as effective annual.
+        with localcontext() as ctx:
+            ctx.prec = 50
+            return (_ONE + annual_rate / _HUNDRED) ** (_ONE / ppy) - _ONE
+    raise ValueError(f"unsupported compounding: {compounding}")  # pragma: no cover
+
+
 def _periodic_rate(loan: LoanParams) -> Decimal:
     """Compute the per-period interest rate as a Decimal fraction.
 
@@ -27,23 +63,7 @@ def _periodic_rate(loan: LoanParams) -> Decimal:
     Canadian *Interest Act* §6 convention) this derives the equivalent
     periodic rate via ``(1 + j_2/200)**(2/payments_per_year) - 1``.
     """
-    ppy = Decimal(loan.payment_frequency.payments_per_year)
-    if loan.compounding == Compounding.MONTHLY:
-        # Preserves v0.2.x exactness when ppy=12: annual / (100 * 12) = annual / 1200.
-        return loan.annual_rate / (_HUNDRED * ppy)
-    if loan.compounding == Compounding.SEMI_ANNUAL:
-        # j_2 quoted as percent → semi-annual rate fraction is annual / 200.
-        # Periodic rate solves (1+r)^ppy = (1 + j_2/200)^2.
-        with localcontext() as ctx:
-            ctx.prec = 50
-            half_period = _ONE + loan.annual_rate / _TWO_HUNDRED
-            return half_period ** (_TWO / ppy) - _ONE
-    if loan.compounding == Compounding.ANNUAL:
-        # Annual rate is quoted as effective annual.
-        with localcontext() as ctx:
-            ctx.prec = 50
-            return (_ONE + loan.annual_rate / _HUNDRED) ** (_ONE / ppy) - _ONE
-    raise ValueError(f"unsupported compounding: {loan.compounding}")  # pragma: no cover
+    return _periodic_rate_for(loan.annual_rate, loan.compounding, loan.payment_frequency)
 
 
 def periodic_payment(loan: LoanParams) -> Decimal:

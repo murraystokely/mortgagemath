@@ -18,6 +18,7 @@ from mortgagemath._types import (
     LoanParams,
     PaymentFrequency,
     PaymentRounding,
+    RateChange,
 )
 
 try:
@@ -35,6 +36,7 @@ __all__ = [
     "LoanParams",
     "PaymentFrequency",
     "PaymentRounding",
+    "RateChange",
     "__version__",
     "amortization_schedule",
     "monthly_payment",

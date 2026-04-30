@@ -95,6 +95,69 @@ loan = LoanParams(
 print(periodic_payment(loan))         # Decimal("2281.73") — Olivier §13.4
 ```
 
+### Adjustable-rate mortgages (ARMs)
+
+Pass a `rate_schedule` of `RateChange` entries.  Each declares the
+1-indexed payment at which a new rate takes effect:
+
+```python
+from mortgagemath import LoanParams, RateChange, PaymentRounding, amortization_schedule
+
+# 5/1 ARM: $200,000 at 5.7%, term 30 years, with a single rate
+# change at month 61 to 7.2%.  recast=True (the default) recomputes
+# the level payment over the remaining 300 payments.
+loan = LoanParams(
+    principal=Decimal("200000"),
+    annual_rate=Decimal("5.7"),
+    term_months=360,
+    payment_rounding=PaymentRounding.ROUND_HALF_UP,
+    interest_rounding=PaymentRounding.ROUND_HALF_UP,
+    rate_schedule=(
+        RateChange(effective_payment_number=61, new_annual_rate=Decimal("7.2")),
+    ),
+)
+sched = amortization_schedule(loan)
+print(sched[60].payment)              # Decimal("1160.80") — initial level payment
+print(sched[61].payment)              # Decimal("1334.16") — recast at month 61
+```
+
+### Command line
+
+`mortgagemath` ships a CLI for ad-hoc computations without writing a
+Python script.  Both `mortgagemath …` and `python -m mortgagemath …`
+work; no arguments runs the post-install self-check.
+
+```sh
+# Just the monthly payment
+$ mortgagemath payment --principal 131250 --rate 4.25 --term-months 360
+645.68
+
+# Full schedule as CSV (pipe to a file or another tool)
+$ mortgagemath schedule --principal 162000 --rate 3.875 --term-months 360 \
+    --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP \
+    --format csv > cfpb-h25b.csv
+
+# Canadian j_2 mortgage (semi-annual compounding)
+$ mortgagemath payment --principal 300000 --rate 5 --term-months 300 \
+    --compounding semi_annual \
+    --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP
+1747.45
+
+# 5/1 ARM with a rate change at month 61
+$ mortgagemath payment --principal 200000 --rate 5.7 --term-months 360 \
+    --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP \
+    --rate-change 61:7.2
+1160.80
+
+# Fannie Mae §1103 SARM with balloon at term 120
+$ mortgagemath schedule --principal 25000000 --rate 5.5 \
+    --term-months 120 --amortization-period-months 360 \
+    --day-count actual/360 --start-date 2018-12-01 \
+    --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP \
+    --format json | jq '.[-1].balance'
+"20885505.83"
+```
+
 If this solves a problem for you, please star the repo ⭐
 
 ## Why This Package?

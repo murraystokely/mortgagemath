@@ -132,6 +132,48 @@ class BalanceTracking(Enum):
 
 
 @dataclass(frozen=True, slots=True)
+class RateChange:
+    """A scheduled rate change for an Adjustable-Rate Mortgage (ARM).
+
+    Used in ``LoanParams.rate_schedule`` (a tuple of ``RateChange``).
+    Goldstein 12e §10.4 Example 13 5/1 ARM is the canonical fixture:
+    ``RateChange(effective_payment_number=61, new_annual_rate=Decimal("7.2"))``
+    moves the rate from the initial 5.7% to 7.2% starting at payment 61
+    and recasts the level payment over the remaining 300 payments.
+
+    Args:
+        effective_payment_number: 1-indexed payment ordinal at which
+            the new rate first takes effect.  Interest accrual for that
+            payment uses the new rate.  Must be ``>= 2`` (a rate change
+            at payment 1 is the same as constructing the loan with that
+            initial rate).
+        new_annual_rate: The new annual rate in percent (e.g.
+            ``Decimal("7.2")``).  Must be positive.
+        recast: When True (the default), recompute the level payment
+            for the remaining payments using the new periodic rate
+            applied to the current balance.  When False, keep the prior
+            level payment — the rate change still affects every
+            subsequent period's interest accrual, and any residual is
+            absorbed by the final-row trueup.
+    """
+
+    effective_payment_number: int
+    new_annual_rate: Decimal
+    recast: bool = True
+
+    def __post_init__(self) -> None:
+        """Validate single-instance invariants."""
+        if self.effective_payment_number < 2:
+            raise ValueError(
+                f"effective_payment_number must be >= 2, got "
+                f"{self.effective_payment_number}. A rate change at payment 1 "
+                f"is the same as constructing the loan with that initial rate."
+            )
+        if self.new_annual_rate <= 0:
+            raise ValueError(f"new_annual_rate must be positive, got {self.new_annual_rate}")
+
+
+@dataclass(frozen=True, slots=True)
 class LoanParams:
     """Parameters defining a fixed-rate mortgage.
 
@@ -199,6 +241,7 @@ class LoanParams:
     balance_tracking: BalanceTracking = BalanceTracking.ROUND_EACH
     compounding: Compounding = Compounding.MONTHLY
     payment_frequency: PaymentFrequency = PaymentFrequency.MONTHLY
+    rate_schedule: tuple[RateChange, ...] = ()
 
     def __post_init__(self) -> None:
         """Validate cross-field invariants."""
@@ -233,6 +276,39 @@ class LoanParams:
                 f"amortization_period_months={self.amortization_period_months} "
                 f"* payments_per_year={ppy} is not divisible by 12."
             )
+
+        # Rate-schedule validation. v0.4.0 ships Tier 1 ARMs (explicit
+        # rate-change list) for THIRTY_360 fully-amortizing loans only;
+        # ACTUAL_360 + ARM and balloon + ARM stay deferred to a later
+        # release that brings published fixtures motivating them.
+        if self.rate_schedule:
+            if self.day_count != DayCount.THIRTY_360:
+                raise ValueError(
+                    "rate_schedule is only supported for DayCount.THIRTY_360 in v0.4.0; "
+                    f"got {self.day_count}"
+                )
+            amort = self.amortization_period_months
+            if amort is not None and amort != self.term_months:
+                raise ValueError(
+                    "rate_schedule with a balloon "
+                    "(amortization_period_months != term_months) is not supported in v0.4.0"
+                )
+            total_payments = (self.term_months * ppy) // 12
+            prev = 0
+            for rc in self.rate_schedule:
+                if rc.effective_payment_number <= prev:
+                    raise ValueError(
+                        "rate_schedule entries must have strictly increasing "
+                        f"effective_payment_number; got {rc.effective_payment_number} "
+                        f"after {prev}"
+                    )
+                if rc.effective_payment_number > total_payments:
+                    raise ValueError(
+                        f"rate_schedule entry effective_payment_number="
+                        f"{rc.effective_payment_number} exceeds total_payments="
+                        f"{total_payments}"
+                    )
+                prev = rc.effective_payment_number
 
     @property
     def _total_payments(self) -> int:

@@ -5,7 +5,7 @@ import decimal
 import warnings
 from decimal import Decimal, localcontext
 
-from mortgagemath._payment import _periodic_rate, periodic_payment
+from mortgagemath._payment import _periodic_rate, _periodic_rate_for, periodic_payment
 from mortgagemath._types import (
     BalanceTracking,
     DayCount,
@@ -13,6 +13,7 @@ from mortgagemath._types import (
     Installment,
     LoanParams,
     PaymentRounding,
+    RateChange,
 )
 
 _PENNY = Decimal("0.01")
@@ -24,6 +25,41 @@ _ROUNDING_MAP = {
     PaymentRounding.ROUND_HALF_UP: decimal.ROUND_HALF_UP,
     PaymentRounding.ROUND_HALF_EVEN: decimal.ROUND_HALF_EVEN,
 }
+
+
+def _recast_payment_pair(
+    balance: Decimal,
+    periodic_rate: Decimal,
+    remaining_payments: int,
+    payment_rounding: PaymentRounding,
+) -> tuple[Decimal, Decimal]:
+    """Recompute the level payment for a rate change. Returns (raw, rounded).
+
+    Used by both 30/360 schedule paths.  ``balance`` is whatever balance
+    flavor the caller is carrying (rounded for round-each, unrounded for
+    carry-precision); the formula is the same.  Mirrors the closed-form
+    annuity computation in :func:`periodic_payment` but with the new rate
+    and the explicit remaining horizon.
+    """
+    rounding = _ROUNDING_MAP[payment_rounding]
+    with localcontext() as ctx:
+        ctx.prec = 50
+        factor = (_ONE + periodic_rate) ** remaining_payments
+        raw = balance * periodic_rate * factor / (factor - _ONE)
+    return raw, raw.quantize(_PENNY, rounding=rounding)
+
+
+def _next_rate_change(
+    rate_schedule: tuple[RateChange, ...], idx: int, payment_number: int
+) -> RateChange | None:
+    """Return the rate change effective at ``payment_number``, if any.
+
+    ``idx`` is the index of the next unconsumed entry; if it matches,
+    the caller should consume it (advance idx past this entry).
+    """
+    if idx < len(rate_schedule) and rate_schedule[idx].effective_payment_number == payment_number:
+        return rate_schedule[idx]
+    return None
 
 
 def amortization_schedule(loan: LoanParams) -> list[Installment]:
@@ -103,6 +139,7 @@ def _schedule_thirty_360_round_each(loan: LoanParams) -> list[Installment]:
     fully_amortizing = loan.amortization_period_months is None or (
         loan.amortization_period_months == loan.term_months
     )
+    rate_schedule_idx = 0
 
     schedule: list[Installment] = [
         Installment(
@@ -116,6 +153,19 @@ def _schedule_thirty_360_round_each(loan: LoanParams) -> list[Installment]:
     ]
 
     for i in range(1, total_payments + 1):
+        # Apply any rate change effective at this payment, before interest accrual.
+        rc = _next_rate_change(loan.rate_schedule, rate_schedule_idx, i)
+        if rc is not None:
+            periodic_rate = _periodic_rate_for(
+                rc.new_annual_rate, loan.compounding, loan.payment_frequency
+            )
+            if rc.recast:
+                remaining = total_payments - (i - 1)
+                _, pmt = _recast_payment_pair(
+                    balance, periodic_rate, remaining, loan.payment_rounding
+                )
+            rate_schedule_idx += 1
+
         interest = (balance * periodic_rate).quantize(_PENNY, rounding=interest_rounding)
 
         is_scheduled_final = i == total_payments and fully_amortizing
@@ -196,6 +246,7 @@ def _schedule_thirty_360_carry_precision(loan: LoanParams) -> list[Installment]:
 
     balance = loan.principal  # full-precision Decimal
     total_interest_disp = _ZERO
+    rate_schedule_idx = 0
 
     schedule: list[Installment] = [
         Installment(
@@ -209,6 +260,19 @@ def _schedule_thirty_360_carry_precision(loan: LoanParams) -> list[Installment]:
     ]
 
     for i in range(1, total_payments + 1):
+        # Apply any rate change effective at this payment, before interest accrual.
+        rc = _next_rate_change(loan.rate_schedule, rate_schedule_idx, i)
+        if rc is not None:
+            periodic_rate = _periodic_rate_for(
+                rc.new_annual_rate, loan.compounding, loan.payment_frequency
+            )
+            if rc.recast:
+                remaining = total_payments - (i - 1)
+                pmt_raw, pmt_disp = _recast_payment_pair(
+                    balance, periodic_rate, remaining, loan.payment_rounding
+                )
+            rate_schedule_idx += 1
+
         interest_raw = balance * periodic_rate
         interest_disp = interest_raw.quantize(_PENNY, rounding=interest_rounding)
 
