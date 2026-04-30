@@ -255,13 +255,14 @@ def _emit_schedule_table(loan: LoanParams, out: IO[str]) -> None:
     widths = (5, 14, 14, 14, 16, 16)
     out.write("  ".join(h.rjust(w) for h, w in zip(headers, widths, strict=True)) + "\n")
     for inst in sched:
+        # Data column widths match the header widths above so right-edges align.
         out.write(
             f"  {inst.number:>3d}  "
-            f"{inst.payment:>12,.2f}  "
-            f"{inst.interest:>12,.2f}  "
-            f"{inst.principal:>12,.2f}  "
-            f"{inst.total_interest:>14,.2f}  "
-            f"{inst.balance:>14,.2f}\n"
+            f"{inst.payment:>14,.2f}  "
+            f"{inst.interest:>14,.2f}  "
+            f"{inst.principal:>14,.2f}  "
+            f"{inst.total_interest:>16,.2f}  "
+            f"{inst.balance:>16,.2f}\n"
         )
 
 

@@ -46,6 +46,8 @@ exactly, 1 otherwise.
 
 ## Quick Start
 
+### From Python
+
 ```python
 from decimal import Decimal
 from mortgagemath import LoanParams, periodic_payment, amortization_schedule
@@ -68,6 +70,34 @@ Returns a cent-accurate payment and lender-style amortization schedule.
 > preserved as a permanent alias.  The new `periodic_payment` name
 > reads more clearly when non-monthly cadences (weekly, biweekly,
 > quarterly) are used.
+
+### From the command line
+
+A built-in CLI (registered as `mortgagemath`, also available as
+`python -m mortgagemath`) computes the same numbers without writing a
+script:
+
+```sh
+# Just the monthly payment
+$ mortgagemath payment --principal 131250 --rate 4.25 --term-months 360
+645.68
+
+# Full amortization schedule (table by default; --format csv | json)
+$ mortgagemath schedule --principal 131250 --rate 4.25 --term-months 360 | head -5
+    #         Payment        Interest       Principal         Total Int           Balance
+    0            0.00            0.00            0.00              0.00        131,250.00
+    1          645.68          464.84          180.84            464.84        131,069.16
+    2          645.68          464.20          181.48            929.04        130,887.68
+    3          645.68          463.56          182.12          1,392.60        130,705.56
+```
+
+Pipe `--format csv` to a file or `--format json` to `jq` for
+downstream tooling.  See `mortgagemath --help` and the per-subcommand
+help (`mortgagemath schedule --help`) for the full flag surface,
+including Canadian semi-annual compounding (`--compounding`),
+non-monthly payments (`--payment-frequency`), Actual/360 commercial
+loans (`--day-count`, `--start-date`), and ARMs
+(`--rate-change EFFECTIVE_PMT:NEW_RATE`).
 
 ### Canadian and other non-monthly loans
 
@@ -121,33 +151,19 @@ print(sched[60].payment)              # Decimal("1160.80") — initial level pay
 print(sched[61].payment)              # Decimal("1334.16") — recast at month 61
 ```
 
-### Command line
-
-`mortgagemath` ships a CLI for ad-hoc computations without writing a
-Python script.  Both `mortgagemath …` and `python -m mortgagemath …`
-work; no arguments runs the post-install self-check.
+### CLI examples for the harder loan types
 
 ```sh
-# Just the monthly payment
-$ mortgagemath payment --principal 131250 --rate 4.25 --term-months 360
-645.68
-
-# Full schedule as CSV (pipe to a file or another tool)
-$ mortgagemath schedule --principal 162000 --rate 3.875 --term-months 360 \
-    --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP \
-    --format csv > cfpb-h25b.csv
-
-# Canadian j_2 mortgage (semi-annual compounding)
+# Canadian j_2 mortgage (semi-annual compounding per Interest Act §6)
 $ mortgagemath payment --principal 300000 --rate 5 --term-months 300 \
     --compounding semi_annual \
     --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP
 1747.45
 
 # 5/1 ARM with a rate change at month 61
-$ mortgagemath payment --principal 200000 --rate 5.7 --term-months 360 \
+$ mortgagemath schedule --principal 200000 --rate 5.7 --term-months 360 \
     --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP \
-    --rate-change 61:7.2
-1160.80
+    --rate-change 61:7.2 --format csv > arm-schedule.csv
 
 # Fannie Mae §1103 SARM with balloon at term 120
 $ mortgagemath schedule --principal 25000000 --rate 5.5 \
@@ -157,6 +173,10 @@ $ mortgagemath schedule --principal 25000000 --rate 5.5 \
     --format json | jq '.[-1].balance'
 "20885505.83"
 ```
+
+`mortgagemath --help` and `mortgagemath <subcommand> --help` document
+the full flag surface.  `mortgagemath` with no arguments runs the
+post-install self-check (also `mortgagemath selfcheck`).
 
 If this solves a problem for you, please star the repo ⭐
 
