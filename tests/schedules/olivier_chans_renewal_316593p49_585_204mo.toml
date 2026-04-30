@@ -1,0 +1,28 @@
+# Olivier, *Business Math: A Step-by-Step Handbook* (LibreTexts CC-BY-NC-SA),
+# §13.4 "Special Application: Mortgages."
+#
+# The Chans renew their first-term balloon ($316,593.49) for the
+# remaining 17 years at a new j_2 = 5.85% semi-annual rate, monthly
+# payments. Published value: $2,440.73 monthly P&I.
+#
+# Pair with `olivier_chans_350100_490_36mo_term_240mo` (the first term).
+
+[loan]
+principal = "316593.49"
+annual_rate = "5.85"
+term_months = 204
+day_count = "30/360"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+compounding = "semi_annual"
+payment_frequency = "monthly"
+
+[source]
+kind = "textbook"
+country = "CA"
+label = "olivier_business_math_13_4_chans_renewal"
+url = "https://math.libretexts.org/Bookshelves/Applied_Mathematics/Business_Math_(Olivier)/13:_Understanding_Amortization_and_its_Applications/13.04:_Special_Application_-_Mortgages"
+notes = "The Chans' renewal scenario after the 3-year first term. j_2 increases from 4.9% to 5.85%; the remaining balance is amortized over 17 years. Source publishes only the new monthly P&I."
+
+[expected]
+periodic_payment = "2440.73"

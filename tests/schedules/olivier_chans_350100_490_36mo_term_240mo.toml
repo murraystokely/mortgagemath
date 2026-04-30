@@ -1,0 +1,37 @@
+# Olivier, *Business Math: A Step-by-Step Handbook* (LibreTexts CC-BY-NC-SA),
+# §13.4 "Special Application: Mortgages."
+#
+# Worked example: the Chans purchase a $350,100 condominium with a
+# 3-year fixed term on a 20-year amortization, semi-annual compounding
+# at j_2 = 4.9%, monthly payments. Canadian *Interest Act* §6 requires
+# the rate be quoted as semi-annually compounded.
+#
+# Published values:
+#   monthly P&I = $2,281.73
+#   balance after 36 months (= balloon at end of 3-year term) = $316,593.49
+#
+# Both reproduce exactly under the library's
+# Compounding.SEMI_ANNUAL + PaymentFrequency.MONTHLY mode with default
+# round-each-balance accounting.
+
+[loan]
+principal = "350100.00"
+annual_rate = "4.9"
+term_months = 36
+amortization_period_months = 240
+day_count = "30/360"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+compounding = "semi_annual"
+payment_frequency = "monthly"
+
+[source]
+kind = "textbook"
+country = "CA"
+label = "olivier_business_math_13_4_chans_first_term"
+url = "https://math.libretexts.org/Bookshelves/Applied_Mathematics/Business_Math_(Olivier)/13:_Understanding_Amortization_and_its_Applications/13.04:_Special_Application_-_Mortgages"
+notes = "Chapter 13 of Olivier *Business Math* (CC-BY-NC-SA). The Chans first term — Canadian residential mortgage with semi-annual compounding (Interest Act §6). Validates monthly P&I and the balloon at end of the 3-year term (the balance the Chans must renew or pay off)."
+
+[expected]
+periodic_payment = "2281.73"
+balloon_at_term = "316593.49"

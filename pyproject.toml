@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mortgagemath"
-version = "0.2.2"
+version = "0.3.0"
 description = "Cent-accurate mortgage amortization for Python, validated against published CFPB and Fannie Mae examples"
 readme = "README.md"
 license = "MIT"

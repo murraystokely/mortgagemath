@@ -1,0 +1,37 @@
+# eCampus Ontario *Mathematics of Finance* (CC-BY 4.0), §4.4.1
+# "Mortgages: Formula approach."
+#
+# Worked example: a $297,500 Canadian mortgage with j_2 = 3.8%
+# semi-annual compounding, 3-year fixed term on a 20-year
+# amortization, **quarterly** payments. Per Canadian *Interest Act*
+# §6 the quoted rate is semi-annually compounded; the periodic
+# (quarterly) rate per payment is (1 + j_2/2)^(2/4) - 1.
+#
+# Published values:
+#   quarterly P&I = $5,317.62
+#   balance after 12 quarters (= balloon at end of 3-year term) = $265,830.61
+#
+# Both reproduce exactly under
+# Compounding.SEMI_ANNUAL + PaymentFrequency.QUARTERLY.
+
+[loan]
+principal = "297500.00"
+annual_rate = "3.8"
+term_months = 36
+amortization_period_months = 240
+day_count = "30/360"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+compounding = "semi_annual"
+payment_frequency = "quarterly"
+
+[source]
+kind = "textbook"
+country = "CA"
+label = "ecampus_finmath_4_4_1_first_term"
+url = "https://ecampusontario.pressbooks.pub/financemath/chapter/4-4-mortgages-formula-approach/"
+notes = "eCampus Ontario *Mathematics of Finance* §4.4.1 (CC-BY 4.0). Canadian residential mortgage with quarterly payments and semi-annual compounding. Validates the periodic P&I and the balloon at end of the 3-year term."
+
+[expected]
+periodic_payment = "5317.62"
+balloon_at_term = "265830.61"

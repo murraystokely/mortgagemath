@@ -1,0 +1,27 @@
+# eCampus Ontario *Mathematics of Finance* (CC-BY 4.0), §4.4.1.
+#
+# The renewal scenario: after the 3-year first term, the remaining
+# balance ($265,830.61) is renewed at j_2 = 2.5% for the remaining
+# 17 years, quarterly payments. Published value: $4,807.70.
+#
+# Pair with `ecampus_finmath_4_4_1_297500_380_q_36mo_term_240mo`.
+
+[loan]
+principal = "265830.61"
+annual_rate = "2.5"
+term_months = 204
+day_count = "30/360"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+compounding = "semi_annual"
+payment_frequency = "quarterly"
+
+[source]
+kind = "textbook"
+country = "CA"
+label = "ecampus_finmath_4_4_1_renewal"
+url = "https://ecampusontario.pressbooks.pub/financemath/chapter/4-4-mortgages-formula-approach/"
+notes = "Renewal scenario from §4.4.1; j_2 drops from 3.8% to 2.5% on renewal. Source publishes only the new quarterly P&I."
+
+[expected]
+periodic_payment = "4807.70"

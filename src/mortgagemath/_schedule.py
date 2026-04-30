@@ -3,9 +3,9 @@
 import calendar
 import decimal
 import warnings
-from decimal import Decimal
+from decimal import Decimal, localcontext
 
-from mortgagemath._payment import monthly_payment
+from mortgagemath._payment import _periodic_rate, periodic_payment
 from mortgagemath._types import (
     BalanceTracking,
     DayCount,
@@ -17,6 +17,7 @@ from mortgagemath._types import (
 
 _PENNY = Decimal("0.01")
 _ZERO = Decimal("0.00")
+_ONE = Decimal("1")
 
 _ROUNDING_MAP = {
     PaymentRounding.ROUND_UP: decimal.ROUND_UP,
@@ -31,8 +32,8 @@ def amortization_schedule(loan: LoanParams) -> list[Installment]:
     For 30/360 loans the schedule uses bank-style round-each-balance
     accounting:
 
-    1. The monthly payment is computed once and rounded.
-    2. Each month's interest is computed on the (rounded) remaining
+    1. The periodic payment is computed once and rounded.
+    2. Each period's interest is computed on the (rounded) remaining
        balance and rounded to the cent.
     3. Principal is the difference: ``payment - interest``.
     4. The final payment is adjusted so the balance lands exactly at zero.
@@ -51,17 +52,17 @@ def amortization_schedule(loan: LoanParams) -> list[Installment]:
     Both modes guarantee ``principal + interest == payment`` for every
     installment and a final balance of exactly ``$0.00``.
 
-    For very small principals the cent-rounded monthly payment can
+    For very small principals the cent-rounded periodic payment can
     overpay the closed-form value by enough that the loan amortizes
     before the requested term.  In that case the schedule is truncated
-    at the actual payoff month and an :class:`EarlyPayoffWarning` is
-    emitted; ``len(schedule)`` will be smaller than ``term_months + 1``.
+    at the actual payoff period and an :class:`EarlyPayoffWarning` is
+    emitted; ``len(schedule)`` will be smaller than ``total_payments + 1``.
 
     Args:
         loan: Loan parameters.
 
     Returns:
-        A list of :class:`Installment` objects from payment 0 (initial
+        A list of :class:`Installment` objects from period 0 (initial
         state showing the starting balance) through the final payment.
 
     Raises:
@@ -71,7 +72,7 @@ def amortization_schedule(loan: LoanParams) -> list[Installment]:
 
     Warns:
         EarlyPayoffWarning: When 30/360 round-each-balance accounting
-            amortizes the loan before ``term_months`` due to monthly
+            amortizes the loan before its scheduled end due to periodic
             payment overpayment from rounding.
     """
     if loan.day_count == DayCount.THIRTY_360:
@@ -93,9 +94,10 @@ def _schedule_thirty_360(loan: LoanParams) -> list[Installment]:
 
 
 def _schedule_thirty_360_round_each(loan: LoanParams) -> list[Installment]:
-    pmt = monthly_payment(loan)
+    pmt = periodic_payment(loan)
     interest_rounding = _ROUNDING_MAP[loan.interest_rounding]
-    monthly_rate = loan.annual_rate / Decimal("1200")
+    periodic_rate = _periodic_rate(loan)
+    total_payments = loan._total_payments
     balance = loan.principal
     total_interest = _ZERO
     fully_amortizing = loan.amortization_period_months is None or (
@@ -113,10 +115,10 @@ def _schedule_thirty_360_round_each(loan: LoanParams) -> list[Installment]:
         )
     ]
 
-    for i in range(1, loan.term_months + 1):
-        interest = (balance * monthly_rate).quantize(_PENNY, rounding=interest_rounding)
+    for i in range(1, total_payments + 1):
+        interest = (balance * periodic_rate).quantize(_PENNY, rounding=interest_rounding)
 
-        is_scheduled_final = i == loan.term_months and fully_amortizing
+        is_scheduled_final = i == total_payments and fully_amortizing
         # Round-each-balance accounting can pay off a tiny loan early.
         # Example: $20 / 4.4% / 30yr.  The closed-form payment is $0.10018,
         # ROUND_UP rounds it to $0.11.  That extra $0.0098/month
@@ -151,8 +153,8 @@ def _schedule_thirty_360_round_each(loan: LoanParams) -> list[Installment]:
 
         if will_pay_off_early:
             warnings.warn(
-                f"Loan paid off at month {i} of term_months={loan.term_months}; "
-                f"schedule truncated. The {loan.payment_rounding.value} monthly "
+                f"Loan paid off at period {i} of total_payments={total_payments}; "
+                f"schedule truncated. The {loan.payment_rounding.value} periodic "
                 f"payment of {pmt} overpays the closed-form value enough to "
                 f"amortize the loan early. For very small principals, consider "
                 f"PaymentRounding.ROUND_HALF_UP.",
@@ -175,15 +177,18 @@ def _schedule_thirty_360_carry_precision(loan: LoanParams) -> list[Installment]:
     land balance at exactly $0.00.
     """
     interest_rounding = _ROUNDING_MAP[loan.interest_rounding]
-    monthly_rate = loan.annual_rate / Decimal("1200")
+    periodic_rate = _periodic_rate(loan)
+    total_payments = loan._total_payments
 
-    # Validate via monthly_payment (enforces guards) and reuse rounded display.
-    pmt_disp = monthly_payment(loan)
+    # Validate via periodic_payment (enforces guards) and reuse rounded display.
+    pmt_disp = periodic_payment(loan)
 
     # Unrounded closed-form payment, carried internally.
-    n = loan._amort_periods
-    factor = (1 + monthly_rate) ** n
-    pmt_raw = (loan.principal * monthly_rate * factor) / (factor - 1)
+    n = loan._amort_payments
+    with localcontext() as ctx:
+        ctx.prec = 50
+        factor = (_ONE + periodic_rate) ** n
+        pmt_raw = (loan.principal * periodic_rate * factor) / (factor - _ONE)
 
     fully_amortizing = loan.amortization_period_months is None or (
         loan.amortization_period_months == loan.term_months
@@ -203,11 +208,11 @@ def _schedule_thirty_360_carry_precision(loan: LoanParams) -> list[Installment]:
         )
     ]
 
-    for i in range(1, loan.term_months + 1):
-        interest_raw = balance * monthly_rate
+    for i in range(1, total_payments + 1):
+        interest_raw = balance * periodic_rate
         interest_disp = interest_raw.quantize(_PENNY, rounding=interest_rounding)
 
-        if i == loan.term_months and fully_amortizing:
+        if i == total_payments and fully_amortizing:
             # Final payment of a fully amortizing loan: zero balance exactly.
             principal_disp = balance.quantize(_PENNY, rounding=interest_rounding)
             actual_pmt = principal_disp + interest_disp
@@ -241,21 +246,26 @@ def _schedule_actual_360(loan: LoanParams) -> list[Installment]:
     Validated against Fannie Mae Multifamily Selling and Servicing Guide
     §1103: $25M / 5.5% / 30yr / Actual/360, issue date 2018-12-01,
     aggregate principal over first 120 payments = $4,114,494.17 (exact).
+
+    ACTUAL_360 is restricted (in ``LoanParams.__post_init__``) to monthly
+    compounding and monthly payments — day-counted accrual is not
+    well-defined for non-monthly cadence, and all worked examples we
+    validate against (§1103, §1104, §1106) are monthly + monthly.
     """
     interest_rounding = _ROUNDING_MAP[loan.interest_rounding]
     annual_rate = loan.annual_rate / Decimal("100")  # percent → fraction
 
-    # Validate via monthly_payment (which enforces rate/term/amort guards)
+    # Validate via periodic_payment (which enforces rate/term/amort guards)
     # and reuse its rounded display value.
-    pmt_disp = monthly_payment(loan)
+    pmt_disp = periodic_payment(loan)
 
     # Unrounded closed-form payment, carried internally; displayed value rounded.
     # Uses the amortization period (which may be larger than term_months for
     # balloon loans) — see the LoanParams docstring.
     r = loan.annual_rate / Decimal("1200")
     n = loan._amort_periods
-    factor = (1 + r) ** n
-    pmt_raw = (loan.principal * r * factor) / (factor - 1)
+    factor = (_ONE + r) ** n
+    pmt_raw = (loan.principal * r * factor) / (factor - _ONE)
 
     fully_amortizing = loan.amortization_period_months is None or (
         loan.amortization_period_months == loan.term_months
