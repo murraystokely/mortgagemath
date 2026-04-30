@@ -1,28 +1,54 @@
-"""Post-install self-check: ``python -m mortgagemath``.
+"""Command-line interface for ``mortgagemath``.
 
-Computes a small set of well-known reference values against the
-installed library and reports pass/fail. Exits 0 if every check
-matches the published source exactly, 1 otherwise. Useful for
-verifying that a freshly-installed wheel matches the same numbers
-the test suite validates — without needing to clone the repo or
-install a test runner.
+Three subcommands:
+
+* ``mortgagemath selfcheck`` — post-install reference checks.  The
+  default when no subcommand is given (preserves the v0.2.x
+  ``python -m mortgagemath`` behavior).  Recomputes a small set of
+  well-known published values (CFPB H-25(B), Goldstein §10.3 Ex 1,
+  Fannie Mae §1103) and reports pass/fail.  Exits 0 on every match,
+  1 otherwise.
+
+* ``mortgagemath payment`` — print the periodic P&I for a loan.
+
+* ``mortgagemath schedule`` — print the full amortization schedule
+  in ``--format table`` (default), ``csv``, or ``json``.
+
+Both ``payment`` and ``schedule`` accept the full ``LoanParams``
+surface as flags whose names mirror the field names
+(``--principal``, ``--rate``, ``--term-months``, etc.).  ARMs are
+supported via repeatable ``--rate-change EFFECTIVE_PMT:NEW_RATE``
+flags (append ``:no_recast`` to disable the level-payment
+recomputation).
 """
 
 from __future__ import annotations
 
+import argparse
+import csv
+import json
 import sys
 from datetime import date
 from decimal import Decimal
+from typing import IO
 
 from mortgagemath import (
     BalanceTracking,
+    Compounding,
     DayCount,
     LoanParams,
+    PaymentFrequency,
     PaymentRounding,
+    RateChange,
     __version__,
     amortization_schedule,
     monthly_payment,
+    periodic_payment,
 )
+
+# ---------------------------------------------------------------------------
+# selfcheck (default subcommand)
+# ---------------------------------------------------------------------------
 
 
 def _check(name: str, got: object, expected: object) -> bool:
@@ -33,14 +59,11 @@ def _check(name: str, got: object, expected: object) -> bool:
     return ok
 
 
-def main() -> int:
-    """Run the self-check. Return 0 on success, 1 on any failure."""
+def _run_selfcheck() -> int:
+    """Run the post-install self-check. Return 0 on success, 1 on any failure."""
     print(f"mortgagemath {__version__} self-check\n")
     failures = 0
 
-    # 1. CFPB H-25(B) sample Closing Disclosure. CFPB rounds HALF_UP
-    #    (unrounded value is $761.7840...; the library's ROUND_UP default
-    #    would ceiling to $761.79).
     cfpb = LoanParams(
         principal=Decimal("162000"),
         annual_rate=Decimal("3.875"),
@@ -55,8 +78,6 @@ def main() -> int:
     ):
         failures += 1
 
-    # 2. Goldstein "Finite Mathematics and Its Applications", 12 ed., §10.3
-    #    Example 1 + Table 1 — full 5-row schedule under carry-precision.
     goldstein = LoanParams(
         principal=Decimal("563"),
         annual_rate=Decimal("12"),
@@ -89,8 +110,6 @@ def main() -> int:
         ):
             failures += 1
 
-    # 3. Fannie Mae Multifamily Guide §1103 — Tier 2 SARM, $25M / 5.5% /
-    #    10-year term, 30-year amortization, Actual/360, balloon at term.
     fanniemae = LoanParams(
         principal=Decimal("25000000"),
         annual_rate=Decimal("5.5"),
@@ -121,6 +140,219 @@ def main() -> int:
         return 1
     print("All checks passed.")
     return 0
+
+
+# ---------------------------------------------------------------------------
+# Argument parsing helpers (shared by `payment` and `schedule`)
+# ---------------------------------------------------------------------------
+
+
+def _parse_rate_change(s: str) -> RateChange:
+    """Parse a ``--rate-change`` value: ``EFFECTIVE_PMT:NEW_RATE[:no_recast]``."""
+    parts = s.split(":")
+    if len(parts) not in (2, 3):
+        raise argparse.ArgumentTypeError(
+            f"--rate-change expects EFFECTIVE_PMT:NEW_RATE[:no_recast], got {s!r}"
+        )
+    try:
+        effective = int(parts[0])
+        rate = Decimal(parts[1])
+    except (ValueError, ArithmeticError) as exc:
+        raise argparse.ArgumentTypeError(f"--rate-change parse error in {s!r}: {exc}") from exc
+    recast = True
+    if len(parts) == 3:
+        flag = parts[2].lower()
+        if flag == "no_recast":
+            recast = False
+        elif flag == "recast":
+            recast = True
+        else:
+            raise argparse.ArgumentTypeError(
+                f"--rate-change suffix must be 'recast' or 'no_recast', got {parts[2]!r}"
+            )
+    return RateChange(effective_payment_number=effective, new_annual_rate=rate, recast=recast)
+
+
+def _parse_date(s: str) -> date:
+    return date.fromisoformat(s)
+
+
+def _add_loan_args(parser: argparse.ArgumentParser) -> None:
+    """Attach LoanParams flags to ``parser``."""
+    parser.add_argument("--principal", "-p", type=Decimal, required=True)
+    parser.add_argument("--rate", "-r", type=Decimal, required=True, dest="annual_rate")
+    parser.add_argument("--term-months", "-t", type=int, required=True)
+    parser.add_argument(
+        "--day-count",
+        choices=[e.value for e in DayCount],
+        default=DayCount.THIRTY_360.value,
+    )
+    parser.add_argument(
+        "--payment-rounding",
+        choices=[e.value for e in PaymentRounding],
+        default=PaymentRounding.ROUND_UP.value,
+    )
+    parser.add_argument(
+        "--interest-rounding",
+        choices=[e.value for e in PaymentRounding],
+        default=PaymentRounding.ROUND_HALF_UP.value,
+    )
+    parser.add_argument("--start-date", type=_parse_date, default=None)
+    parser.add_argument("--amortization-period-months", type=int, default=None)
+    parser.add_argument(
+        "--balance-tracking",
+        choices=[e.value for e in BalanceTracking],
+        default=BalanceTracking.ROUND_EACH.value,
+    )
+    parser.add_argument(
+        "--compounding",
+        choices=[e.value for e in Compounding],
+        default=Compounding.MONTHLY.value,
+    )
+    parser.add_argument(
+        "--payment-frequency",
+        choices=[e.value for e in PaymentFrequency],
+        default=PaymentFrequency.MONTHLY.value,
+    )
+    parser.add_argument(
+        "--rate-change",
+        action="append",
+        default=[],
+        type=_parse_rate_change,
+        metavar="EFFECTIVE_PMT:NEW_RATE[:no_recast]",
+        help="Rate change for ARM (repeatable). Example: --rate-change 61:7.2",
+    )
+
+
+def _params_from_args(args: argparse.Namespace) -> LoanParams:
+    return LoanParams(
+        principal=args.principal,
+        annual_rate=args.annual_rate,
+        term_months=args.term_months,
+        day_count=DayCount(args.day_count),
+        payment_rounding=PaymentRounding(args.payment_rounding),
+        interest_rounding=PaymentRounding(args.interest_rounding),
+        start_date=args.start_date,
+        amortization_period_months=args.amortization_period_months,
+        balance_tracking=BalanceTracking(args.balance_tracking),
+        compounding=Compounding(args.compounding),
+        payment_frequency=PaymentFrequency(args.payment_frequency),
+        rate_schedule=tuple(args.rate_change),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Schedule output formatters
+# ---------------------------------------------------------------------------
+
+
+_SCHEDULE_COLUMNS = ("number", "payment", "interest", "principal", "total_interest", "balance")
+
+
+def _emit_schedule_table(loan: LoanParams, out: IO[str]) -> None:
+    sched = amortization_schedule(loan)
+    headers = ("#", "Payment", "Interest", "Principal", "Total Int", "Balance")
+    widths = (5, 14, 14, 14, 16, 16)
+    out.write("  ".join(h.rjust(w) for h, w in zip(headers, widths, strict=True)) + "\n")
+    for inst in sched:
+        # Data column widths match the header widths above so right-edges align.
+        out.write(
+            f"  {inst.number:>3d}  "
+            f"{inst.payment:>14,.2f}  "
+            f"{inst.interest:>14,.2f}  "
+            f"{inst.principal:>14,.2f}  "
+            f"{inst.total_interest:>16,.2f}  "
+            f"{inst.balance:>16,.2f}\n"
+        )
+
+
+def _emit_schedule_csv(loan: LoanParams, out: IO[str]) -> None:
+    sched = amortization_schedule(loan)
+    writer = csv.writer(out)
+    writer.writerow(_SCHEDULE_COLUMNS)
+    for inst in sched:
+        writer.writerow(
+            [
+                inst.number,
+                str(inst.payment),
+                str(inst.interest),
+                str(inst.principal),
+                str(inst.total_interest),
+                str(inst.balance),
+            ]
+        )
+
+
+def _emit_schedule_json(loan: LoanParams, out: IO[str]) -> None:
+    sched = amortization_schedule(loan)
+    payload = [
+        {
+            "number": inst.number,
+            "payment": str(inst.payment),
+            "interest": str(inst.interest),
+            "principal": str(inst.principal),
+            "total_interest": str(inst.total_interest),
+            "balance": str(inst.balance),
+        }
+        for inst in sched
+    ]
+    json.dump(payload, out, indent=2)
+    out.write("\n")
+
+
+_FORMATTERS = {
+    "table": _emit_schedule_table,
+    "csv": _emit_schedule_csv,
+    "json": _emit_schedule_json,
+}
+
+
+# ---------------------------------------------------------------------------
+# main
+# ---------------------------------------------------------------------------
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="mortgagemath",
+        description="Cent-accurate mortgage amortization. "
+        "Run with no arguments to perform the post-install self-check.",
+    )
+    parser.add_argument("--version", action="version", version=f"mortgagemath {__version__}")
+    sub = parser.add_subparsers(dest="cmd")
+
+    sub.add_parser("selfcheck", help="Run post-install reference checks")
+
+    p_payment = sub.add_parser("payment", help="Print the periodic P&I for a loan")
+    _add_loan_args(p_payment)
+
+    p_schedule = sub.add_parser("schedule", help="Print the full amortization schedule")
+    _add_loan_args(p_schedule)
+    p_schedule.add_argument("--format", choices=tuple(_FORMATTERS), default="table")
+
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    """CLI entry point. Return shell exit code."""
+    parser = _build_parser()
+    args = parser.parse_args(argv)
+
+    if args.cmd in (None, "selfcheck"):
+        return _run_selfcheck()
+
+    params = _params_from_args(args)
+
+    if args.cmd == "payment":
+        print(periodic_payment(params))
+        return 0
+
+    if args.cmd == "schedule":
+        _FORMATTERS[args.format](params, sys.stdout)
+        return 0
+
+    parser.error(f"unknown command: {args.cmd}")  # pragma: no cover
+    return 2  # pragma: no cover
 
 
 if __name__ == "__main__":  # pragma: no cover - exercised via subprocess test

@@ -7,6 +7,81 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-04-30
+
+### Added
+
+- **Adjustable-rate mortgages (Tier 1).**  New ``RateChange``
+  dataclass and ``LoanParams.rate_schedule`` field
+  (``tuple[RateChange, ...]``) allow rate changes at specified payment
+  numbers.  Each ``RateChange`` declares an ``effective_payment_number``
+  (1-indexed), a ``new_annual_rate``, and an optional ``recast`` flag
+  (default True — recompute the level payment over remaining payments
+  at the new rate).  Empty ``rate_schedule`` is the v0.3.0 fast path
+  with byte-identical output; every existing fixture still passes.
+- **Validation.**  ``RateChange.__post_init__`` rejects
+  ``effective_payment_number < 2`` and non-positive rates.
+  ``LoanParams.__post_init__`` rejects non-strictly-increasing
+  schedules, entries past the loan's total payments, ARM + ACTUAL_360
+  (day-counted accrual semantics undefined under non-monthly
+  cadences), and ARM + balloon (``amortization_period_months !=
+  term_months``) — both deferred until a fixture motivates them.
+- **First-class CLI.**  Three subcommands: ``mortgagemath selfcheck``
+  (the existing post-install validation), ``mortgagemath payment``
+  (print the periodic P&I), and ``mortgagemath schedule`` (full
+  schedule with ``--format table|csv|json``).  Console-script entry
+  point ``mortgagemath = "mortgagemath.__main__:main"`` registered in
+  ``pyproject.toml``; ``python -m mortgagemath`` continues to work.
+  No-args invocation defaults to selfcheck (preserves v0.2.x
+  behavior).  ARMs supported in the CLI via repeatable
+  ``--rate-change EFFECTIVE_PMT:NEW_RATE[:no_recast]``.  Stdlib only —
+  no new runtime dependencies.
+- **24 new structural / invariant tests** for ARMs covering both
+  balance-tracking modes, recast and no-recast, multi-rate schedules,
+  and the empty-schedule fast path.
+- **17 new CLI tests** covering all three subcommands, all three
+  output formats, ARMs via flag, the no-args default routing to
+  selfcheck, and standard argparse error handling.
+
+### Validated against
+
+- **Reg Z, 12 CFR Part 1026, Appendix H, Sample H-14** —
+  $10,000 / 30yr 1/1 ARM at 1-year CMT + 3pp margin, 2pp annual cap,
+  5pp symmetric lifetime cap. Initial rate 17.41% (1982 origination).
+  The fixture validates 11 schedule rows spanning the regulation's
+  full 15-year published trajectory, including the periodic cap
+  binding at years 2 and 4 (1983 / 1985), the lifetime cap binding
+  from year 5 onward (1986–1996), and the year-15 terminal balance
+  $8,700.37.  Every published value reproduces exactly under
+  ``BalanceTracking.ROUND_EACH`` + ``ROUND_HALF_UP``.  See
+  ``tests/schedules/regz_apph_h14_arm_10k_1741_360mo.{toml,csv}``.
+
+### Notes
+
+- **Cap-application math.**  The Reg Z H-14 fixture encodes
+  post-cap rates explicitly in its ``[[loan.rate_schedule]]``
+  entries; the cap-derivation table (year-by-year application of
+  periodic + lifetime caps to the index + margin) is documented in
+  the fixture's TOML ``notes`` field.  A library-side
+  ``IndexedRateSchedule`` API that derives post-cap rates from raw
+  index history was considered ("Tier 2" in ``docs/v0.4-plan.md``)
+  but deferred — only one published source motivates it today,
+  falling below the project's complexity-threshold rule.  When a
+  second source surfaces, that helper becomes justified.
+- **Goldstein §10.4 Example 13 5/1 ARM not committed.**  Goldstein
+  publishes balances computed via the textbook closed-form
+  outstanding-balance formula
+  ``pmt × (1 - (1+r)^-(n-k))/r`` using the rounded payment
+  $1,160.80, which differs from the library's row-by-row schedule
+  by 13–26¢ at month 60 ($185,405.12 published vs $185,405.25
+  carry-precision / $185,405.38 round-each).  This is an algorithmic
+  difference, not a library bug — Goldstein computes balances at
+  conceptual checkpoints, while the library produces actual
+  amortization rows.  Per the no-partial-fixtures rule, the
+  Goldstein fixture is not committed.
+- ``tests/test_selfcheck.py`` was retired in favor of consolidated
+  coverage in the new ``tests/test_cli.py``.
+
 ## [0.3.0] - 2026-04-29
 
 ### Added

@@ -1,0 +1,133 @@
+# Reg Z, 12 CFR Part 1026, Appendix H, Sample H-14 — Variable-Rate
+# Mortgage Sample (CFPB / Federal Reserve regulatory worked example).
+#
+# Loan (per $10,000 normalized): $10,000 / 30-year term / fully
+# amortizing 1/1 ARM (annual interest adjustment, annual payment
+# adjustment), 1-year CMT index, 3.0 percentage point margin, 2 pp
+# annual cap, 5 pp lifetime cap (symmetric: rate within initial ± 5 pp).
+# Origination July 1982 with then-current 1-year CMT of 14.41%, giving
+# initial rate of 17.41%.
+#
+# The regulation's worked example tabulates 15 years of historical
+# rate adjustments (1982–1996) using actual published 1-year CMT
+# values.  Each year publishes index value, the rate after caps are
+# applied, the recast monthly payment, and the year-end remaining
+# balance.  All anchors reproduce exactly under
+# ``BalanceTracking.ROUND_EACH`` + ``ROUND_HALF_UP``.
+#
+# Cap derivation (year-by-year):
+#
+# | Yr | Index   | Fully indexed | Periodic-cap floor | Lifetime-cap | Rate     |
+# |----|---------|---------------|--------------------|--------------|----------|
+# |  1 | 14.41%  | 17.41%        | (initial)          | (initial)    | 17.41%   |
+# |  2 |  9.78%  | 12.78%        | 15.41% (binds)     | 12.41%       | 15.41%   |
+# |  3 | 12.17%  | 15.17%        | 13.41%             | 12.41%       | 15.17%   |
+# |  4 |  7.66%  | 10.66%        | 13.17% (binds)     | 12.41%       | 13.17%   |
+# |  5 |  6.36%  |  9.36%        | 11.17%             | 12.41% (binds)| 12.41%  |
+# | 6+ | (varies)| (≤ 9.36%)     | (varies)           | 12.41% (binds)| 12.41%  |
+#
+# The library's existing ``RateChange`` API encodes one entry per year
+# (years 2–15) with ``effective_payment_number = 12 * (year - 1) + 1``
+# and ``new_annual_rate`` set to the post-cap rate from the table
+# above.  Even when the rate is unchanged year-over-year (years 6–15),
+# the regulation requires the payment recast on the new remaining
+# balance — so a ``RateChange`` is recorded each year with
+# ``recast=True``.
+#
+# A separate ``IndexedRateSchedule`` API that derives the post-cap
+# rates from raw index history was considered ("Tier 2" in
+# docs/v0.4-plan.md) but deferred: with only one published source
+# requiring the cap-application logic, the explicit precomputed-rate
+# fixture below satisfies the project's complexity-threshold rule.
+# When a second source surfaces, that helper becomes justified.
+
+[loan]
+principal = "10000"
+annual_rate = "17.41"
+term_months = 360
+day_count = "30/360"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+balance_tracking = "round_each"
+
+[[loan.rate_schedule]]
+effective_payment_number = 13
+new_annual_rate = "15.41"
+recast = true
+
+[[loan.rate_schedule]]
+effective_payment_number = 25
+new_annual_rate = "15.17"
+recast = true
+
+[[loan.rate_schedule]]
+effective_payment_number = 37
+new_annual_rate = "13.17"
+recast = true
+
+[[loan.rate_schedule]]
+effective_payment_number = 49
+new_annual_rate = "12.41"
+recast = true
+
+# Years 6-15: rate stays at 12.41% (lifetime cap), but each year
+# recasts the payment off the remaining balance.
+[[loan.rate_schedule]]
+effective_payment_number = 61
+new_annual_rate = "12.41"
+recast = true
+
+[[loan.rate_schedule]]
+effective_payment_number = 73
+new_annual_rate = "12.41"
+recast = true
+
+[[loan.rate_schedule]]
+effective_payment_number = 85
+new_annual_rate = "12.41"
+recast = true
+
+[[loan.rate_schedule]]
+effective_payment_number = 97
+new_annual_rate = "12.41"
+recast = true
+
+[[loan.rate_schedule]]
+effective_payment_number = 109
+new_annual_rate = "12.41"
+recast = true
+
+[[loan.rate_schedule]]
+effective_payment_number = 121
+new_annual_rate = "12.41"
+recast = true
+
+[[loan.rate_schedule]]
+effective_payment_number = 133
+new_annual_rate = "12.41"
+recast = true
+
+[[loan.rate_schedule]]
+effective_payment_number = 145
+new_annual_rate = "12.41"
+recast = true
+
+[[loan.rate_schedule]]
+effective_payment_number = 157
+new_annual_rate = "12.41"
+recast = true
+
+[[loan.rate_schedule]]
+effective_payment_number = 169
+new_annual_rate = "12.41"
+recast = true
+
+[source]
+kind = "regulatory_example"
+country = "US"
+label = "regz_part_1026_apph_sample_h14"
+url = "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/appendix-Appendix%20H%20to%20Part%201026"
+notes = "12 CFR Part 1026 Appendix H Sample H-14 — Variable-Rate Mortgage Sample. $10,000 / 30yr 1/1 ARM at 1-year CMT + 3pp margin, 2pp annual cap, 5pp symmetric lifetime cap. Historical trajectory 1982-1996 using actual published 1-year CMT values. Library reproduces every published value to the cent."
+
+[expected]
+periodic_payment = "145.90"

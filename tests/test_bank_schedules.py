@@ -14,6 +14,7 @@ from mortgagemath import (
     LoanParams,
     PaymentFrequency,
     PaymentRounding,
+    RateChange,
     amortization_schedule,
     periodic_payment,
 )
@@ -28,6 +29,14 @@ def _loan_from_toml(toml_data: dict) -> LoanParams:
     balance_tracking_str = loan.get("balance_tracking", "round_each")
     compounding_str = loan.get("compounding", "monthly")
     payment_frequency_str = loan.get("payment_frequency", "monthly")
+    rate_schedule = tuple(
+        RateChange(
+            effective_payment_number=int(rc["effective_payment_number"]),
+            new_annual_rate=Decimal(rc["new_annual_rate"]),
+            recast=rc.get("recast", True),
+        )
+        for rc in loan.get("rate_schedule", ())
+    )
     return LoanParams(
         principal=Decimal(loan["principal"]),
         annual_rate=Decimal(loan["annual_rate"]),
@@ -40,6 +49,7 @@ def _loan_from_toml(toml_data: dict) -> LoanParams:
         balance_tracking=BalanceTracking(balance_tracking_str),
         compounding=Compounding(compounding_str),
         payment_frequency=PaymentFrequency(payment_frequency_str),
+        rate_schedule=rate_schedule,
     )
 
 
