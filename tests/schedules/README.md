@@ -44,23 +44,26 @@ condition and how the expected values were independently verified.
 | `start_date` | `"YYYY-MM-DD"` | Required for `actual/360` (issue date / first interest-accrual period); ignored otherwise |
 | `amortization_period_months` | integer | Optional. Set when `>= term_months` for balloon loans (the amortization basis the closed-form payment uses, with a balloon at term). |
 | `balance_tracking` | `"round_each"` (default) or `"carry_precision"` | Round-each-balance is the US-residential-lender convention; carry-precision is Excel-default and used by graduate CRE finance textbooks. Ignored for `actual/360` (always carry-precision). |
+| `compounding` | `"monthly"` (default), `"semi_annual"`, or `"annual"` | How the annual rate compounds. `"semi_annual"` is the Canadian *Interest Act* §6 convention — quoted `j_2` is per year compounded semi-annually. |
+| `payment_frequency` | `"monthly"` (default), `"semi_monthly"`, `"biweekly"`, `"weekly"`, `"quarterly"`, `"annual"` | Cadence of payments. `term_months * payments_per_year` must be divisible by 12. |
 
 ### `[expected]` (required)
 
 ```toml
 [expected]
-monthly_payment = "141947.25"   # always required
-
-[[expected.balance_anchor]]
-after_payment = 120
-value = "20885505.83"
+periodic_payment = "141947.25"   # required (alias: monthly_payment for v0.2.x fixtures)
+balloon_at_term = "20885505.83"  # optional — balance at end of loan's term
 ```
 
-`monthly_payment` is the closed-form annuity payment value the library
-must reproduce. Optional `[[expected.balance_anchor]]` entries each
-publish the unpaid principal balance after a specific payment number —
-used for sources (e.g. Fannie Mae §1103) that publish cumulative
-figures rather than per-row schedule data.
+`periodic_payment` is the closed-form annuity payment value the library
+must reproduce per period.  ``monthly_payment`` is accepted as an
+alias for backward compatibility with v0.2.x fixtures and is still
+preferred for monthly-cadence loans where it reads more clearly.
+
+Optional `balloon_at_term` validates the unpaid principal at the end
+of the loan's term — used for sources (e.g. Fannie Mae §1103, Canadian
+fixed-term mortgages on longer amortizations) that publish a balloon
+or end-of-term balance rather than per-row schedule data.
 
 ## Contributing
 

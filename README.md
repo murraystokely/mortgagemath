@@ -48,7 +48,7 @@ exactly, 1 otherwise.
 
 ```python
 from decimal import Decimal
-from mortgagemath import LoanParams, monthly_payment, amortization_schedule
+from mortgagemath import LoanParams, periodic_payment, amortization_schedule
 
 loan = LoanParams(
     principal=Decimal("131250"),
@@ -56,13 +56,44 @@ loan = LoanParams(
     term_months=360,
 )
 
-pmt = monthly_payment(loan)          # Decimal("645.68")
+pmt = periodic_payment(loan)         # Decimal("645.68")
 sched = amortization_schedule(loan)
 print(sched[104].principal)          # Decimal("260.27")
 print(sched[104].interest)           # Decimal("385.41")
 ```
 
 Returns a cent-accurate payment and lender-style amortization schedule.
+
+> Released v0.2.x called this function `monthly_payment`; that name is
+> preserved as a permanent alias.  The new `periodic_payment` name
+> reads more clearly when non-monthly cadences (weekly, biweekly,
+> quarterly) are used.
+
+### Canadian and other non-monthly loans
+
+Canadian *Interest Act* §6 mortgages and any other loan with a
+non-monthly compounding or payment frequency:
+
+```python
+from mortgagemath import (
+    LoanParams, Compounding, PaymentFrequency,
+    PaymentRounding, periodic_payment,
+)
+
+# Canadian mortgage: $350,100 at j_2 = 4.9%, 3-year term on a
+# 20-year amortization, monthly payments.
+loan = LoanParams(
+    principal=Decimal("350100"),
+    annual_rate=Decimal("4.9"),
+    term_months=36,
+    amortization_period_months=240,
+    compounding=Compounding.SEMI_ANNUAL,
+    payment_frequency=PaymentFrequency.MONTHLY,
+    payment_rounding=PaymentRounding.ROUND_HALF_UP,
+    interest_rounding=PaymentRounding.ROUND_HALF_UP,
+)
+print(periodic_payment(loan))         # Decimal("2281.73") — Olivier §13.4
+```
 
 If this solves a problem for you, please star the repo ⭐
 

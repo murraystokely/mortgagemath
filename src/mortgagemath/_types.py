@@ -52,6 +52,60 @@ class PaymentRounding(Enum):
     ROUND_HALF_EVEN = "ROUND_HALF_EVEN"
 
 
+class Compounding(Enum):
+    """How the annual rate compounds to a periodic rate.
+
+    ``MONTHLY`` (the default) is the US residential / commercial
+    convention: the periodic rate is ``annual_rate / payments_per_year``
+    treated as a simple division. For monthly payments under monthly
+    compounding this is exactly the v0.2.x behavior.
+
+    ``SEMI_ANNUAL`` is the Canadian convention (Interest Act §6): the
+    quoted rate ``j_2`` is per year compounded semi-annually, and the
+    periodic rate per payment is
+    ``(1 + j_2 / 200) ** (2 / payments_per_year) - 1``.
+    For a 5% Canadian mortgage with monthly payments this is
+    ``(1.025) ** (1/6) - 1 ≈ 0.41239...%``, **not** ``5/12``.
+
+    ``ANNUAL`` treats the quoted rate as the effective annual rate;
+    the periodic rate is ``(1 + annual / 100) ** (1 / payments_per_year) - 1``.
+    Included for completeness.
+    """
+
+    MONTHLY = "monthly"
+    SEMI_ANNUAL = "semi_annual"
+    ANNUAL = "annual"
+
+
+class PaymentFrequency(Enum):
+    """How often payments are made.
+
+    The ``payments_per_year`` mapping is the standard banking convention
+    used by the worked-example sources the library validates against
+    (e.g. the Canadian Olivier and eCampus Ontario texts use exactly
+    52 weekly / 26 biweekly / 24 semi-monthly periods per year).
+    """
+
+    MONTHLY = "monthly"
+    SEMI_MONTHLY = "semi_monthly"
+    BIWEEKLY = "biweekly"
+    WEEKLY = "weekly"
+    QUARTERLY = "quarterly"
+    ANNUAL = "annual"
+
+    @property
+    def payments_per_year(self) -> int:
+        """Number of payments per calendar year."""
+        return {
+            PaymentFrequency.MONTHLY: 12,
+            PaymentFrequency.SEMI_MONTHLY: 24,
+            PaymentFrequency.BIWEEKLY: 26,
+            PaymentFrequency.WEEKLY: 52,
+            PaymentFrequency.QUARTERLY: 4,
+            PaymentFrequency.ANNUAL: 1,
+        }[self]
+
+
 class BalanceTracking(Enum):
     """How the running balance is tracked between schedule rows.
 
@@ -121,6 +175,17 @@ class LoanParams:
             Excel-default convention used by graduate-level CRE finance
             textbooks (Geltner, LibreTexts, eCampus). Ignored for
             ACTUAL_360 day count, which always uses carry-precision.
+        compounding: How the annual rate compounds to a periodic rate.
+            ``MONTHLY`` (default, US convention) divides the annual rate
+            by ``payments_per_year``. ``SEMI_ANNUAL`` is the Canadian
+            convention required by *Interest Act* §6. ``ANNUAL`` treats
+            the quoted rate as the effective annual rate.
+        payment_frequency: How often payments are made.  Defaults to
+            ``MONTHLY`` (12/yr).  Other supported cadences are
+            ``SEMI_MONTHLY`` (24/yr), ``BIWEEKLY`` (26/yr),
+            ``WEEKLY`` (52/yr), ``QUARTERLY`` (4/yr), and ``ANNUAL``
+            (1/yr).  ``term_months * payments_per_year`` must be
+            divisible by 12.
     """
 
     principal: Decimal
@@ -132,11 +197,68 @@ class LoanParams:
     start_date: date | None = None
     amortization_period_months: int | None = None
     balance_tracking: BalanceTracking = BalanceTracking.ROUND_EACH
+    compounding: Compounding = Compounding.MONTHLY
+    payment_frequency: PaymentFrequency = PaymentFrequency.MONTHLY
 
+    def __post_init__(self) -> None:
+        """Validate cross-field invariants."""
+        # Day-counted accrual is only well-defined for monthly cadence + monthly
+        # compounding. The §1103 §1104 §1106 commercial-loan worked examples
+        # we validate against are all monthly + monthly + Actual/360.
+        if self.day_count == DayCount.ACTUAL_360:
+            if self.payment_frequency != PaymentFrequency.MONTHLY:
+                raise ValueError(
+                    f"DayCount.ACTUAL_360 requires PaymentFrequency.MONTHLY, "
+                    f"got {self.payment_frequency}"
+                )
+            if self.compounding != Compounding.MONTHLY:
+                raise ValueError(
+                    f"DayCount.ACTUAL_360 requires Compounding.MONTHLY, got {self.compounding}"
+                )
+
+        # Number of payments must be a whole number for the schedule loop.
+        ppy = self.payment_frequency.payments_per_year
+        if (self.term_months * ppy) % 12 != 0:
+            raise ValueError(
+                f"term_months={self.term_months} * payments_per_year={ppy} "
+                f"is not divisible by 12; cannot derive a whole number of "
+                f"payments. Adjust term_months so the total is an integer "
+                f"number of payments at the chosen frequency."
+            )
+        if (
+            self.amortization_period_months is not None
+            and (self.amortization_period_months * ppy) % 12 != 0
+        ):
+            raise ValueError(
+                f"amortization_period_months={self.amortization_period_months} "
+                f"* payments_per_year={ppy} is not divisible by 12."
+            )
+
+    @property
+    def _total_payments(self) -> int:
+        """Total number of payments in the schedule."""
+        ppy = self.payment_frequency.payments_per_year
+        return (self.term_months * ppy) // 12
+
+    @property
+    def _amort_payments(self) -> int:
+        """Number of payments used for the closed-form payment formula.
+
+        For balloon loans this is larger than ``_total_payments``.
+        """
+        if self.amortization_period_months is None:
+            return self._total_payments
+        ppy = self.payment_frequency.payments_per_year
+        return (self.amortization_period_months * ppy) // 12
+
+    # Back-compat: many internals predate the rename and refer to "periods"
+    # under monthly+monthly. Keep this property; callers that expect a count
+    # of payments still work, since under monthly+monthly the total payment
+    # count equals the term in months.
     @property
     def _amort_periods(self) -> int:
         """Periods used for the closed-form payment formula."""
-        return self.amortization_period_months or self.term_months
+        return self._amort_payments
 
 
 @dataclass(frozen=True, slots=True)

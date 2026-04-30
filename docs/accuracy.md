@@ -7,12 +7,16 @@ payment requires; many sources do not state a mode explicitly, in which
 case the cell shows the mode under which the library matches the printed
 value (where multiple modes give the same cent, the column says "any").
 
-| Source | Loan | Monthly P&I | Pmt rounding | Int rounding |
+| Source | Loan | Periodic P&I | Pmt rounding | Int rounding |
 |---|---|---|---|---|
 | [CFPB H-25(B) sample Closing Disclosure](https://files.consumerfinance.gov/f/201403_cfpb_closing-disclosure_cover-H25B.pdf) | $162,000 / 3.875% / 30yr | $761.78 | `HALF_UP` | `HALF_UP` |
 | [Fannie Mae Multifamily Guide §1103, Tier 2 SARM example](https://mfguide.fanniemae.com/node/5286) ³ | $25,000,000 / 5.5% / 10yr term, 30yr amort, Actual/360 | $141,947.25 + $20,885,505.83 balloon | `HALF_UP` | `HALF_UP` |
 | [Geltner et al., *Commercial RE Analysis*, Ch 20 Exhibit 20-6 (CPM)](https://s3-eu-west-1.amazonaws.com/s3-euw1-ap-pe-ws4-cws-documents.ri-prod/9781041076391/online-chapters/9781041081197_Online_content.pdf) ⁴ | $1,000,000 / 12% / 30yr | $10,286.13 | `HALF_UP` | `HALF_UP` (carry-precision) |
 | [Goldstein et al., *Finite Mathematics and Its Applications* (12 ed.), §10.3 Ex 1 + Table 1](https://www.pearsonhighered.com/assets/samplechapter/0/1/3/4/0134437764.pdf) ⁵ | $563 / 12% / 5mo | $116.00 | `HALF_UP` | `HALF_UP` (carry-precision) |
+| [Olivier *Business Math* §13.4 — Chans first term](https://math.libretexts.org/Bookshelves/Applied_Mathematics/Business_Math_(Olivier)/13:_Understanding_Amortization_and_its_Applications/13.04:_Special_Application_-_Mortgages) ⁶ | $350,100 / j_2 = 4.9% / 3yr term, 20yr amort, monthly | $2,281.73 + balloon $316,593.49 | `HALF_UP` | `HALF_UP` (semi-annual) |
+| Olivier *Business Math* §13.4 — Chans renewal ⁶ | $316,593.49 / j_2 = 5.85% / 17yr / monthly | $2,440.73 | `HALF_UP` | `HALF_UP` (semi-annual) |
+| [eCampus Ontario *Mathematics of Finance* §4.4.1 — first term](https://ecampusontario.pressbooks.pub/financemath/chapter/4-4-mortgages-formula-approach/) ⁶ | $297,500 / j_2 = 3.8% / 3yr term, 20yr amort, **quarterly** | $5,317.62 + balloon $265,830.61 | `HALF_UP` | `HALF_UP` (semi-annual, quarterly) |
+| eCampus Ontario *Mathematics of Finance* §4.4.1 — renewal ⁶ | $265,830.61 / j_2 = 2.5% / 17yr / quarterly | $4,807.70 | `HALF_UP` | `HALF_UP` (semi-annual, quarterly) |
 | [MS State Extension P3920](https://extension.msstate.edu/sites/default/files/publications/P3920_web.pdf) | $100,000 / 7% / 30yr | $665.30 | `HALF_UP` | `HALF_UP` |
 | [OpenStax *Contemporary Mathematics* §6.8 — car](https://openstax.org/books/contemporary-mathematics/pages/6-8-the-basics-of-loans) ¹ | $28,500 / 3.99% / 5yr | $524.75 | `ROUND_UP` | `HALF_UP` |
 | [OpenStax *Contemporary Mathematics* §6.8 — home](https://openstax.org/books/contemporary-mathematics/pages/6-8-the-basics-of-loans) ¹ | $136,700 / 5.75% / 15yr | $1,135.18 | `ROUND_UP` | `HALF_UP` |
@@ -79,6 +83,19 @@ closed-form annuity present-value formula with the rounded $905
 payment, which drifts a few cents from any row-by-row schedule (3¢ on
 the balance after payment 312); for that reason the per-row anchors
 are not committed.
+
+⁶ The Olivier *Business Math* (CC-BY-NC-SA, LibreTexts) and eCampus
+Ontario *Mathematics of Finance* (CC-BY 4.0) Canadian-mortgage worked
+examples are reproduced under `Compounding.SEMI_ANNUAL` — the
+*Interest Act* §6 convention requiring rates be quoted as
+semi-annually compounded. The library derives the periodic (monthly
+or quarterly) rate as `(1 + j_2/200)^(2/payments_per_year) - 1` and
+the schedule then runs as a standard 30/360 round-each amortization.
+The "Chans" pair models the typical Canadian flow: a fixed-term
+(3 years) mortgage on a longer amortization basis (20 years), with
+the unpaid balance at end of term renewed at a new rate. The
+"eCampus 4.4.1" pair is identical in structure but uses **quarterly**
+payments, exercising the new `PaymentFrequency.QUARTERLY` cadence.
 
 Sources investigated but rejected (because at least one published value
 could not be matched exactly) are documented in

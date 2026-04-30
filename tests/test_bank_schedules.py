@@ -9,11 +9,13 @@ from decimal import Decimal
 
 from mortgagemath import (
     BalanceTracking,
+    Compounding,
     DayCount,
     LoanParams,
+    PaymentFrequency,
     PaymentRounding,
     amortization_schedule,
-    monthly_payment,
+    periodic_payment,
 )
 
 
@@ -24,6 +26,8 @@ def _loan_from_toml(toml_data: dict) -> LoanParams:
     if isinstance(start_date, str):
         start_date = date.fromisoformat(start_date)
     balance_tracking_str = loan.get("balance_tracking", "round_each")
+    compounding_str = loan.get("compounding", "monthly")
+    payment_frequency_str = loan.get("payment_frequency", "monthly")
     return LoanParams(
         principal=Decimal(loan["principal"]),
         annual_rate=Decimal(loan["annual_rate"]),
@@ -34,16 +38,30 @@ def _loan_from_toml(toml_data: dict) -> LoanParams:
         start_date=start_date,
         amortization_period_months=loan.get("amortization_period_months"),
         balance_tracking=BalanceTracking(balance_tracking_str),
+        compounding=Compounding(compounding_str),
+        payment_frequency=PaymentFrequency(payment_frequency_str),
     )
 
 
 class TestBankSchedules:
-    def test_monthly_payment_matches(self, bank_schedule):
-        """The computed monthly payment must match the TOML expected value."""
+    def test_periodic_payment_matches(self, bank_schedule):
+        """The computed periodic payment must match the TOML expected value.
+
+        Accepts either ``monthly_payment`` (legacy key, used by all
+        v0.2.x fixtures) or ``periodic_payment`` (new in v0.3.0,
+        preferred for non-monthly cadences).
+        """
         toml_data, _ = bank_schedule
         loan = _loan_from_toml(toml_data)
-        expected = Decimal(toml_data["expected"]["monthly_payment"])
-        assert monthly_payment(loan) == expected
+        expected_str = toml_data["expected"].get("periodic_payment") or toml_data["expected"].get(
+            "monthly_payment"
+        )
+        if expected_str is None:
+            raise AssertionError(
+                "Fixture must declare expected.periodic_payment or expected.monthly_payment"
+            )
+        expected = Decimal(expected_str)
+        assert periodic_payment(loan) == expected
 
     def test_schedule_matches_csv(self, bank_schedule):
         """Every row in the CSV must match the computed schedule."""
@@ -90,6 +108,13 @@ class TestBankSchedules:
             return
         loan = _loan_from_toml(toml_data)
         sched = amortization_schedule(loan)
-        assert sched[loan.term_months].balance == Decimal(balloon), (
-            f"Balloon at term: {sched[loan.term_months].balance} != {balloon}"
+        # The balloon is the unpaid balance after the final scheduled
+        # payment of the loan's *term*. For monthly cadence this is row
+        # ``term_months``; for non-monthly cadence the schedule has
+        # ``term_months * payments_per_year / 12`` rows after the
+        # opening row.
+        ppy = loan.payment_frequency.payments_per_year
+        final_index = loan.term_months * ppy // 12
+        assert sched[final_index].balance == Decimal(balloon), (
+            f"Balloon at term: {sched[final_index].balance} != {balloon}"
         )

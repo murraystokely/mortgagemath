@@ -261,7 +261,7 @@ class TestEarlyPayoffFromRounding:
     )
 
     def test_emits_warning(self):
-        with pytest.warns(EarlyPayoffWarning, match="paid off at month"):
+        with pytest.warns(EarlyPayoffWarning, match="paid off at period"):
             amortization_schedule(self.LOAN)
 
     def test_schedule_truncates_before_term(self):
