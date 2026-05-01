@@ -1,0 +1,37 @@
+# Broverman, *Mathematics of Investment and Credit* (8th ed.), §2.1
+# Example 2.7(a). SOA Course FM reference text.
+#
+# Worked example: $12,000 loan at 12% nominal annual rate compounded
+# monthly, 36 monthly payments. Published anchor: monthly payment
+# $398.57. Library reproduces $398.57 exactly under ROUND_HALF_UP.
+# (ROUND_UP gives $398.58, missing the published value.)
+#
+# The textbook also publishes a "total of payments = $14,348.52" derived
+# as 36 × $398.57. The library's actual sum is $14,348.59 because the
+# final-row trueup distributes $0.07 across the schedule to keep the
+# balance at exactly $0; this is a common difference between
+# textbook-style "total = n × pmt" and lender-style "total = sum of
+# rows." We validate the closed-form payment value, not the
+# multiplication.
+
+[loan]
+principal = "12000.00"
+annual_rate = "12"
+term_months = 36
+day_count = "30/360"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[source]
+kind = "textbook"
+country = "US"
+license = "all rights reserved (worked numerical values are uncopyrightable facts)"
+short_label = "Broverman MIC 2.7(a)"
+bib_key = "broverman_mic"
+bib_title = "Broverman MIC §2.1 Ex 2.7"
+citation = "Broverman, S. A. *Mathematics of Investment and Credit*, 8th ed., §2.1 Example 2.7(a)–(b). ACTEX, 2023. <https://www.actexlearning.com/samples/MIC_8th_edition_051923_SAMPLE.pdf>"
+url = "https://www.actexlearning.com/samples/MIC_8th_edition_051923_SAMPLE.pdf"
+notes = "SOA Exam FM canonical reference. Closed-form payment validation; HALF_UP required (ROUND_UP gives $398.58)."
+
+[expected]
+periodic_payment = "398.57"

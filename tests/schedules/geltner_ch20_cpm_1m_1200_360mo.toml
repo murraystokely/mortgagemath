@@ -34,7 +34,11 @@ balance_tracking = "carry_precision"
 [source]
 kind = "textbook"
 country = "US"
-label = "geltner_ch20_exhibit_20_6_cpm"
+license = "all rights reserved (worked numerical values are uncopyrightable facts)"
+short_label = "Geltner Ch 20"
+bib_key = "geltner_ch20"
+bib_title = "Geltner Ch 20"
+citation = "Geltner, D., Miller, N. G., van de Minne, A., Eichholtz, P., Lindenthal, T., & Shen, J. *Commercial Real Estate Analysis and Investments*, online supplement Chapter 20: \"Mortgage Basics II — Payments, Yields, and Values,\" Exhibit 20-6 (Constant-Payment Mortgage). Routledge, 2024. ISBN 9781041081197."
 url = "https://s3-eu-west-1.amazonaws.com/s3-euw1-ap-pe-ws4-cws-documents.ri-prod/9781041076391/online-chapters/9781041081197_Online_content.pdf"
 notes = "Geltner et al. graduate-level CRE finance text (Routledge online supplement). Exhibit 20-6 publishes 9 specific rows; library reproduces 7 exactly. The 2 omitted rows (358 and 360) contain textbook-side arithmetic inconsistencies documented in TestGeltnerCPM."
 

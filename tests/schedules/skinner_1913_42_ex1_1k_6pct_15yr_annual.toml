@@ -1,0 +1,41 @@
+# Skinner, *The Mathematical Theory of Investment* (1913), §42 Example 1
+# (p. 116). Public-domain.
+#
+# "What annual installment will pay for [a property worth $1000] in 15
+# years, money being worth 6% effective annually?"
+#
+# Verbatim anchor from the textbook:
+#
+#   R = 1000 · (1 / a_15|.06) = $102.96
+#
+# 6% is treated as the effective annual rate and the level annual
+# installment is computed by the closed-form annuity-certain formula.
+# Library reproduces $102.96 exactly under
+# Compounding.ANNUAL + PaymentFrequency.ANNUAL + ROUND_HALF_UP.
+#
+# Single-anchor fixture (only the periodic payment is published; no
+# schedule), so the CSV is header-only.
+
+[loan]
+principal = "1000.00"
+annual_rate = "6"
+term_months = 180
+day_count = "30/360"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+compounding = "annual"
+payment_frequency = "annual"
+
+[source]
+kind = "textbook"
+country = "US"
+license = "public domain"
+short_label = "Skinner §42 Ex 1"
+bib_key = "skinner_1913"
+bib_title = "Skinner (1913)"
+citation = "Skinner, E. B. *The Mathematical Theory of Investment*, §42 Examples 1 and 3. Boston: Ginn and Company, 1913. Public domain. <https://archive.org/details/mathematicaltheo00skin>"
+url = "https://archive.org/details/mathematicaltheo00skin"
+notes = "Pre-WWI actuarial textbook. Annual-cadence + annual-compounding fixture. Skinner uses 6-place tables; the annuity factor 1/a_15|.06 = 0.102963 yields $102.96 in cents."
+
+[expected]
+periodic_payment = "102.96"

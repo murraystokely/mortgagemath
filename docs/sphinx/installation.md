@@ -37,7 +37,7 @@ python -m mortgagemath
 Sample output:
 
 ```
-mortgagemath 0.5.1 self-check
+mortgagemath 0.5.2 self-check
 
   [OK  ] CFPB H-25(B) $162,000 / 3.875% / 30yr monthly P&I: got 761.78  expected 761.78
   [OK  ] Goldstein §10.3 Ex 1 $563 / 12% / 5mo monthly P&I: got 116.00  expected 116.00

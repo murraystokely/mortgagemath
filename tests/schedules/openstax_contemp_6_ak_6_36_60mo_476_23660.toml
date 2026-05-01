@@ -12,7 +12,11 @@ interest_rounding = "ROUND_HALF_UP"
 [source]
 kind = "textbook"
 country = "US"
-label = "openstax_contemp_6_ak_6_36"
+license = "CC-BY-4.0"
+short_label = "OpenStax AK 6.36"
+bib_key = "openstax_contemp_math"
+bib_title = "OpenStax (Contemporary Mathematics)"
+citation = "OpenStax College. *Contemporary Mathematics*, §6.8 \"The Basics of Loans,\" §6.12 \"Renting and Homeownership,\" and Chapter 6 Answer Key (problems 6.36, 6.78, 6.100, 6.110, 6.114). CC-BY-4.0. <https://openstax.org/books/contemporary-mathematics>"
 url = "https://openstax.org/books/contemporary-mathematics/pages/chapter-6"
 notes = "OpenStax Contemporary Mathematics (CC BY 4.0). Chapter 6 answer key."
 

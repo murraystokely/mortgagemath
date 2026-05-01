@@ -28,7 +28,11 @@ payment_frequency = "monthly"
 [source]
 kind = "textbook"
 country = "CA"
-label = "olivier_business_math_13_4_chans_first_term"
+license = "CC-BY-NC-SA-4.0"
+short_label = "Olivier Chans T1"
+bib_key = "olivier_business_math"
+bib_title = "Olivier Chans (T1 + renewal)"
+citation = "Olivier, J. *Business Math: A Step-by-Step Handbook*, §13.4 \"Special Application: Mortgages\" (the Chans first term and renewal). LibreTexts (CC-BY-NC-SA), 2021. <https://math.libretexts.org/Bookshelves/Applied_Mathematics/Business_Math_(Olivier)/13:_Understanding_Amortization_and_its_Applications/13.04:_Special_Application_-_Mortgages>"
 url = "https://math.libretexts.org/Bookshelves/Applied_Mathematics/Business_Math_(Olivier)/13:_Understanding_Amortization_and_its_Applications/13.04:_Special_Application_-_Mortgages"
 notes = "Chapter 13 of Olivier *Business Math* (CC-BY-NC-SA). The Chans first term — Canadian residential mortgage with semi-annual compounding (Interest Act §6). Validates monthly P&I and the balloon at end of the 3-year term (the balance the Chans must renew or pay off)."
 

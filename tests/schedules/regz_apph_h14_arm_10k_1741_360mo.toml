@@ -125,7 +125,11 @@ recast = true
 [source]
 kind = "regulatory_example"
 country = "US"
-label = "regz_part_1026_apph_sample_h14"
+license = "public domain"
+short_label = "Reg Z H-14"
+bib_key = "regz_h14"
+bib_title = "Reg Z H-14"
+citation = "U.S. Code of Federal Regulations. 12 CFR Part 1026 (Regulation Z, Truth in Lending), Appendix H, Sample H-14: *Variable-Rate Mortgage Sample*. <https://www.ecfr.gov/current/title-12/chapter-X/part-1026/appendix-Appendix%20H%20to%20Part%201026>"
 url = "https://www.ecfr.gov/current/title-12/chapter-X/part-1026/appendix-Appendix%20H%20to%20Part%201026"
 notes = "12 CFR Part 1026 Appendix H Sample H-14 — Variable-Rate Mortgage Sample. $10,000 / 30yr 1/1 ARM at 1-year CMT + 3pp margin, 2pp annual cap, 5pp symmetric lifetime cap. Historical trajectory 1982-1996 using actual published 1-year CMT values. Library reproduces every published value to the cent."
 

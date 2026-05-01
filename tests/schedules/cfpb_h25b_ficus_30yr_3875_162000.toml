@@ -21,7 +21,11 @@ interest_rounding = "ROUND_HALF_UP"
 [source]
 kind = "regulatory_example"
 country = "US"
-label = "cfpb_h25b_ficus_bank"
+license = "public domain"
+short_label = "CFPB H-25(B)"
+bib_key = "cfpb_h25b"
+bib_title = "CFPB H-25(B)"
+citation = "Consumer Financial Protection Bureau. *Closing Disclosure (Sample), Form H-25(B)*. 2014. <https://files.consumerfinance.gov/f/201403_cfpb_closing-disclosure_cover-H25B.pdf>"
 url = "https://files.consumerfinance.gov/f/201403_cfpb_closing-disclosure_cover-H25B.pdf"
 
 [expected]

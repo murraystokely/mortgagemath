@@ -28,7 +28,11 @@ payment_frequency = "quarterly"
 [source]
 kind = "textbook"
 country = "CA"
-label = "ecampus_finmath_4_4_1_first_term"
+license = "CC-BY-4.0"
+short_label = "eCampus §4.4.1 T1"
+bib_key = "ecampus_finmath_4_4_1"
+bib_title = "eCampus §4.4.1 (T1 + renewal)"
+citation = "eCampus Ontario. *Mathematics of Finance*, §4.4.1 \"Mortgages: Formula approach.\" Pressbooks (CC-BY 4.0). <https://ecampusontario.pressbooks.pub/financemath/chapter/4-4-mortgages-formula-approach/>"
 url = "https://ecampusontario.pressbooks.pub/financemath/chapter/4-4-mortgages-formula-approach/"
 notes = "eCampus Ontario *Mathematics of Finance* §4.4.1 (CC-BY 4.0). Canadian residential mortgage with quarterly payments and semi-annual compounding. Validates the periodic P&I and the balloon at end of the 3-year term."
 

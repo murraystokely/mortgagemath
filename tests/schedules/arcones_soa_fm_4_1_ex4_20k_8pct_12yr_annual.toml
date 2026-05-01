@@ -1,0 +1,38 @@
+# Arcones, *Manual for SOA Exam FM / CAS Exam 2* (2009), Chapter 4
+# "Amortization and sinking bonds," §4.1 Example 4.
+#
+# Worked example: $20,000 loan at 8% effective annual rate, 12 annual
+# payments. Source publishes the complete 12-row schedule (payment
+# amount, interest paid, principal reduction, outstanding balance).
+# Library reproduces every cell exactly under
+# Compounding.ANNUAL + PaymentFrequency.ANNUAL + ROUND_HALF_UP +
+# round_each-balance accounting.
+#
+# Closed-form payment 2653.8975... rounds half-up to $2,653.90; the
+# final payment is $2,653.91 (last-row trueup absorbing the cent of
+# accumulated rounding so the balance lands at $0).
+
+[loan]
+principal = "20000.00"
+annual_rate = "8"
+term_months = 144
+day_count = "30/360"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+compounding = "annual"
+payment_frequency = "annual"
+balance_tracking = "round_each"
+
+[source]
+kind = "textbook"
+country = "US"
+license = "all rights reserved (worked numerical values are uncopyrightable facts)"
+short_label = "Arcones SOA FM §4.1 Ex 4"
+bib_key = "arcones_soa_fm"
+bib_title = "Arcones SOA FM §4.1 Ex 4"
+citation = "Arcones, M. A. *Manual for SOA Exam FM / CAS Exam 2*, Chapter 4 \"Amortization and sinking bonds,\" §4.1 Example 4. 2009. <https://people.math.binghamton.edu/arcones/exam-fm/sect-4-1.pdf>"
+url = "https://people.math.binghamton.edu/arcones/exam-fm/sect-4-1.pdf"
+notes = "SOA Exam FM / CAS Exam 2 study manual. First annual-cadence fixture in the corpus with a full 12-row published schedule. Source's row-0 \"balance = 2000.00\" is an OCR transcription artifact (true value 20000.00) — the row-0 balance is the loan principal, which the schedule otherwise reproduces correctly."
+
+[expected]
+periodic_payment = "2653.90"

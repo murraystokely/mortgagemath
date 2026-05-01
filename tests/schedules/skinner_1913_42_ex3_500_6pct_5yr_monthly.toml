@@ -1,0 +1,41 @@
+# Skinner, *The Mathematical Theory of Investment* (1913), §42 Example 3
+# (p. 117). Public-domain. The "piano" example.
+#
+# "What is the monthly payment required to pay for a piano costing
+# [$500], with interest at 6%, in 5 years … By logarithms we find
+# R/12 = $9.63."
+#
+# Skinner quotes 6% as the *effective annual* rate and uses the actuarial
+# convention of converting to the equivalent nominal-monthly rate
+# i^(12) = 12·((1.06)^(1/12) - 1) ≈ 0.058411 before computing the level
+# monthly payment. This is the European/actuarial counterpart to the
+# American "6% nominal compounded monthly" reading: naïve
+# Compounding.MONTHLY (6/12 = 0.5% per month) would give $9.67, a
+# 4-cent miss. Compounding.ANNUAL reproduces $9.63 exactly.
+#
+# This is the first fixture in the suite that isolates Compounding.ANNUAL
+# on a monthly-cadence loan.
+
+[loan]
+principal = "500.00"
+annual_rate = "6"
+term_months = 60
+day_count = "30/360"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+compounding = "annual"
+payment_frequency = "monthly"
+
+[source]
+kind = "textbook"
+country = "US"
+license = "public domain"
+short_label = "Skinner §42 Ex 3 piano"
+bib_key = "skinner_1913"
+bib_title = "Skinner (1913)"
+citation = "Skinner, E. B. *The Mathematical Theory of Investment*, §42 Examples 1 and 3. Boston: Ginn and Company, 1913. Public domain. <https://archive.org/details/mathematicaltheo00skin>"
+url = "https://archive.org/details/mathematicaltheo00skin"
+notes = "First fixture isolating Compounding.ANNUAL on a monthly-cadence loan. Skinner treats 6% as effective annual; library backs out the equivalent nominal-monthly rate i^(12)/12 = (1.06)^(1/12) - 1."
+
+[expected]
+periodic_payment = "9.63"

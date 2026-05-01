@@ -44,7 +44,11 @@ payment_cap_factor = "1.075"
 [source]
 kind = "regulatory_example"
 country = "US"
-label = "proeducate_arm_payment_caps"
+license = "public domain"
+short_label = "ProEducate cap"
+bib_key = "proeducate_arm_cap"
+bib_title = "ProEducate ARM cap"
+citation = "ProEducate. *ARM Payment Caps* (worked example derived from a Federal Reserve consumer-handbook lineage, mirrored at mortgagesfinancingandcredit.org). 2014. <https://www.proeducate.com/courses/Finance/PaymentCap.pdf>"
 url = "https://www.proeducate.com/courses/Finance/PaymentCap.pdf"
 notes = "ARM payment-cap worked example with explicit negative amortization. Payment cap factor 1.075 (7.5% annual cap) binds at year 2 because the uncapped 12% recast ($667.30) exceeds the cap ($613.20 = $570.42 × 1.075). Year-2 interest ($646.39 first month) exceeds capped payment, generating $420.90 cumulative neg-am over 12 months."
 
