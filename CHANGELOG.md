@@ -36,6 +36,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   balance-tracking modes (cap binds vs doesn't bind, neg-am
   invariant, regression check that cap=None is byte-identical to
   v0.4 recast).
+- **Quarto vignette documentation set** in
+  ``docs/vignettes/``.  Five vignettes branded with the MortgageMath
+  logo, rendered to both HTML (Quarto's website format) and PDF
+  (typst engine, deterministic builds, no LaTeX dependency).
+  - *At a glance* — single-page overview with install/use, worked
+    example, and the full Required + Optional parameter list.
+  - *Validation against published sources* — 27-fixture table with
+    the six parameter columns (Day / Bal / Rnd / Cmp / Freq / ARM)
+    showing the exact ``LoanParams`` settings required to match
+    each source, plus a curated bibliography keyed by source.  The
+    table is generated dynamically from
+    ``tests/schedules/*.toml`` so it stays current as fixtures are
+    added.
+  - *Reg Z Sample H-14: an ARM walkthrough* — cap derivation table,
+    encoded ``LoanParams``, and live anchor verification of all 11
+    published anchors against the regulatory worked example.
+  - *Payment caps and negative amortization* — ProEducate worked
+    example with a row-by-row trace of the rate-change boundary
+    (months 10–25) showing where the cap binds and where the
+    schedule enters negative amortization.
+  - *Canadian semi-annual mortgages* — *Interest Act* §6 convention
+    with worked Olivier (Chans, monthly) and eCampus (§4.4.1,
+    quarterly) reproductions.
 
 ### Validation
 

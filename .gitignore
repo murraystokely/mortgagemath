@@ -10,3 +10,8 @@ coverage.xml
 # IDE
 .idea/
 .vscode/
+
+# Quarto vignette build outputs
+docs/vignettes/_site/
+docs/vignettes/_freeze/
+docs/vignettes/.quarto/

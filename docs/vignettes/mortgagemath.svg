@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 880 290" role="img" aria-label="MortgageMath">
+  <title>MortgageMath — Precise Loan Amortization in Python</title>
+
+  <defs>
+    <!-- Bar gradients from rpt.svg -->
+    <linearGradient id="mm-red" x1="-452.91" y1="1202.21" x2="-451.21" y2="1202.21"
+                    gradientTransform="translate(-35218.98 -94131.96) rotate(180) scale(78.4 -78.4)"
+                    gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#b22f25"/>
+      <stop offset="1" stop-color="#e54426"/>
+    </linearGradient>
+    <linearGradient id="mm-green" x1="-452.6" y1="1203.85" x2="-450.9" y2="1203.85"
+                    gradientTransform="translate(-28268.86 -75661.21) rotate(180) scale(62.95 -62.95)"
+                    gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#288943"/>
+      <stop offset="1" stop-color="#70ba75"/>
+    </linearGradient>
+    <linearGradient id="mm-blue" x1="-442.12" y1="1164.46" x2="-440.42" y2="1164.46"
+                    gradientTransform="translate(7806.79 20474.64) scale(17.46 -17.46)"
+                    gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#206890"/>
+      <stop offset="1" stop-color="#57abdc"/>
+    </linearGradient>
+    <linearGradient id="mm-orange" x1="-451.55" y1="1206.7" x2="-449.86" y2="1206.7"
+                    gradientTransform="translate(-21556.16 -57726.78) rotate(180) scale(47.98 -47.98)"
+                    gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#c86828"/>
+      <stop offset="1" stop-color="#ef8122"/>
+    </linearGradient>
+
+    <!-- Soft Gaussian drop shadow for the paper -->
+    <filter id="paper-shadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="1.5" dy="2.5" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+
+  <!-- ================================================================
+       LAYER 1: Tilted paper (with soft shadow on all sides) and equation
+       ================================================================ -->
+  <g transform="rotate(-2.6 123.5 252.5)">
+    <!-- Paper body + folded corner, sharing the drop-shadow filter -->
+    <g filter="url(#paper-shadow)">
+      <rect x="5" y="215" width="237" height="75" fill="#fefce8"
+            stroke="#cbd5e1" stroke-width="1.2"/>
+      <path d="M226 215 L242 215 L242 231 Z" fill="#e2e8f0"
+            stroke="#cbd5e1" stroke-width="1.2" stroke-linejoin="round"/>
+      <path d="M226 215 L226 231 L242 231" fill="none"
+            stroke="#cbd5e1" stroke-width="1.2" stroke-linejoin="round"/>
+    </g>
+
+    <!-- Equation: stacked fraction, drawn on top of paper (no shadow) -->
+    <g font-family="Cambria Math, Latin Modern Math, Georgia, serif"
+       font-style="italic" fill="#1e293b">
+      <text x="45" y="261" font-size="22">M =</text>
+      <text x="148" y="253" font-size="16" text-anchor="middle">P · r(1+r)<tspan font-size="10" dy="-5">n</tspan></text>
+      <line x1="92" y1="259" x2="204" y2="259"
+            stroke="#1e293b" stroke-width="1.6" stroke-linecap="round"/>
+      <text x="148" y="274" font-size="16" text-anchor="middle">(1+r)<tspan font-size="10" dy="-5">n</tspan><tspan dy="5"> − 1</tspan></text>
+    </g>
+  </g>
+
+  <!-- ================================================================
+       LAYER 2: Chart bars on top of paper. Each bar is now built from
+       three explicit shapes: side parallelogram (with diagonal top
+       AND bottom), front rectangle, and top parallelogram facet.
+       The diagonal bottom of each side face mirrors the top facet's
+       perspective offset (~11 units right, ~5.23 units up at the back).
+       ================================================================ -->
+
+  <!-- Red bar (tallest) -->
+  <polygon fill="url(#mm-red)" points="216.77 11.05 205.72 16.28 205.72 222 216.77 216.77"/>
+  <rect fill="#de553e" x="176.14" y="16.28" width="29.58" height="205.72"/>
+  <polygon fill="#f47c69" points="216.77 11.05 205.72 16.28 176.14 16.28 187.18 11.05"/>
+
+  <!-- Green bar -->
+  <polygon fill="url(#mm-green)" points="166.54 38.2 155.49 43.44 155.49 222 166.54 216.76"/>
+  <rect fill="#76c47f" x="125.91" y="43.44" width="29.58" height="178.56"/>
+  <polygon fill="#b4dbb2" points="166.54 38.2 155.49 43.44 125.91 43.44 136.95 38.2"/>
+
+  <!-- Blue bar -->
+  <polygon fill="url(#mm-blue)" points="117.92 74.13 106.88 79.37 106.88 222 117.92 216.76"/>
+  <rect fill="#7dc5ed" x="77.29" y="79.37" width="29.58" height="142.63"/>
+  <polygon fill="#b3e0f8" points="117.92 74.13 106.88 79.37 77.29 79.37 88.34 74.13"/>
+
+  <!-- Orange bar (shortest) -->
+  <polygon fill="url(#mm-orange)" points="71.13 117.39 60.08 122.62 60.08 222 71.13 216.77"/>
+  <rect fill="#e48135" x="30.5" y="122.62" width="29.58" height="99.38"/>
+  <polygon fill="#faaf75" points="71.13 117.39 60.08 122.62 30.5 122.62 41.54 117.39"/>
+
+  <!-- ================================================================
+       LAYER 3: House (also on the paper, original position)
+       ================================================================ -->
+  <polygon fill="#383838" points="199.67 170.62 191.05 172.07 191.73 157.93 199.67 170.62"/>
+  <polygon fill="#727373" points="102.18 222.18 52.13 222.18 52.13 163.94 102.18 146.93 102.18 222.18"/>
+  <polygon fill="#ccc" points="91.91 158.8 84.26 148.53 150.83 80.66 204.91 163.27 199.67 170.62 191.73 157.93 192.5 222.18 102.19 222.18 102.19 146.93 91.91 158.8"/>
+
+  <!-- Window fills -->
+  <polygon fill="#fff" points="152.58 175.85 162.1 176.68 162.1 156.96 152.58 156.38 152.58 175.85"/>
+  <polygon fill="#fff" points="132.37 198.9 143.56 198.9 143.56 179.87 132.95 179.01 132.37 198.9"/>
+  <polygon fill="#fff" points="133.08 173.58 143.56 174.1 143.56 155.08 132.95 154.21 133.08 173.58"/>
+  <polygon fill="#fff" points="152.58 200.02 161.43 200.02 161.43 181 152.47 180.13 152.58 200.02"/>
+
+  <!-- Side wall + roof shadow -->
+  <polygon fill="#9e9e9e" points="36.87 165.39 94.72 110.15 150.83 80.66 84.26 148.53 36.87 165.39"/>
+  <polygon fill="#383838" points="36.87 165.39 42.98 172.95 91.91 158.8 84.26 148.53 36.87 165.39"/>
+
+  <!-- Window frames -->
+  <polygon fill="#9e9e9e" points="150.15 177.79 143.56 179.44 143.56 199.13 150.15 199.26 150.15 177.79"/>
+  <polygon fill="#9e9e9e" points="143.56 179.87 132.95 179.01 132.95 176.58 149.89 178.18 143.56 179.87"/>
+  <polygon fill="#9e9e9e" points="168.14 179.87 161.52 180.41 161.52 199.58 168.14 199.73 168.14 179.87"/>
+  <polygon fill="#9e9e9e" points="161.52 181.23 152.95 180.62 152.95 178.56 168.28 179.86 161.52 181.23"/>
+  <polygon fill="#9e9e9e" points="161.25 157.59 168.57 156.38 168.57 176.87 161.25 176.87 161.25 157.59"/>
+  <polygon fill="#9e9e9e" points="152.58 154.2 152.58 157.1 161.25 157.59 168.57 156.7 152.58 154.2"/>
+  <polygon fill="#9e9e9e" points="143.42 155.12 149.55 153.88 149.55 174.4 143.42 174.4 143.42 155.12"/>
+  <polygon fill="#9e9e9e" points="133.31 151.73 133.31 154.63 143.42 155.12 149.68 153.85 133.31 151.73"/>
+
+  <polygon fill="none" stroke="#fff" stroke-miterlimit="10" points="132.95 176.58 150.15 177.79 150.15 199.26 132.66 198.92 132.95 176.58"/>
+  <polygon fill="none" stroke="#fff" stroke-miterlimit="10" points="168.57 179.49 152.58 178.13 152.58 199.79 168.57 200.18 168.57 179.49"/>
+  <polygon fill="none" stroke="#fff" stroke-miterlimit="10" points="168.57 156.38 152.58 154.2 152.58 175.85 168.57 176.87 168.57 156.38"/>
+  <polygon fill="none" stroke="#fff" stroke-miterlimit="10" points="149.96 153.47 132.95 151.42 132.95 173.69 149.96 175.13 149.96 153.47"/>
+
+  <!-- ================================================================
+       WORDMARK: 78pt name, 25pt tagline
+       ================================================================ -->
+  <g transform="translate(305,0)">
+    <text x="0" y="178"
+          font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif"
+          font-size="78" font-weight="700" letter-spacing="-2.2"
+          fill="#383838">Mortgage<tspan fill="#de553e">Math</tspan></text>
+    <text x="3" y="218"
+          font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif"
+          font-size="25" font-weight="500" letter-spacing="0.4"
+          fill="#727373">Precise Loan Amortization in Python</text>
+  </g>
+</svg>
