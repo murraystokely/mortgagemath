@@ -11,8 +11,20 @@
 [![Python 3.11+](https://img.shields.io/pypi/pyversions/mortgagemath.svg)](https://pypi.org/project/mortgagemath/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/mortgagemath?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/mortgagemath)
+[![Documentation](https://img.shields.io/readthedocs/mortgagemath?label=docs)](https://mortgagemath.readthedocs.io/)
 
 Cent-accurate mortgage amortization for Python — validated against CFPB, Fannie Mae, and published real-world examples.
+
+## Documentation
+
+- **[Read the Docs](https://mortgagemath.readthedocs.io/)** — installation, quickstart, full API reference, and changelog
+- **Vignettes** — five branded PDFs covering the library at-a-glance, validated sources, ARMs, payment caps, and Canadian j_2 mortgages:
+  - [At a glance](docs/vignettes/rendered/at-a-glance.pdf) — 1-page overview
+  - [Validation against published sources](docs/vignettes/rendered/validation.pdf) — full 27-fixture parameter matrix + bibliography
+  - [Reg Z H-14 ARM walkthrough](docs/vignettes/rendered/arm-regz-h14.pdf)
+  - [Payment caps and negative amortization](docs/vignettes/rendered/payment-caps-proeducate.pdf)
+  - [Canadian semi-annual mortgages](docs/vignettes/rendered/canadian-j2.pdf)
+- **HTML site**: [murraystokely.github.io/mortgagemath](https://murraystokely.github.io/mortgagemath/) (rendered vignettes with navigation and search)
 
 ## Use Cases
 

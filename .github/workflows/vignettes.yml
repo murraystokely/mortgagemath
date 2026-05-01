@@ -1,0 +1,78 @@
+name: vignettes
+
+# Renders the Quarto vignettes under docs/vignettes/ and:
+#  - on push to main: deploys the HTML site to the gh-pages branch
+#    (served at https://<owner>.github.io/<repo>/)
+#  - on tag (v*): rebuilds and uploads the PDFs as workflow artifacts
+#    (the release workflow can pull them and attach to the GitHub
+#    Release; or the user can attach manually from the run page).
+#
+# The committed copies under docs/vignettes/rendered/ are independent
+# of this workflow.  They are refreshed manually before each release
+# tag and let users browsing the GitHub repo file tree click a PDF
+# without leaving the repo.
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+    paths:
+      - "docs/vignettes/**"
+      - ".github/workflows/vignettes.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+        with:
+          python-version: "3.13"
+
+      - name: Install Python deps for Quarto
+        run: |
+          uv pip install --system --no-cache jupyter
+          uv pip install --system --no-cache -e .
+
+      - name: Install Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: "1.5.57"
+
+      - name: Render vignettes
+        working-directory: docs/vignettes
+        run: quarto render
+
+      - name: Upload site artifact
+        if: github.ref == 'refs/heads/main' || github.ref_type == 'tag'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/vignettes/_site
+
+      - name: Upload PDFs as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vignette-pdfs
+          path: docs/vignettes/_site/*.pdf
+          retention-days: 90
+
+  deploy-pages:
+    # Only deploy from main pushes; tag pushes only build artifacts.
+    if: github.ref == 'refs/heads/main'
+    needs: render
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
