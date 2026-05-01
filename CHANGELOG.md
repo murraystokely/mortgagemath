@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-04-30
+
+### Added
+
+- **Payment caps with negative amortization** for ARMs.
+  ``RateChange`` gains an optional ``payment_cap_factor`` field (e.g.
+  ``Decimal("1.075")`` for a 7.5% annual cap).  When set on a
+  recasting rate change, the new payment is bounded by
+  ``min(closed_form_recast, prior_payment * cap_factor)``.  If the
+  cap binds and the per-period interest exceeds the capped payment,
+  the unpaid interest is capitalized into the balance — the
+  corresponding ``Installment.principal`` is negative and the balance
+  grows.  The per-row invariant
+  ``principal + interest == payment`` continues to hold.
+- **ProEducate ARM payment-cap fixture.**  $65,000 / Year 1 at 10% /
+  Year 2 at 12% / 30yr / 7.5% annual payment cap.  Validates 7
+  cents-level anchors: year-1 P&I $570.42, balance after pmt 12
+  $64,638.72, year-2 capped P&I $613.20, month-13 interest $646.39
+  with -$33.19 principal (neg-am), cumulative neg-am $420.90 over
+  year 2, balance after pmt 24 $65,059.62, year-2 uncapped recast
+  for reference $667.30.  See
+  ``tests/schedules/proeducate_arm_pmt_cap_65k_10pct_to_12pct_360mo.{toml,csv}``.
+- **CLI cap-suffix syntax.**  ``--rate-change`` accepts
+  ``EFFECTIVE_PMT:NEW_RATE:cap=FACTOR``, repeatable suffixes parsed
+  in any order alongside the existing ``:no_recast`` flag.
+- 6 new structural / invariant tests for cap mechanics in both
+  balance-tracking modes (cap binds vs doesn't bind, neg-am
+  invariant, regression check that cap=None is byte-identical to
+  v0.4 recast).
+
+### Validation
+
+- Validation rejects ``payment_cap_factor <= 0`` and the
+  combination ``payment_cap_factor`` + ``recast=False`` (cap is only
+  meaningful when recasting).
+- Empty ``rate_schedule`` and rate changes without
+  ``payment_cap_factor`` are byte-identical to v0.4.0 (regression-
+  tested; every existing fixture passes unchanged).
+
+### Notes
+
+- **Goldstein 12e §10.4 Example 14** (the textbook canonical 5/1
+  ARM with payment cap and neg-am at year 7) was the algorithmic
+  motivator for the API but is **not committed as a fixture**.
+  Goldstein computes year-6 balances via the textbook closed-form
+  outstanding-balance formula at the rounded year-1 payment, which
+  diverges 13–26¢ from the library's row-by-row schedule (same
+  algorithmic mismatch documented in v0.4.0 for Goldstein Ex 13).
+  The 1¢ propagation breaks the year-7 cap calculation.  ProEducate
+  is the cents-level published-source fixture.
+- See ``docs/v0.5-plan.md`` for the v0.5 design and a deferred-work
+  list (Canadian biweekly fixtures, UK / AU fixtures, Quarto
+  vignette docs, Reg Z Appendix J APR validator, GPM).
+
 ## [0.4.0] - 2026-04-30
 
 ### Added

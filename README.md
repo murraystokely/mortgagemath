@@ -151,6 +151,34 @@ print(sched[60].payment)              # Decimal("1160.80") — initial level pay
 print(sched[61].payment)              # Decimal("1334.16") — recast at month 61
 ```
 
+Payment caps with negative amortization (since v0.5):
+
+```python
+# ProEducate ARM payment-cap example: $65,000 at 10% Year 1, 12% Year 2,
+# 7.5% annual payment cap.  At the year 2 reset the uncapped recast
+# would be $667.30, but the cap clamps it to $613.20 (= $570.42 × 1.075).
+# Monthly interest at 12% on the year-1 ending balance ($64,638.72) is
+# $646.39, exceeding the capped $613.20 — so $33.19 of interest is
+# capitalized into the balance each month (negative amortization).
+loan = LoanParams(
+    principal=Decimal("65000"),
+    annual_rate=Decimal("10"),
+    term_months=360,
+    payment_rounding=PaymentRounding.ROUND_HALF_UP,
+    interest_rounding=PaymentRounding.ROUND_HALF_UP,
+    rate_schedule=(
+        RateChange(
+            effective_payment_number=13,
+            new_annual_rate=Decimal("12"),
+            payment_cap_factor=Decimal("1.075"),  # 7.5% annual cap
+        ),
+    ),
+)
+sched = amortization_schedule(loan)
+print(sched[13].payment)              # Decimal("613.20") — cap binds
+print(sched[13].principal)            # Decimal("-33.19") — neg-am
+```
+
 ### CLI examples for the harder loan types
 
 ```sh

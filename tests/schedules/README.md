@@ -58,6 +58,12 @@ declares one rate change:
 effective_payment_number = 61   # 1-indexed; new rate applies starting at this payment
 new_annual_rate = "7.2"         # Decimal string — quote like `annual_rate`
 recast = true                   # optional, default true; false keeps prior level payment
+payment_cap_factor = "1.075"    # optional Decimal string; bounds the recast at
+                                # min(uncapped, prior_pmt × factor). Only meaningful
+                                # when recast=true. When the cap binds and interest
+                                # exceeds the capped payment, the unpaid interest is
+                                # capitalized into the balance (negative amortization);
+                                # the corresponding Installment.principal is negative.
 ```
 
 Constraints (validated by ``LoanParams.__post_init__``): entries must

@@ -152,6 +152,8 @@ def _schedule_thirty_360_round_each(loan: LoanParams) -> list[Installment]:
         )
     ]
 
+    payment_rounding = _ROUNDING_MAP[loan.payment_rounding]
+
     for i in range(1, total_payments + 1):
         # Apply any rate change effective at this payment, before interest accrual.
         rc = _next_rate_change(loan.rate_schedule, rate_schedule_idx, i)
@@ -161,9 +163,14 @@ def _schedule_thirty_360_round_each(loan: LoanParams) -> list[Installment]:
             )
             if rc.recast:
                 remaining = total_payments - (i - 1)
-                _, pmt = _recast_payment_pair(
+                _, pmt_uncapped = _recast_payment_pair(
                     balance, periodic_rate, remaining, loan.payment_rounding
                 )
+                if rc.payment_cap_factor is not None:
+                    cap = (pmt * rc.payment_cap_factor).quantize(_PENNY, rounding=payment_rounding)
+                    pmt = min(pmt_uncapped, cap)
+                else:
+                    pmt = pmt_uncapped
             rate_schedule_idx += 1
 
         interest = (balance * periodic_rate).quantize(_PENNY, rounding=interest_rounding)
@@ -247,6 +254,7 @@ def _schedule_thirty_360_carry_precision(loan: LoanParams) -> list[Installment]:
     balance = loan.principal  # full-precision Decimal
     total_interest_disp = _ZERO
     rate_schedule_idx = 0
+    payment_rounding = _ROUNDING_MAP[loan.payment_rounding]
 
     schedule: list[Installment] = [
         Installment(
@@ -268,9 +276,25 @@ def _schedule_thirty_360_carry_precision(loan: LoanParams) -> list[Installment]:
             )
             if rc.recast:
                 remaining = total_payments - (i - 1)
-                pmt_raw, pmt_disp = _recast_payment_pair(
+                pmt_uncapped_raw, pmt_uncapped_disp = _recast_payment_pair(
                     balance, periodic_rate, remaining, loan.payment_rounding
                 )
+                if rc.payment_cap_factor is not None:
+                    cap = (pmt_disp * rc.payment_cap_factor).quantize(
+                        _PENNY, rounding=payment_rounding
+                    )
+                    if cap < pmt_uncapped_disp:
+                        # Cap binds: use the cap as both raw and displayed
+                        # payment.  The cap is at cents granularity, so
+                        # subsequent neg-am math uses the cap value exactly.
+                        pmt_disp = cap
+                        pmt_raw = cap
+                    else:
+                        pmt_disp = pmt_uncapped_disp
+                        pmt_raw = pmt_uncapped_raw
+                else:
+                    pmt_disp = pmt_uncapped_disp
+                    pmt_raw = pmt_uncapped_raw
             rate_schedule_idx += 1
 
         interest_raw = balance * periodic_rate

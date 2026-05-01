@@ -281,6 +281,61 @@ def test_rate_change_non_numeric_value_exits_two():
     assert exc.value.code == 2
 
 
+def test_rate_change_cap_factor_via_cli(capsys):
+    """ProEducate via CLI: --rate-change 13:12:cap=1.075 — year 2 P&I $613.20."""
+    import json as _json
+
+    rc = cli.main(
+        [
+            "schedule",
+            "--principal",
+            "65000",
+            "--rate",
+            "10",
+            "--term-months",
+            "360",
+            "--payment-rounding",
+            "ROUND_HALF_UP",
+            "--interest-rounding",
+            "ROUND_HALF_UP",
+            "--rate-change",
+            "13:12:cap=1.075",
+            "--format",
+            "json",
+        ]
+    )
+    assert rc == 0
+    payload = _json.loads(capsys.readouterr().out)
+    assert payload[13]["payment"] == "613.20"
+
+
+def test_rate_change_cap_with_no_recast_rejected():
+    """``cap=`` and ``no_recast`` together are rejected by the RateChange dataclass."""
+    with pytest.raises(SystemExit) as exc:
+        cli.main(
+            [
+                "payment",
+                "-p",
+                "100000",
+                "-r",
+                "5",
+                "-t",
+                "360",
+                "--rate-change",
+                "13:6:no_recast:cap=1.05",
+            ]
+        )
+    assert exc.value.code == 2
+
+
+def test_rate_change_cap_unparseable_factor():
+    with pytest.raises(SystemExit) as exc:
+        cli.main(
+            ["payment", "-p", "100000", "-r", "5", "-t", "360", "--rate-change", "13:6:cap=zzz"]
+        )
+    assert exc.value.code == 2
+
+
 def test_rate_change_explicit_recast_suffix(capsys):
     """Explicit ``:recast`` suffix is the same as omitting it."""
     rc = cli.main(

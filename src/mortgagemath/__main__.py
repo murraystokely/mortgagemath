@@ -148,29 +148,48 @@ def _run_selfcheck() -> int:
 
 
 def _parse_rate_change(s: str) -> RateChange:
-    """Parse a ``--rate-change`` value: ``EFFECTIVE_PMT:NEW_RATE[:no_recast]``."""
+    """Parse a ``--rate-change`` value.
+
+    Syntax: ``EFFECTIVE_PMT:NEW_RATE[:SUFFIX]*`` where each ``SUFFIX``
+    is one of ``recast``, ``no_recast``, or ``cap=FACTOR``.  Defaults
+    are ``recast`` and no cap.
+    """
     parts = s.split(":")
-    if len(parts) not in (2, 3):
+    if len(parts) < 2:
         raise argparse.ArgumentTypeError(
-            f"--rate-change expects EFFECTIVE_PMT:NEW_RATE[:no_recast], got {s!r}"
+            f"--rate-change expects EFFECTIVE_PMT:NEW_RATE[:no_recast][:cap=FACTOR], got {s!r}"
         )
     try:
         effective = int(parts[0])
         rate = Decimal(parts[1])
     except (ValueError, ArithmeticError) as exc:
         raise argparse.ArgumentTypeError(f"--rate-change parse error in {s!r}: {exc}") from exc
+
     recast = True
-    if len(parts) == 3:
-        flag = parts[2].lower()
-        if flag == "no_recast":
+    cap_factor: Decimal | None = None
+    for suffix in parts[2:]:
+        if suffix.lower() == "no_recast":
             recast = False
-        elif flag == "recast":
+        elif suffix.lower() == "recast":
             recast = True
+        elif suffix.lower().startswith("cap="):
+            try:
+                cap_factor = Decimal(suffix[len("cap=") :])
+            except ArithmeticError as exc:
+                raise argparse.ArgumentTypeError(
+                    f"--rate-change cap= parse error in {suffix!r}: {exc}"
+                ) from exc
         else:
             raise argparse.ArgumentTypeError(
-                f"--rate-change suffix must be 'recast' or 'no_recast', got {parts[2]!r}"
+                f"--rate-change suffix must be 'recast', 'no_recast', or 'cap=FACTOR'; "
+                f"got {suffix!r}"
             )
-    return RateChange(effective_payment_number=effective, new_annual_rate=rate, recast=recast)
+    return RateChange(
+        effective_payment_number=effective,
+        new_annual_rate=rate,
+        recast=recast,
+        payment_cap_factor=cap_factor,
+    )
 
 
 def _parse_date(s: str) -> date:
@@ -219,8 +238,9 @@ def _add_loan_args(parser: argparse.ArgumentParser) -> None:
         action="append",
         default=[],
         type=_parse_rate_change,
-        metavar="EFFECTIVE_PMT:NEW_RATE[:no_recast]",
-        help="Rate change for ARM (repeatable). Example: --rate-change 61:7.2",
+        metavar="EFFECTIVE_PMT:NEW_RATE[:no_recast][:cap=FACTOR]",
+        help="Rate change for ARM (repeatable). Examples: --rate-change 61:7.2, "
+        "--rate-change 13:12:cap=1.075 (7.5%% payment cap)",
     )
 
 

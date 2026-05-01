@@ -1,0 +1,52 @@
+# ProEducate, "ARM Payment Caps" — worked Adjustable-Rate Mortgage
+# example demonstrating payment caps with negative amortization.
+#
+# Source URL: https://www.proeducate.com/courses/Finance/PaymentCap.pdf
+# (verbatim text reproduces from a Federal Reserve consumer-handbook
+# lineage; mirror at mortgagesfinancingandcredit.org dated April 2014).
+#
+# Loan: $65,000 / 30yr / Year 1 at 10% / Year 2 at 12% / 7.5% annual
+# payment cap.
+#
+# Published anchors (all reproduce to the cent under
+# BalanceTracking.ROUND_EACH + ROUND_HALF_UP):
+#
+# - Year 1 monthly P&I:                $570.42
+# - Balance after pmt 12:              $64,638.72
+# - Year 2 uncapped recast (12%, 348mo, balance 64,638.72): $667.30
+# - Year 2 capped P&I (570.42 × 1.075): $613.20
+# - Year 2 cumulative negative amortization: $420.90
+# - Balance after pmt 24:              $65,059.62
+#
+# Algorithm: at each rate-change boundary,
+#   pmt_uncapped = closed_form(balance, new_rate, remaining)
+#   cap          = prior_pmt × payment_cap_factor (rounded HALF_UP)
+#   new_pmt      = min(pmt_uncapped, cap)
+# When the cap binds and per-period interest exceeds the capped
+# payment, the unpaid interest is capitalized into the balance —
+# Installment.principal is negative, balance grows.
+
+[loan]
+principal = "65000"
+annual_rate = "10"
+term_months = 360
+day_count = "30/360"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+balance_tracking = "round_each"
+
+[[loan.rate_schedule]]
+effective_payment_number = 13
+new_annual_rate = "12"
+recast = true
+payment_cap_factor = "1.075"
+
+[source]
+kind = "regulatory_example"
+country = "US"
+label = "proeducate_arm_payment_caps"
+url = "https://www.proeducate.com/courses/Finance/PaymentCap.pdf"
+notes = "ARM payment-cap worked example with explicit negative amortization. Payment cap factor 1.075 (7.5% annual cap) binds at year 2 because the uncapped 12% recast ($667.30) exceeds the cap ($613.20 = $570.42 × 1.075). Year-2 interest ($646.39 first month) exceeds capped payment, generating $420.90 cumulative neg-am over 12 months."
+
+[expected]
+periodic_payment = "570.42"

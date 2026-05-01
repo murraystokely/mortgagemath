@@ -155,11 +155,24 @@ class RateChange:
             level payment — the rate change still affects every
             subsequent period's interest accrual, and any residual is
             absorbed by the final-row trueup.
+        payment_cap_factor: Optional bound on the recast payment as a
+            multiple of the prior period's payment (e.g.
+            ``Decimal("1.075")`` for a 7.5% annual cap).  Only meaningful
+            when ``recast=True``.  When set, the new payment is
+            ``min(closed_form_recast, prior_payment * cap_factor)``.
+            If the cap binds and the new periodic interest exceeds the
+            capped payment, the unpaid interest is capitalized into
+            the balance (negative amortization) — the corresponding
+            ``Installment.principal`` will be negative and the balance
+            will grow.  Validated against the ProEducate ARM payment-
+            cap example ($65,000 / 10% Year 1 → 12% Year 2 / 7.5% cap;
+            year-2 P&I $613.20, cumulative neg-am $420.90).
     """
 
     effective_payment_number: int
     new_annual_rate: Decimal
     recast: bool = True
+    payment_cap_factor: Decimal | None = None
 
     def __post_init__(self) -> None:
         """Validate single-instance invariants."""
@@ -171,6 +184,16 @@ class RateChange:
             )
         if self.new_annual_rate <= 0:
             raise ValueError(f"new_annual_rate must be positive, got {self.new_annual_rate}")
+        if self.payment_cap_factor is not None:
+            if self.payment_cap_factor <= 0:
+                raise ValueError(
+                    f"payment_cap_factor must be positive when set, got {self.payment_cap_factor}"
+                )
+            if not self.recast:
+                raise ValueError(
+                    "payment_cap_factor is only meaningful when recast=True; "
+                    "with recast=False the prior payment carries through unchanged."
+                )
 
 
 @dataclass(frozen=True, slots=True)

@@ -34,6 +34,9 @@ def _loan_from_toml(toml_data: dict) -> LoanParams:
             effective_payment_number=int(rc["effective_payment_number"]),
             new_annual_rate=Decimal(rc["new_annual_rate"]),
             recast=rc.get("recast", True),
+            payment_cap_factor=(
+                Decimal(rc["payment_cap_factor"]) if "payment_cap_factor" in rc else None
+            ),
         )
         for rc in loan.get("rate_schedule", ())
     )
