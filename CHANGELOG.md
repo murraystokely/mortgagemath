@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-04-30
+
+### Added
+
+- **Read the Docs site** at <https://mortgagemath.readthedocs.io/>.
+  Small Sphinx project under ``docs/sphinx/`` (Furo theme + MyST
+  parser + autodoc) covering installation, quickstart, full
+  auto-generated API reference, vignette directory, and changelog.
+  Sphinx pulls the version from package metadata, so the site
+  always reports the same version as ``pip show`` and the in-Python
+  ``__version__``.
+- **GitHub Pages site** at <https://murraystokely.github.io/mortgagemath/>
+  hosting the rendered Quarto vignettes.  Built and deployed by a
+  new ``vignettes.yml`` GitHub Actions workflow that triggers on
+  push to ``main`` (when ``docs/vignettes/**`` changes) and on
+  ``v*`` tags (which also publish the rendered PDFs as workflow
+  artifacts).
+- **Pre-rendered PDF vignettes** committed to
+  ``docs/vignettes/rendered/`` so anyone browsing the GitHub repo
+  can click a PDF and read it without cloning or running Quarto.
+- **README "Documentation" section** prominently linking the Read
+  the Docs site, the GitHub Pages vignette site, and the five
+  individual PDFs.
+- **PyPI Project URLs** expanded: ``Documentation`` now points to
+  Read the Docs (was the README anchor); new ``Vignettes`` URL
+  points to GitHub Pages; new ``Changelog`` URL.
+
+### Changed
+
+- ``pyproject.toml`` gains a ``[project.optional-dependencies] docs``
+  group with ``sphinx``, ``furo``, ``myst-parser``, and
+  ``sphinx-copybutton``.  Read the Docs uses
+  ``pip install .[docs]`` per ``.readthedocs.yaml``.
+
+### Notes
+
+- No library code changes in this release.  Test suite, coverage,
+  CLI, and the v0.5.0 ARM payment-cap feature are unchanged.
+
 ## [0.5.0] - 2026-04-30
 
 ### Added
