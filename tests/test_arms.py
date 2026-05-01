@@ -260,6 +260,165 @@ class TestArmRecastSemantics:
         assert sched[61].interest == expected_int
 
 
+class TestPaymentCapValidation:
+    def test_zero_cap_factor_rejected(self):
+        with pytest.raises(ValueError, match="payment_cap_factor must be positive"):
+            RateChange(
+                effective_payment_number=12,
+                new_annual_rate=Decimal("6"),
+                payment_cap_factor=Decimal("0"),
+            )
+
+    def test_negative_cap_factor_rejected(self):
+        with pytest.raises(ValueError, match="payment_cap_factor must be positive"):
+            RateChange(
+                effective_payment_number=12,
+                new_annual_rate=Decimal("6"),
+                payment_cap_factor=Decimal("-1"),
+            )
+
+    def test_cap_with_no_recast_rejected(self):
+        with pytest.raises(ValueError, match="only meaningful when recast=True"):
+            RateChange(
+                effective_payment_number=12,
+                new_annual_rate=Decimal("6"),
+                recast=False,
+                payment_cap_factor=Decimal("1.075"),
+            )
+
+
+class TestPaymentCapBindingMechanics:
+    """Validate the cap-binding semantics on synthetic loans.
+
+    The ProEducate fixture (committed in tests/schedules/) is the
+    published-source validation; these tests cover the algorithmic
+    edges around the binding behavior.
+    """
+
+    def _proeducate_loan(self, cap_factor):
+        return LoanParams(
+            principal=Decimal("65000"),
+            annual_rate=Decimal("10"),
+            term_months=360,
+            payment_rounding=PaymentRounding.ROUND_HALF_UP,
+            interest_rounding=PaymentRounding.ROUND_HALF_UP,
+            balance_tracking=BalanceTracking.ROUND_EACH,
+            rate_schedule=(
+                RateChange(
+                    effective_payment_number=13,
+                    new_annual_rate=Decimal("12"),
+                    payment_cap_factor=cap_factor,
+                ),
+            ),
+        )
+
+    def test_cap_binds_payment_below_uncapped(self):
+        """When cap_factor=1.075 binds, year-2 payment is $613.20 not $667.30."""
+        loan = self._proeducate_loan(Decimal("1.075"))
+        sched = amortization_schedule(loan)
+        assert sched[13].payment == Decimal("613.20")
+
+    def test_cap_does_not_bind_when_factor_loose(self):
+        """When cap_factor=2.0 doesn't bind, year-2 payment is the full
+        uncapped recast $667.30 — same as if no cap was specified."""
+        loan = self._proeducate_loan(Decimal("2.0"))
+        sched = amortization_schedule(loan)
+        assert sched[13].payment == Decimal("667.30")
+
+    def test_neg_am_when_cap_binds(self):
+        """When cap binds and interest > capped payment, principal is
+        negative and balance grows."""
+        loan = self._proeducate_loan(Decimal("1.075"))
+        sched = amortization_schedule(loan)
+        # Month 13 should be neg-am: balance grows from 64,638.72.
+        assert sched[13].principal < Decimal("0")
+        assert sched[13].balance > sched[12].balance
+
+    def test_invariant_holds_during_neg_am(self):
+        """principal + interest == payment must still hold during neg-am."""
+        loan = self._proeducate_loan(Decimal("1.075"))
+        sched = amortization_schedule(loan)
+        for inst in sched[1:]:
+            assert inst.principal + inst.interest == inst.payment
+
+    def test_cap_in_carry_precision_mode_binds(self):
+        """The carry-precision schedule path must also honor cap_factor.
+
+        Per the design, the cap is applied at cents granularity (the
+        cap value comes from the rounded prior payment) regardless of
+        which balance-tracking mode is active.
+        """
+        loan = LoanParams(
+            principal=Decimal("65000"),
+            annual_rate=Decimal("10"),
+            term_months=360,
+            payment_rounding=PaymentRounding.ROUND_HALF_UP,
+            interest_rounding=PaymentRounding.ROUND_HALF_UP,
+            balance_tracking=BalanceTracking.CARRY_PRECISION,
+            rate_schedule=(
+                RateChange(
+                    effective_payment_number=13,
+                    new_annual_rate=Decimal("12"),
+                    payment_cap_factor=Decimal("1.075"),
+                ),
+            ),
+        )
+        sched = amortization_schedule(loan)
+        # Year-2 cap binds: 570.42 * 1.075 = 613.20.
+        assert sched[13].payment == Decimal("613.20")
+        # Per-row invariant still holds.
+        for inst in sched[1:]:
+            assert inst.principal + inst.interest == inst.payment
+
+    def test_cap_in_carry_precision_mode_does_not_bind(self):
+        """Loose cap factor in carry-precision mode produces the
+        unbounded recast payment (covers the else branch)."""
+        loan = LoanParams(
+            principal=Decimal("65000"),
+            annual_rate=Decimal("10"),
+            term_months=360,
+            payment_rounding=PaymentRounding.ROUND_HALF_UP,
+            interest_rounding=PaymentRounding.ROUND_HALF_UP,
+            balance_tracking=BalanceTracking.CARRY_PRECISION,
+            rate_schedule=(
+                RateChange(
+                    effective_payment_number=13,
+                    new_annual_rate=Decimal("12"),
+                    payment_cap_factor=Decimal("2.0"),  # too loose to bind
+                ),
+            ),
+        )
+        sched = amortization_schedule(loan)
+        # No cap binding: payment is the unrestricted recast.
+        # Carry-precision uses pmt_uncapped_raw internally so the
+        # displayed payment may differ by 1 cent from round-each.
+        assert sched[13].payment > Decimal("613.20")
+
+    def test_no_cap_specified_matches_v0_4_behavior(self):
+        """When cap_factor=None, the fixture matches the v0.4.0 recast
+        behavior exactly (regression check)."""
+        loan_no_cap = LoanParams(
+            principal=Decimal("65000"),
+            annual_rate=Decimal("10"),
+            term_months=360,
+            payment_rounding=PaymentRounding.ROUND_HALF_UP,
+            interest_rounding=PaymentRounding.ROUND_HALF_UP,
+            balance_tracking=BalanceTracking.ROUND_EACH,
+            rate_schedule=(
+                RateChange(
+                    effective_payment_number=13,
+                    new_annual_rate=Decimal("12"),
+                ),
+            ),
+        )
+        # Cap factor 1000 also doesn't bind (way above uncapped).
+        loan_loose_cap = self._proeducate_loan(Decimal("1000"))
+        sched_a = amortization_schedule(loan_no_cap)
+        sched_b = amortization_schedule(loan_loose_cap)
+        for a, b in zip(sched_a, sched_b, strict=True):
+            assert a == b
+
+
 class TestEmptyRateScheduleFastPath:
     def test_empty_rate_schedule_byte_identical_to_no_field(self):
         """Constructing with rate_schedule=() must produce the same

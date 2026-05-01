@@ -1,0 +1,93 @@
+---
+title: "mortgagemath at a glance"
+subtitle: "Cent-accurate mortgage amortization for Python"
+format:
+  typst:
+    margin:
+      x: 0.7in
+      y: 0.55in
+    fontsize: 9pt
+  html: default
+---
+
+![](mortgagemath.svg){fig-align="center" width="32%"}
+
+```{python}
+#| echo: false
+#| output: asis
+import mortgagemath
+from datetime import date
+print(f"_mortgagemath {mortgagemath.__version__} · "
+      f"rendered {date.today().isoformat()}_")
+```
+
+Produces fixed-rate and adjustable-rate mortgage amortization schedules
+that reproduce **published lender, regulator, and textbook examples
+to the cent**. Decimal end-to-end, stdlib-only.
+
+## Install and use
+
+```sh
+pip install mortgagemath
+python -m mortgagemath        # post-install self-check
+
+mortgagemath payment --principal 300000 --rate 6.5 --term-months 360
+mortgagemath schedule --principal 300000 --rate 6.5 --term-months 360 \
+    --format csv > schedule.csv
+```
+
+## Worked example
+
+```{python}
+#| output: false
+from decimal import Decimal
+from mortgagemath import LoanParams, periodic_payment, amortization_schedule
+
+loan = LoanParams(
+    principal=Decimal("300000"),
+    annual_rate=Decimal("6.5"),
+    term_months=360,
+)
+pmt = periodic_payment(loan)        # Decimal("1896.21")
+sched = amortization_schedule(loan)  # closes at $0.00 on payment 360
+```
+
+```{python}
+#| echo: false
+#| output: asis
+print("| #   |   Payment  |  Interest  | Principal  |    Balance   |")
+print("|----:|-----------:|-----------:|-----------:|-------------:|")
+for n in (1, 240, 360):
+    inst = sched[n]
+    print(
+        f"| {inst.number:>3} | "
+        f"\\${inst.payment:>10,.2f} | "
+        f"\\${inst.interest:>10,.2f} | "
+        f"\\${inst.principal:>10,.2f} | "
+        f"\\${inst.balance:>12,.2f} |"
+    )
+```
+
+## Loan parameters
+
+A wide variety of mortgage types can be represented by setting the
+parameters below. A robust test suite validates schedules from
+financial textbooks, regulatory documents, and other sources for
+US, UK, and Canadian mortgages by choosing the right settings.
+
+**Required.**
+
+- **`principal`** — original loan amount (`Decimal`)
+- **`annual_rate`** — annual interest rate as a percentage (`Decimal`)
+- **`term_months`** — loan term in calendar months
+
+**Optional.**
+
+- **`amortization_period_months`** — set when ≠ `term_months` for balloon loans (Fannie Mae §1103 SARM, Canadian fixed-term mortgages)
+- **`start_date`** — issue date; required for `ACTUAL_360`
+- **`day_count`** — `THIRTY_360` (US residential) · `ACTUAL_360` (US commercial / SARM)
+- **`balance_tracking`** — `ROUND_EACH` (lender statements) · `CARRY_PRECISION` (Excel / CRE textbook)
+- **`payment_rounding`** / **`interest_rounding`** — `ROUND_UP` (US lender default) · `ROUND_HALF_UP` · `ROUND_HALF_EVEN`
+- **`compounding`** — `MONTHLY` (US) · `SEMI_ANNUAL` (Canadian j_2) · `ANNUAL`
+- **`payment_frequency`** — `MONTHLY` · `SEMI_MONTHLY` · `BIWEEKLY` · `WEEKLY` · `QUARTERLY` · `ANNUAL`
+- **`rate_schedule`** — list of `RateChange` (rate change at any payment, optional recast, optional payment cap with neg-am)

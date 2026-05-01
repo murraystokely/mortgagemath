@@ -1,0 +1,43 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "mortgagemath vignettes"
+  description: "Cent-accurate mortgage amortization for Python"
+  navbar:
+    background: light
+    left:
+      - href: index.qmd
+        text: Home
+      - href: at-a-glance.qmd
+        text: At a glance
+      - href: validation.qmd
+        text: Validation
+      - href: arm-regz-h14.qmd
+        text: ARM (Reg Z H-14)
+      - href: payment-caps-proeducate.qmd
+        text: Payment caps + neg-am
+      - href: canadian-j2.qmd
+        text: Canadian j_2
+    right:
+      - icon: github
+        href: https://github.com/murraystokely/mortgagemath
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    code-tools: false
+    code-copy: true
+    css: styles.css
+  typst:
+    margin:
+      x: 0.85in
+      y: 0.85in
+    fontsize: 10pt
+    columns: 1
+
+execute:
+  freeze: auto
+  echo: true

@@ -1,0 +1,226 @@
+---
+title: "Validation against published sources"
+subtitle: "What mortgagemath reproduces to the cent and the parameters that get you there"
+format:
+  typst:
+    margin:
+      x: 0.55in
+      y: 0.55in
+    fontsize: 8.5pt
+  html: default
+---
+
+![](mortgagemath.svg){fig-align="center" width="32%"}
+
+```{python}
+#| echo: false
+#| output: asis
+import mortgagemath
+from datetime import date
+print(f"_mortgagemath {mortgagemath.__version__} · "
+      f"rendered {date.today().isoformat()}_")
+```
+
+Every fixture in the table below reproduces **every** value its source
+publishes, to the cent. The library follows a strict policy: if any
+published value diverges, the fixture stays out. The six parameter
+columns show the exact `LoanParams` settings required to match each
+source — the same six knobs documented in the *at-a-glance*
+vignette.
+
+## Validated fixtures
+
+```{python}
+#| echo: false
+#| output: asis
+#| tbl-colwidths: [22, 28, 8, 6, 6, 6, 6, 10]
+import tomllib
+from pathlib import Path
+
+FIXTURES_DIR = Path("..") / ".." / "tests" / "schedules"
+
+# Hand-curated short labels.  Multiple fixtures may share a source;
+# the bibliography below has one entry per *source*, not per fixture.
+SOURCE_LABELS = {
+    "cfpb_h25b_ficus_30yr_3875_162000":            "CFPB H-25(B)",
+    "fanniemae_mf_1103_25m_550_360mo":             "FNMA §1103",
+    "regz_apph_h14_arm_10k_1741_360mo":            "Reg Z H-14",
+    "proeducate_arm_pmt_cap_65k_10pct_to_12pct_360mo": "ProEducate cap",
+    "geltner_ch20_cpm_1m_1200_360mo":              "Geltner Ch 20",
+    "goldstein_ch10_3_ex1_563_1200_5mo":           "Goldstein §10.3",
+    "olivier_chans_350100_490_36mo_term_240mo":    "Olivier Chans T1",
+    "olivier_chans_renewal_316593p49_585_204mo":   "Olivier Chans renew",
+    "ecampus_finmath_4_4_1_297500_380_q_36mo_term_240mo": "eCampus §4.4.1 T1",
+    "ecampus_finmath_4_4_1_renewal_265830p61_250_q_204mo": "eCampus §4.4.1 renew",
+    "msstate_ext_p3920_100k_700_360mo":            "MS State P3920",
+    "openstax_contemp_car_60mo_399_28500":         "OpenStax §6.8 car",
+    "openstax_contemp_home_180mo_575_136700":      "OpenStax §6.8 home",
+    "openstax_contemp_6_12_132k650_480_360mo":     "OpenStax §6.12.110",
+    "openstax_contemp_6_ak_6_36_60mo_476_23660":   "OpenStax AK 6.36",
+    "openstax_contemp_6_ak_6_78_1_120mo_750_17950": "OpenStax AK 6.78.1",
+    "openstax_contemp_6_ak_6_78_2_240mo_430_33760": "OpenStax AK 6.78.2",
+    "openstax_contemp_6_ak_6_100_1_48mo_675_18325": "OpenStax AK 6.100.1",
+    "openstax_contemp_6_ak_6_100_2_72mo_390_41633": "OpenStax AK 6.100.2",
+    "openstax_contemp_6_ak_6_110ak_240mo_421_153899": "OpenStax AK 6.110",
+    "openstax_contemp_6_ak_6_114ak_360mo_575_159195p50": "OpenStax AK 6.114",
+    "las_positas_8_05_15k_900_60mo":               "Las Positas §8.05 Ex 1",
+    "las_positas_8_05_18k_200_60mo":               "Las Positas §8.05 Ex 3",
+    "wikipedia_30yr_650_200000":                   "Wikipedia mortgage calc",
+    "synthetic_halfcent_halfup_360_480_100001p25":  "Synthetic HALF_UP",
+    "synthetic_halfcent_roundup_360_480_100001p25": "Synthetic ROUND_UP",
+    "synthetic_halfcent_halfeven_360_480_100001p25": "Synthetic HALF_EVEN",
+}
+
+DAY_SHORT = {"30/360": "30/360", "actual/360": "A/360"}
+BAL_SHORT = {"round_each": "RE", "carry_precision": "CP"}
+RND_SHORT = {"ROUND_UP": "UP", "ROUND_HALF_UP": "HU", "ROUND_HALF_EVEN": "HE"}
+COMP_SHORT = {"monthly": "M", "semi_annual": "j₂", "annual": "A"}
+FREQ_SHORT = {
+    "monthly": "M", "semi_monthly": "SM", "biweekly": "BW",
+    "weekly": "W", "quarterly": "Q", "annual": "A",
+}
+
+
+def fmt_principal(p_str):
+    """Compact dollar formatting: 162k, 25M, etc."""
+    p = float(p_str)
+    if p >= 1_000_000:
+        return f"\\${p / 1_000_000:.1f}M".replace(".0M", "M")
+    if p >= 1_000:
+        return f"\\${p / 1_000:.1f}k".replace(".0k", "k")
+    return f"\\${p:,.0f}"
+
+
+def fmt_term_months(months):
+    """Compact term formatting: 360mo → 30yr, 180mo → 15yr, 60mo → 5yr."""
+    if months >= 12 and months % 12 == 0:
+        return f"{months // 12}yr"
+    return f"{months}mo"
+
+
+def fmt_loan(loan):
+    p = fmt_principal(loan["principal"])
+    rate = loan["annual_rate"]
+    term = fmt_term_months(loan["term_months"])
+    amort = loan.get("amortization_period_months")
+    if amort and amort != loan["term_months"]:
+        return f"{p} / {rate}% / {term}, {fmt_term_months(amort)} amort"
+    return f"{p} / {rate}% / {term}"
+
+
+def fmt_arm(loan):
+    rs = loan.get("rate_schedule", [])
+    if not rs:
+        return "—"
+    has_cap = any("payment_cap_factor" in r for r in rs)
+    n = len(rs)
+    if has_cap:
+        return f"{n}, cap"
+    return f"{n}"
+
+
+rows = []
+for toml_path in sorted(FIXTURES_DIR.glob("*.toml")):
+    with open(toml_path, "rb") as f:
+        data = tomllib.load(f)
+    loan = data["loan"]
+    label = SOURCE_LABELS.get(toml_path.stem, toml_path.stem)
+    rows.append((
+        label,
+        fmt_loan(loan),
+        DAY_SHORT[loan["day_count"]],
+        BAL_SHORT[loan.get("balance_tracking", "round_each")],
+        RND_SHORT[loan["payment_rounding"]],
+        COMP_SHORT[loan.get("compounding", "monthly")],
+        FREQ_SHORT[loan.get("payment_frequency", "monthly")],
+        fmt_arm(loan),
+    ))
+
+print("| Source | Loan | Day | Bal | Rnd | Cmp | Freq | ARM |")
+print("|:--|:--|:--:|:--:|:--:|:--:|:--:|:--:|")
+for r in rows:
+    print("| " + " | ".join(r) + " |")
+print()
+print(f"_{len(rows)} fixtures total._")
+```
+
+**Column codes.** Day: `30/360` US residential, `A/360` Actual/360
+US commercial. Bal: `RE` round-each-balance, `CP` carry-precision.
+Rnd: `UP` `ROUND_UP`, `HU` `ROUND_HALF_UP`, `HE` `ROUND_HALF_EVEN`.
+Cmp: `M` monthly, `j₂` semi-annual (Canadian *Interest Act* §6),
+`A` annual. Freq: `M` `SM` `BW` `W` `Q` `A` (monthly to annual).
+ARM: count of `RateChange` entries; `cap` indicates at least one
+`payment_cap_factor`. A dash is fully fixed-rate.
+
+## Bibliography
+
+**CFPB H-25(B).** Consumer Financial Protection Bureau. *Closing
+Disclosure (Sample), Form H-25(B)*. 2014.
+<https://files.consumerfinance.gov/f/201403_cfpb_closing-disclosure_cover-H25B.pdf>
+
+**FNMA §1103.** Federal National Mortgage Association.
+*Multifamily Selling and Servicing Guide*, §1103
+"Actual/360 Tier 2 SARM Loan Amortization Calculation."
+Effective 2026-04-03.
+<https://mfguide.fanniemae.com/node/5286>
+
+**Reg Z H-14.** U.S. Code of Federal Regulations. 12 CFR Part
+1026 (Regulation Z, Truth in Lending), Appendix H, Sample H-14:
+*Variable-Rate Mortgage Sample*.
+<https://www.ecfr.gov/current/title-12/chapter-X/part-1026/appendix-Appendix%20H%20to%20Part%201026>
+
+**ProEducate ARM cap.** ProEducate. *ARM Payment Caps* (worked
+example derived from a Federal Reserve consumer-handbook lineage,
+mirrored at mortgagesfinancingandcredit.org). 2014.
+<https://www.proeducate.com/courses/Finance/PaymentCap.pdf>
+
+**Geltner Ch 20.** Geltner, D., Miller, N. G., van de Minne, A.,
+Eichholtz, P., Lindenthal, T., & Shen, J. *Commercial Real Estate
+Analysis and Investments*, online supplement Chapter 20:
+"Mortgage Basics II — Payments, Yields, and Values," Exhibit
+20-6 (Constant-Payment Mortgage). Routledge, 2024. ISBN
+9781041081197.
+
+**Goldstein §10.3.** Goldstein, L. J., Schneider, D. I.,
+Lay, D. C., & Asmar, N. H. *Finite Mathematics and Its Applications*,
+12th ed., §10.3 Example 1 + Table 1. Pearson, 2018. ISBN
+978-0-13-443776-7.
+<https://www.pearsonhighered.com/assets/samplechapter/0/1/3/4/0134437764.pdf>
+
+**Olivier Chans (T1 + renewal).** Olivier, J. *Business Math: A
+Step-by-Step Handbook*, §13.4 "Special Application: Mortgages"
+(the Chans first term and renewal). LibreTexts (CC-BY-NC-SA), 2021.
+<https://math.libretexts.org/Bookshelves/Applied_Mathematics/Business_Math_(Olivier)/13:_Understanding_Amortization_and_its_Applications/13.04:_Special_Application_-_Mortgages>
+
+**eCampus §4.4.1 (T1 + renewal).** eCampus Ontario.
+*Mathematics of Finance*, §4.4.1 "Mortgages: Formula approach."
+Pressbooks (CC-BY 4.0).
+<https://ecampusontario.pressbooks.pub/financemath/chapter/4-4-mortgages-formula-approach/>
+
+**MS State P3920.** Mississippi State University Extension
+Service. Publication P3920, "Time Value of Money for Beginning
+Farmers and Ranchers."
+<https://extension.msstate.edu/sites/default/files/publications/P3920_web.pdf>
+
+**OpenStax §6.8, §6.12, AK 6.\*.** OpenStax College.
+*Contemporary Mathematics*, §6.8 "The Basics of Loans," §6.12
+"Renting and Homeownership," and Chapter 6 Answer Key (problems
+6.36, 6.78, 6.100, 6.110, 6.114). CC-BY-4.0.
+<https://openstax.org/books/contemporary-mathematics>
+
+**Las Positas §8.05.** Las Positas College Mathematics. *Math
+for Liberal Arts*, §8.05 "Amortized Loans," Examples 1 and 3.
+LibreTexts (CC-BY).
+<https://math.libretexts.org/Courses/Las_Positas_College/Math_for_Liberal_Arts/08:_Consumer_Mathematics/8.05:_Amortized_Loans>
+
+**Wikipedia mortgage calc.** Wikipedia contributors. "Mortgage
+calculator." *Wikipedia, The Free Encyclopedia*. Worked example in
+the monthly-payment formula section.
+<https://en.wikipedia.org/wiki/Mortgage_calculator>
+
+**Synthetic HALF_UP / ROUND_UP / HALF_EVEN.** Synthetic boundary
+case constructed for this library: \$100,001.25 / 4.8% / 30yr is
+engineered so month-1 unrounded interest equals exactly \$400.005 —
+a half-cent boundary that distinguishes `ROUND_HALF_UP` (\$400.01)
+from `ROUND_HALF_EVEN` (\$400.00) and from `ROUND_UP` (which
+rounds the payment up to \$524.68 instead of \$524.67).
