@@ -73,6 +73,7 @@ independently verified.
 | `compounding` | `"monthly"` (default), `"semi_annual"`, or `"annual"` | How the annual rate compounds. `"semi_annual"` is the Canadian *Interest Act* §6 convention — quoted `j_2` is per year compounded semi-annually. |
 | `payment_frequency` | `"monthly"` (default), `"semi_monthly"`, `"biweekly"`, `"weekly"`, `"quarterly"`, `"annual"` | Cadence of payments. `term_months * payments_per_year` must be divisible by 12. |
 | `rate_schedule` | array of tables (optional) | ARM rate-change schedule; see below. |
+| `payment_override` | string (Decimal, optional) | Pin the periodic payment to this value; the schedule's final row absorbs the residual. Reproduces the historical "given-payment, find-term" convention (FHLBB 1935 *Review*). Currently incompatible with `rate_schedule`. |
 
 #### `[[loan.rate_schedule]]` (ARMs)
 

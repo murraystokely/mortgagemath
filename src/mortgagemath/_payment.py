@@ -108,6 +108,13 @@ def periodic_payment(loan: LoanParams) -> Decimal:
             f"For zero-interest loans, the closed-form annuity formula "
             f"is undefined; compute principal/term_months yourself."
         )
+    # When the user has pinned the payment, return it directly.  The
+    # historical "given-payment, find-term" convention (FHLBB Federal
+    # Home Loan Bank Review, March 1935) chose a round payment as the
+    # input and derived the term + final-row trueup; the closed-form
+    # value is not the published anchor for these schedules.
+    if loan.payment_override is not None:
+        return loan.payment_override
     if loan.amortization_period_months is not None:
         if loan.amortization_period_months <= 0:
             raise ValueError(

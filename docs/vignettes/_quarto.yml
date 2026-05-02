@@ -14,12 +14,8 @@ website:
         text: At a glance
       - href: validation.qmd
         text: Validation
-      - href: arm-regz-h14.qmd
-        text: ARM (Reg Z H-14)
-      - href: payment-caps-proeducate.qmd
-        text: Payment caps + neg-am
-      - href: canadian-j2.qmd
-        text: Canadian j_2
+      - href: examples.qmd
+        text: Examples
       - href: history.qmd
         text: History
     right:

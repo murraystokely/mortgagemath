@@ -40,6 +40,7 @@ def _loan_from_toml(toml_data: dict) -> LoanParams:
         )
         for rc in loan.get("rate_schedule", ())
     )
+    payment_override = loan.get("payment_override")
     return LoanParams(
         principal=Decimal(loan["principal"]),
         annual_rate=Decimal(loan["annual_rate"]),
@@ -53,6 +54,7 @@ def _loan_from_toml(toml_data: dict) -> LoanParams:
         compounding=Compounding(compounding_str),
         payment_frequency=PaymentFrequency(payment_frequency_str),
         rate_schedule=rate_schedule,
+        payment_override=Decimal(payment_override) if payment_override is not None else None,
     )
 
 
