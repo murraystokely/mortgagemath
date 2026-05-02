@@ -26,7 +26,7 @@ the residential mortgage loan, focusing on the long arc from
 land-secured lending in early law through the standardization of
 the *direct-reduction* (fully-amortizing) contract during the New
 Deal, to the regulatory examples that constitute the library's
-modern fixture set. It is also a candid accounting of what
+modern set of validated worked examples. It is also a candid accounting of what
 `mortgagemath` *cannot* reproduce, and why — those gaps are
 themselves historically informative.
 
@@ -71,23 +71,33 @@ $$
 $$
 
 was a standard exercise in actuarial education and in the more
-mathematical wings of commercial bookkeeping.
+mathematical wings of commercial bookkeeping. The same formula
+remains the canonical level-payment expression today: it is the
+arithmetic embedded in every modern mortgage calculator, in the
+closed-form `periodic_payment(loan)` of `mortgagemath`, and in
+the FHA / Fannie Mae / Freddie Mac servicing standards that
+descend from the New Deal reforms discussed in §5.
 
 A working library of pre-1929 actuarial textbooks survives — the
 canonical examples include Sprague's *Accountancy of Investment*
 (1907), Hardy's *Theory of Annuities Certain* (1909), Skinner's
 *Mathematical Theory of Investment* (1913), and Hart's
-*Mathematics of Investment* (1924). Of these, only **Skinner (1913)** yields fixture-quality
-material under the strict cents-level matching policy: his §42
-piano example ($500 at 6% effective annual, 5-year monthly
-payments, $9.63 per month) is the first fixture in the corpus
-that isolates the actuarial convention of treating the quoted
-rate as *effective annual* rather than *nominal monthly*. The
-others either publish to mill precision (Hart 1924, three-decimal
-cents) or rely on six-place annuity-factor tables that produce
-internally inconsistent column totals (Skinner's $10,000/5%
-five-year schedule; Sprague's $1,000/3% four-year schedule). The
-no-partial-fixtures rule excludes them.
+*Mathematics of Investment* (1924). Of these, only **Skinner
+(1913)** publishes a worked example whose every cent
+`mortgagemath` reproduces under one of its existing parameter
+combinations: his §42 piano example ($500 at 6% effective annual,
+5-year monthly payments, $9.63 per month) is the first validated
+example in the test suite that isolates the actuarial convention
+of treating the quoted rate as *effective annual* rather than
+*nominal monthly*. The others either publish to mill precision
+(Hart 1924, three-decimal cents) or rely on six-place annuity-
+factor tables that produce internally inconsistent column totals
+where row-level interest plus principal does not always equal
+the printed payment (Skinner's $10,000/5% five-year schedule;
+Sprague's $1,000/3% four-year schedule). We do not include these
+internally inconsistent historic examples in the test suite,
+because there is no parameter combination under which the library
+matches every printed cell.
 
 ## 3. The Crédit Foncier de France (1852) and the loaded annuity
 
@@ -117,10 +127,12 @@ canonical decomposition for a 4½% loan:
 Wolowski's contemporaneous explanation runs: *« l'intérêt à payer
 au créancier étant à 4 1/2, le propriétaire emprunteur aurait à
 payer 6 pour 100 pendant trente-neuf ans pour être complètement
-libéré. »*
+libéré. »* — "the interest payable to the creditor being at
+4 1/2, the property-owning borrower would pay 6 per 100 for
+thirty-nine years to be entirely discharged."
 
-This decomposition is the load-bearing fact that makes Crédit
-Foncier worked schedules unreproducible by `mortgagemath`. Every
+This decomposition explains why `mortgagemath` cannot, at
+present, reproduce a Crédit Foncier worked schedule. Every
 schedule the CF (and its imitators) published was the *gross*
 annuity — the figure the borrower actually wrote on his
 quarterly draft — not the actuarially-pure interest-plus-
@@ -128,16 +140,18 @@ principal value. The 1.50-franc administrative loading per 100
 francs of original principal is mathematically inseparable from
 the published payment without rebuilding the schedule from a
 stripped-down 5.50% basis, which is *not what the source
-publishes*. The strict no-partial-fixtures policy rejects
-fixtures that diverge from any published row by even one centime,
-so no canonical CF table — neither in Wolowski's 1852 essay, nor
-in Bellet's 1854 *Guide de l'emprunteur*, nor in Josseau's 1872
-*Traité du crédit foncier*, nor in the U.S. Senate Document 214
-of 1913 (*Agricultural Cooperation in Europe*, which reproduces
-CF testimony but only bond-side schedules) — survives as a
-fixture. The structural pattern recurs: when an institution's
+publishes*. Because every printed cell would need to match for a
+worked example to be admitted to the test suite, no canonical CF
+table — neither in Wolowski's 1852 essay, nor in Bellet's 1854
+*Guide de l'emprunteur*, nor in Josseau's 1872 *Traité du crédit
+foncier*, nor in the U.S. Senate Document 214 of 1913
+(*Agricultural Cooperation in Europe*, which reproduces CF
+testimony but only bond-side schedules) — currently passes
+validation. The structural pattern recurs: when an institution's
 contract embeds servicing fees or taxes into the *annuité*
 itself, a pure interest+principal model cannot reproduce it.
+A planned extension to the library — a per-period fee field on
+``LoanParams`` — would close this gap; see §10 below.
 
 ## 4. American building & loan associations (1831–1934)
 
@@ -239,7 +253,7 @@ contemporaneous plans (Serial Sinking-Fund, Drop-Share, Direct-
 Reduction Plan A with monthly interest credit, and Direct-
 Reduction Plan B with semiannual interest credit). These are the
 earliest published direct-reduction schedules from a U.S. federal
-authority. Yet they are *not* a `mortgagemath` fixture — for a
+authority. Yet they are *not* in the `mortgagemath` test suite — for a
 historically illuminating reason. The 1935 *Review* designed all
 four schedules around a fixed payment of *exactly $30 per month*
 (precisely 1% of the original principal), with the loan term
@@ -275,10 +289,11 @@ shareholder-owned secondary-market entity in 1968 by the Charter
 Act amendments, institutionalized the convention nationally;
 Freddie Mac (1970) extended it to thrift-originated loans. The
 closed-form payment formula — what `mortgagemath` evaluates in
-`periodic_payment(loan)` — became the load-bearing arithmetic of
+`periodic_payment(loan)` — became the canonical arithmetic of
 American residential housing finance.
 
-The library's regulatory-example fixtures are drawn from this
+The library's worked examples drawn from this regulatory regime
+are:
 post-1968 standardized regime:
 
 ```{python}
@@ -311,7 +326,8 @@ H-14**, which traces a $10,000-per-unit 1/1 ARM through the
 actual 1-year CMT history from 1982 through 1996 — the period in
 which the U.S. ARM market matured. The Reg Z H-14 trajectory is
 in the library as the
-`regz_apph_h14_arm_10k_1741_360mo` fixture and reproduces every
+`regz_apph_h14_arm_10k_1741_360mo` worked example, and the library
+reproduces every
 published value (initial rate, post-cap rate at each annual
 adjustment, recast monthly payment, year-end remaining balance)
 to the cent under the library's `RateChange` API.
@@ -325,7 +341,7 @@ and accrued interest exceeds the capped payment, the unpaid
 interest is capitalized into the principal balance and the loan
 *grows*. The library models this through the optional
 `payment_cap_factor` parameter on `RateChange`; the canonical
-worked example is the ProEducate ARM payment-cap fixture
+worked example is the ProEducate ARM payment-cap example
 ($65,000 at 10% rising to 12%, 7.5% annual cap, with $420.90 of
 explicit cumulative negative amortization in year 2)
 (ProEducate 2014).
@@ -344,7 +360,7 @@ frequently than semi-annually* (Parliament of Canada 1880). A "5% / 30 yr"
 Canadian mortgage and a "5% / 30 yr" American mortgage therefore
 have meaningfully different periodic rates and payments. The
 library's `Compounding.SEMI_ANNUAL` mode handles this; the worked
-example fixtures are drawn from Olivier's *Business Math*
+worked examples are drawn from Olivier's *Business Math*
 (Olivier 2021, the Chans first term and renewal) and eCampus
 Ontario's *Mathematics of Finance* §4.4.1 (the quarterly-payment
 $297,500 first term and renewal).
@@ -420,10 +436,8 @@ Three classes of historically-important contracts are deliberately
    and modern French residential mortgages with embedded TEG.
    The library's `interest + principal = payment` invariant
    cannot reproduce a published *annuité* that includes
-   commission, reserve, and tax components. (A user could
-   reproduce the *stripped* schedule by passing the
-   interest+amortization-only rate, but that would not match
-   the source's published rows.)
+   commission, reserve, and tax components. This is the gap
+   that §10 below proposes to close.
 3. **Given-payment, find-term contracts** like the FHLBB *Review*
    1935 Plan A schedule. The library is closed-form: term is
    input, payment is output. The 1935 convention chose payment
@@ -433,17 +447,98 @@ Three classes of historically-important contracts are deliberately
 
 These exclusions narrow the library's scope to roughly the period
 **1934–present** in the United States (with the Skinner 1913
-piano fixture an important pre-New-Deal exception, and the
-Canadian, French, and Australian-relevant fixtures extending the
+piano example an important pre-New-Deal exception, and the
+Canadian, French, and Australian-relevant worked examples extending the
 convention coverage internationally). Within that window the
 library reproduces every published cent in 35 worked examples
 spanning regulatory disclosures, GSE servicing guides, and
 open-licensed textbook problems.
 
+## 10. A planned extension: the per-period fee
+
+The Crédit Foncier exclusion from §3 is the most consequential
+gap in the library's coverage of 19th-century European mortgage
+practice. The structural problem is straightforward: CF rows
+publish `annuité = interest + amortissement + frais + réserve +
+impôt`, with the last three components rolled into a single
+flat-amount loading on top of the actuarially-pure
+interest-plus-principal value.
+
+A minimal extension would add an optional `fee_per_period`
+parameter to ``LoanParams`` and a corresponding `fee` field on
+the `Installment` record:
+
+```python
+@dataclass(frozen=True)
+class LoanParams:
+    # ... all existing fields ...
+    fee_per_period: Decimal = Decimal("0")  # flat amount added to each
+                                            # period's published payment
+
+@dataclass(frozen=True)
+class Installment:
+    number: int
+    payment: Decimal      # = interest + principal + fee  (gross annuity)
+    interest: Decimal
+    principal: Decimal
+    fee: Decimal          # default 0.00; non-zero only for fee-loaded loans
+    balance: Decimal
+```
+
+Semantics:
+
+- `periodic_payment(loan)` continues to return the *actuarially-
+  pure* P+I closed-form value. The `fee_per_period` is added by
+  ``amortization_schedule`` to each `Installment.payment` after
+  the schedule is built, so the principal/interest split is
+  unchanged.
+- `Installment.fee` exposes the loading cleanly, so consumers can
+  recover either the gross annuity (the published figure) or the
+  stripped P+I (what the underlying interest rate accrues against)
+  as needed.
+- The fee is treated as a *per-period flat amount in the loan's
+  currency*, not a percentage. Sources that publish the loading
+  as a percentage of original principal (CF: 0.50 fr. per 100 fr.
+  per year) require a one-line preprocessing step:
+  ``fee_per_period = original_principal * fee_pct / payments_per_year``.
+
+For Wolowski's 1852 4½% / 39-year canonical example the math
+works out cleanly: the closed-form payment at 4.50% annual over
+39 years on 100 fr. of principal is 5.485 fr. ≈ 5.50 fr., and a
+fixed 0.50-fr. annual fee lifts the published *annuité* to
+6.00 fr., matching the source. Whether the full Wolowski schedule
+(or any other CF schedule) reproduces row-by-row at that rate is
+an empirical question we can answer only by reading the source
+itself — and the row-level CF tables in Bellet's 1854 *Guide*
+and Josseau's 1872 *Traité* are currently behind JavaScript walls
+on Gallica and Trove that have resisted automated retrieval.
+
+The library's working rule is to add new parameters only when
+they unlock matching a specific verifiable published source. The
+order of operations is therefore:
+
+1. Manually retrieve the row-level CF tables from Bellet, Josseau,
+   or *The Argus*'s 1892 Pinschof paper (which advocated a
+   Victorian state mortgage bank on CF lines and may include a
+   sample schedule).
+2. Validate, by hand or with a small script, that the closed-form
+   P+I plus a fixed fee reproduces every printed cell.
+3. *Then* add the `fee_per_period` field and ship the CF fixture
+   along with the feature.
+
+The same extension would also accept a class of contemporary
+French TEG-loaded amortization tables and several
+non-French-mortgage examples (e.g. early-twentieth-century
+Australian *credit foncier*–style state-bank schedules) where a
+fixed periodic loading rides on top of the closed-form payment.
+Variable-fee structures (commission-de-gestion proportional to
+outstanding balance, or stepped-fee schedules) are left for a
+later extension if any specific verifiable source motivates them.
+
 ## Bibliography
 
 ::: {.callout-note}
-The full machine-checkable bibliography of fixture sources is
+The full machine-checkable bibliography of validated worked-example sources is
 generated automatically from the `[source]` blocks of
 `tests/schedules/*.toml`; see the *Validation* vignette for the
 data-driven version. The references below cover the historical
