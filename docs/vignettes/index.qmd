@@ -32,6 +32,7 @@ payment caps with negative amortization).
 | [Reg Z Sample H-14 ARM walkthrough](arm-regz-h14.qmd) | ARM compliance reviewer | 2 pages |
 | [Payment caps + negative amortization](payment-caps-proeducate.qmd) | ARM / accounting analyst | 2 pages |
 | [Canadian semi-annual (j_2) mortgages](canadian-j2.qmd) | Canadian / cross-border | 1 page |
+| [A short history of the level-payment mortgage](history.qmd) | Historical / academic context | 6 pages |
 
 Each vignette is also available as a PDF (built deterministically
 from the same source).

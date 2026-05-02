@@ -20,6 +20,8 @@ website:
         text: Payment caps + neg-am
       - href: canadian-j2.qmd
         text: Canadian j_2
+      - href: history.qmd
+        text: History
     right:
       - icon: github
         href: https://github.com/murraystokely/mortgagemath
