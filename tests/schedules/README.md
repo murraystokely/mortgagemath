@@ -15,8 +15,22 @@ Each loan has two files with matching names:
 
 ## `[source]` provenance
 
-Every fixture must declare where its numbers came from. The `kind` field is
-required; pick the most specific that applies:
+Every fixture must declare where its numbers came from. The schema is rich
+enough that the validation vignette's bibliography is generated entirely
+from these blocks — no hand-curated list anywhere. Required fields:
+
+| Field | Notes |
+|-------|-------|
+| `kind` | One of the values in the table below |
+| `short_label` | Compact label used in the validation table (e.g. `"CFPB H-25(B)"`, `"OpenStax §6.8 car"`) |
+| `bib_key` | Bibliography group key — fixtures sharing a source share a `bib_key`, and the bibliography emits one entry per key |
+| `bib_title` | Bold lead-in for the bibliography entry (e.g. `"CFPB H-25(B)"`, `"Geltner Ch 20"`) |
+| `citation` | Full prose citation, formatted as a single line of Markdown (authors, title, edition, publisher, year, ISBN, plus a trailing `<url>` if available). Identical across fixtures sharing a `bib_key`. |
+
+The legacy `label` field is accepted as an alias for `short_label` during
+the v0.5.x transition.
+
+`kind` values:
 
 | `kind` | Meaning |
 |--------|---------|
@@ -25,11 +39,23 @@ required; pick the most specific that applies:
 | `gse_guide` | Worked example from a GSE seller/servicer guide (Fannie Mae, Freddie Mac) |
 | `textbook` | Worked example from an open-licensed or public-domain textbook |
 | `calculator` | Output of a publicly available lender or third-party calculator |
+| `reference_work` | Encyclopedia / reference (e.g. Wikipedia worked example) |
 | `synthetic` | Constructed to exercise a specific rounding boundary; values cross-verified |
 
-For non-`statement` kinds, include a `url` field pointing to the source
-document. For `synthetic`, include a `notes` field explaining the boundary
-condition and how the expected values were independently verified.
+Optional structured fields (used when present, but not required — the
+`citation` string is the canonical bibliographic record):
+
+| Field | Notes |
+|-------|-------|
+| `country` | ISO-style country code (`"US"`, `"CA"`, etc.) |
+| `license` | Free-text license summary (`"public domain"`, `"CC-BY-4.0"`, `"CC-BY-NC-SA-4.0"`) |
+| `url` | Direct link to the source document |
+| `notes` | Per-fixture commentary (rounding choices, divergences explained, boundary condition for `synthetic`) |
+
+For `statement` sources include `verified_by` and `verified_date`
+instead of `url`. For `synthetic`, the `notes` field is required and
+must explain the boundary condition and how the expected values were
+independently verified.
 
 ## TOML schema
 

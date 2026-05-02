@@ -1,0 +1,38 @@
+# eCampus Ontario *Mathematics of Finance* (CC-BY-NC-SA 4.0), §4.3
+# Exercise 3: "Johnetta's loan."
+#
+# Worked example: $20,200 loan at 3.53% nominal annual rate compounded
+# monthly, 8-year term, monthly payments.
+#
+# Published anchors:
+#   - monthly payment $241.83
+#   - interest portion of payment 60: $24.91
+#   - principal portion of payment 60: $216.92
+#
+# Library reproduces $241.83 under ROUND_HALF_UP. (Default ROUND_UP
+# gives $241.84 — off by one cent; the textbook explicitly rounds
+# half-up here.) Row 60 balance is computed from the schedule;
+# the textbook does not publish it explicitly but cross-checks
+# against payment 60's interest = balance(59) × rate consistency.
+
+[loan]
+principal = "20200.00"
+annual_rate = "3.53"
+term_months = 96
+day_count = "30/360"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[source]
+kind = "textbook"
+country = "CA"
+license = "CC-BY-NC-SA-4.0"
+short_label = "eCampus §4.3 Johnetta"
+bib_key = "ecampus_finmath_4_3"
+bib_title = "eCampus §4.3 (Pearline / Erika / Johnetta)"
+citation = "eCampus Ontario. *Mathematics of Finance*, §4.3 \"Loan amortization: formula approach\" (Example 4.3.1 Pearline; Exercises 2 Erika and 3 Johnetta). Pressbooks (CC-BY-NC-SA 4.0), 2023. <https://ecampusontario.pressbooks.pub/financemath/chapter/4-3-loan-amortization-formula-approach/>"
+url = "https://ecampusontario.pressbooks.pub/financemath/chapter/4-3-loan-amortization-formula-approach/"
+notes = "ROUND_HALF_UP required (ROUND_UP gives $241.84). Mid-schedule probe at payment 60 validates the interest/principal split."
+
+[expected]
+periodic_payment = "241.83"

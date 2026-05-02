@@ -20,7 +20,11 @@ payment_frequency = "monthly"
 [source]
 kind = "textbook"
 country = "CA"
-label = "olivier_business_math_13_4_chans_renewal"
+license = "CC-BY-NC-SA-4.0"
+short_label = "Olivier Chans renew"
+bib_key = "olivier_business_math"
+bib_title = "Olivier Chans (T1 + renewal)"
+citation = "Olivier, J. *Business Math: A Step-by-Step Handbook*, §13.4 \"Special Application: Mortgages\" (the Chans first term and renewal). LibreTexts (CC-BY-NC-SA), 2021. <https://math.libretexts.org/Bookshelves/Applied_Mathematics/Business_Math_(Olivier)/13:_Understanding_Amortization_and_its_Applications/13.04:_Special_Application_-_Mortgages>"
 url = "https://math.libretexts.org/Bookshelves/Applied_Mathematics/Business_Math_(Olivier)/13:_Understanding_Amortization_and_its_Applications/13.04:_Special_Application_-_Mortgages"
 notes = "The Chans' renewal scenario after the 3-year first term. j_2 increases from 4.9% to 5.85%; the remaining balance is amortized over 17 years. Source publishes only the new monthly P&I."
 

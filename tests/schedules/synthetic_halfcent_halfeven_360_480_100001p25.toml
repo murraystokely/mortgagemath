@@ -20,7 +20,11 @@ interest_rounding = "ROUND_HALF_EVEN"
 [source]
 kind = "synthetic"
 country = "US"
-label = "synthetic_halfcent_boundary_halfeven"
+license = "n/a (synthetic)"
+short_label = "Synthetic HALF_EVEN"
+bib_key = "synthetic_halfcent"
+bib_title = "Synthetic HALF_UP / ROUND_UP / HALF_EVEN"
+citation = "Synthetic boundary case constructed for this library: $100,001.25 / 4.8% / 30yr is engineered so month-1 unrounded interest equals exactly $400.005 — a half-cent boundary that distinguishes `ROUND_HALF_UP` ($400.01) from `ROUND_HALF_EVEN` ($400.00) and from `ROUND_UP` (which rounds the payment up to $524.68 instead of $524.67)."
 notes = "Constructed boundary at month-1 interest = $400.005 exactly; HALF_EVEN rounds to $400.00."
 
 [expected]

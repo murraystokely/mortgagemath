@@ -1,0 +1,38 @@
+# eCampus Ontario *Mathematics of Finance* (CC-BY-NC-SA 4.0), §4.3
+# Exercise 2: "Erika's loan."
+#
+# Worked example: $32,600 loan at 4.83% nominal annual rate compounded
+# monthly, 9-year term, monthly end-of-month payments.
+#
+# Published anchors:
+#   - monthly payment $372.80
+#   - year-4 (months 37-48) interest sum $1,048.37
+#   - year-4 principal sum $3,425.23
+#
+# Library reproduces $372.80 under default ROUND_UP. The CSV is
+# header-only because the source publishes only year-aggregate values,
+# not per-row data; the year-aggregate sums are not directly assertable
+# by the row-by-row test, but cross-checking the library output yields
+# year-4 interest = $1,048.37 and principal = $3,425.23 to the cent.
+
+[loan]
+principal = "32600.00"
+annual_rate = "4.83"
+term_months = 108
+day_count = "30/360"
+payment_rounding = "ROUND_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[source]
+kind = "textbook"
+country = "CA"
+license = "CC-BY-NC-SA-4.0"
+short_label = "eCampus §4.3 Erika"
+bib_key = "ecampus_finmath_4_3"
+bib_title = "eCampus §4.3 (Pearline / Erika / Johnetta)"
+citation = "eCampus Ontario. *Mathematics of Finance*, §4.3 \"Loan amortization: formula approach\" (Example 4.3.1 Pearline; Exercises 2 Erika and 3 Johnetta). Pressbooks (CC-BY-NC-SA 4.0), 2023. <https://ecampusontario.pressbooks.pub/financemath/chapter/4-3-loan-amortization-formula-approach/>"
+url = "https://ecampusontario.pressbooks.pub/financemath/chapter/4-3-loan-amortization-formula-approach/"
+notes = "Year-aggregate anchors only. Library reproduces year-4 interest $1,048.37 and principal $3,425.23 exactly; payment $372.80 validated by test_periodic_payment_matches."
+
+[expected]
+periodic_payment = "372.80"

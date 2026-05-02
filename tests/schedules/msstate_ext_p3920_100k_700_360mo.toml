@@ -16,7 +16,11 @@ interest_rounding = "ROUND_HALF_UP"
 [source]
 kind = "regulatory_example"
 country = "US"
-label = "msstate_extension_p3920"
+license = "public domain"
+short_label = "MS State P3920"
+bib_key = "msstate_p3920"
+bib_title = "MS State P3920"
+citation = "Mississippi State University Extension Service. Publication P3920, \"Time Value of Money for Beginning Farmers and Ranchers.\" <https://extension.msstate.edu/sites/default/files/publications/P3920_web.pdf>"
 url = "https://extension.msstate.edu/sites/default/files/publications/P3920_web.pdf"
 notes = "Land-grant university extension publication (US public-funded). HALF_UP rounding."
 

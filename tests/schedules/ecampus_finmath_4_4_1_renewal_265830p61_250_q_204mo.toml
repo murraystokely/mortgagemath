@@ -19,7 +19,11 @@ payment_frequency = "quarterly"
 [source]
 kind = "textbook"
 country = "CA"
-label = "ecampus_finmath_4_4_1_renewal"
+license = "CC-BY-4.0"
+short_label = "eCampus §4.4.1 renew"
+bib_key = "ecampus_finmath_4_4_1"
+bib_title = "eCampus §4.4.1 (T1 + renewal)"
+citation = "eCampus Ontario. *Mathematics of Finance*, §4.4.1 \"Mortgages: Formula approach.\" Pressbooks (CC-BY 4.0). <https://ecampusontario.pressbooks.pub/financemath/chapter/4-4-mortgages-formula-approach/>"
 url = "https://ecampusontario.pressbooks.pub/financemath/chapter/4-4-mortgages-formula-approach/"
 notes = "Renewal scenario from §4.4.1; j_2 drops from 3.8% to 2.5% on renewal. Source publishes only the new quarterly P&I."
 

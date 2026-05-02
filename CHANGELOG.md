@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-04-29
+
+### Added
+
+- **8 new validated fixtures** drawn from public-domain and
+  open-licensed sources, expanding the suite from 27 to 35:
+  - **Skinner §42 Example 1** ($1,000 / 6% / 15-year annual payment;
+    public-domain 1913) — first annual-cadence fixture sourced from
+    a pre-WWI actuarial textbook.
+  - **Skinner §42 Example 3 piano** ($500 / 6% effective annual /
+    5-year monthly payment) — first fixture isolating
+    `Compounding.ANNUAL` on a monthly-cadence loan, validating the
+    actuarial convention of treating the quoted rate as effective
+    annual and back-deriving the equivalent nominal-monthly rate.
+  - **Arcones SOA FM Manual §4.1 Example 4** ($20,000 / 8% / 12-year
+    annual schedule) — full 12-row published schedule from an SOA
+    Exam FM / CAS Exam 2 study manual; first multi-row
+    annual-cadence fixture in the corpus.
+  - **Broverman MIC §2.1 Example 2.7(a) and 2.7(b)** ($12,000 at
+    12% / 36 months and 15% / 48 months) — closed-form payment
+    anchors at two distinct rates from a perennial SOA Exam FM
+    reference text.
+  - **eCampus Ontario *Mathematics of Finance* §4.3 Example 4.3.1
+    (Pearline)** ($10,000 / 10% / 4-year annual full schedule).
+  - **eCampus §4.3 Exercise 2 (Erika)** ($32,600 / 4.83% / 9-year
+    monthly with year-aggregate anchors).
+  - **eCampus §4.3 Exercise 3 (Johnetta)** ($20,200 / 3.53% /
+    8-year monthly with mid-schedule probe at payment 60).
+- **Self-contained bibliographic schema for fixture TOMLs.** Every
+  fixture's ``[source]`` block now carries ``short_label``,
+  ``bib_key``, ``bib_title``, and ``citation`` fields with full
+  prose citations (authors, title, edition, publisher, year, ISBN,
+  URL where available). Fixtures sharing a source share a
+  ``bib_key`` and the bibliography emits one entry per key.
+
+### Changed
+
+- **Validation vignette is now data-driven.** The ``validation.qmd``
+  bibliography section is generated directly from the fixture
+  ``[source]`` blocks; the previously hand-curated ``SOURCE_LABELS``
+  dict and prose bibliography are gone. Adding a new fixture
+  automatically updates both the validation table and the
+  bibliography on next render.
+- ``tests/schedules/README.md`` documents the new bibliographic
+  fields and lists ``reference_work`` as an additional accepted
+  ``kind`` value (used by the Wikipedia fixture).
+
 ## [0.5.1] - 2026-04-30
 
 ### Added

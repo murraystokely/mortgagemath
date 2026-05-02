@@ -16,9 +16,13 @@ payment_rounding = "ROUND_UP"
 interest_rounding = "ROUND_HALF_UP"
 
 [source]
-kind = "calculator"
+kind = "reference_work"
 country = "US"
-label = "wikipedia_mortgage_calculator"
+license = "CC-BY-SA-4.0"
+short_label = "Wikipedia mortgage calc"
+bib_key = "wikipedia_mortgage_calc"
+bib_title = "Wikipedia mortgage calc"
+citation = "Wikipedia contributors. \"Mortgage calculator.\" *Wikipedia, The Free Encyclopedia*. Worked example in the monthly-payment formula section. <https://en.wikipedia.org/wiki/Mortgage_calculator>"
 url = "https://en.wikipedia.org/wiki/Mortgage_calculator"
 
 [expected]

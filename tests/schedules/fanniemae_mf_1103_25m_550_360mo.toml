@@ -38,7 +38,11 @@ start_date = "2018-12-01"
 [source]
 kind = "gse_guide"
 country = "US"
-label = "fanniemae_mf_guide_1103_tier2_sarm_example"
+license = "public domain"
+short_label = "FNMA §1103"
+bib_key = "fanniemae_mf_1103"
+bib_title = "FNMA §1103"
+citation = "Federal National Mortgage Association. *Multifamily Selling and Servicing Guide*, §1103 \"Actual/360 Tier 2 SARM Loan Amortization Calculation.\" Effective 2026-04-03. <https://mfguide.fanniemae.com/node/5286>"
 url = "https://mfguide.fanniemae.com/node/5286"
 notes = "Fannie Mae Multifamily Selling and Servicing Guide §1103 (eff. 2026-04-03). Tier 2 SARM worked example. Validates Actual/360 monthly_payment and the day-counted schedule's cumulative balance after 120 payments."
 
