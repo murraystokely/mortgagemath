@@ -431,7 +431,7 @@ public domain. Fixture:
 
 # Canada
 
-## Semi-annual *j₂* with monthly payments (Olivier Chans)
+## Semi-annual *j_2* with monthly payments (Olivier Chans)
 
 **Scenario.** Canadian residential mortgages quote rates as
 *semi-annually compounded* (`j_2`), per Section 6 of the federal
@@ -483,7 +483,7 @@ LibreTexts (CC-BY-NC-SA), 2021. Fixture:
 companion `olivier_chans_renewal_316593p49_585_204mo.{toml,csv}`
 for the renewal-term scenario at 5.85%.
 
-## Semi-annual *j₂* with quarterly payments (eCampus §4.4.1)
+## Semi-annual *j_2* with quarterly payments (eCampus §4.4.1)
 
 **Scenario.** Canadian semi-annual compounding combines naturally
 with non-monthly payment cadences. eCampus Ontario's *Mathematics
