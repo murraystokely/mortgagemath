@@ -1,6 +1,9 @@
 ---
 title: "Worked examples"
 subtitle: "Library configurations and live schedules for every country and loan type the test suite covers"
+toc: true
+toc-depth: 2
+toc-title: "Contents"
 format:
   typst:
     margin:
@@ -44,6 +47,11 @@ P&I of \$761.78 implies ROUND_HALF_UP rounding; the unrounded
 closed-form value is \$761.7840…, which would round up to
 \$761.79 under the library's default ROUND_UP.
 
+```sh
+mortgagemath payment --principal 162000 --rate 3.875 --term-months 360 \
+    --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP
+```
+
 ```{python}
 from decimal import Decimal
 from mortgagemath import LoanParams, PaymentRounding, periodic_payment
@@ -56,11 +64,6 @@ cfpb = LoanParams(
     interest_rounding=PaymentRounding.ROUND_HALF_UP,
 )
 print(f"Monthly P&I: ${periodic_payment(cfpb)}  (CFPB H-25(B): $761.78)")
-```
-
-```sh
-mortgagemath payment --principal 162000 --rate 3.875 --term-months 360 \
-    --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP
 ```
 
 **Source.** [CFPB Closing Disclosure Sample H-25(B)
@@ -98,6 +101,14 @@ day-count convention. The borrower makes 120 monthly payments at
 the closed-form level, then owes a published balloon of
 \$20,885,505.83 at term.
 
+```sh
+mortgagemath schedule --principal 25000000 --rate 5.5 --term-months 120 \
+    --amortization-period-months 360 --day-count actual/360 \
+    --start-date 2018-12-01 \
+    --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP \
+    --format csv > fnma_1103.csv
+```
+
 ```{python}
 from datetime import date
 from mortgagemath import DayCount, amortization_schedule
@@ -116,14 +127,6 @@ sched = amortization_schedule(fnma)
 print(f"Monthly P&I:                  ${periodic_payment(fnma):,}")
 print(f"Balloon at term-120:          ${sched[120].balance:,}")
 print(f"  (Fannie Mae §1103 published: $141,947.25 / $20,885,505.83)")
-```
-
-```sh
-mortgagemath schedule --principal 25000000 --rate 5.5 --term-months 120 \
-    --amortization-period-months 360 --day-count actual/360 \
-    --start-date 2018-12-01 \
-    --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP \
-    --format csv > fnma_1103.csv
 ```
 
 **Source.** [Fannie Mae Multifamily Guide §1103 (eff.
@@ -148,6 +151,13 @@ floor at 12.41% binding from 1986 onward.
 | 4  | 1985 |  7.66%    | 10.66%        | periodic (down)      | 13.17% |
 | 5  | 1986 |  6.36%    |  9.36%        | lifetime (floor)     | 12.41% |
 | 6+ | 1987–1996 | varies | ≤ 9.36%      | lifetime holds       | 12.41% |
+
+```sh
+mortgagemath schedule --principal 10000 --rate 17.41 --term-months 360 \
+    --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP \
+    --rate-change 13:15.41 --rate-change 25:15.17 --rate-change 37:13.17 \
+    --rate-change 49:12.41  # ... and similarly for years 6-15
+```
 
 ```{python}
 from mortgagemath import RateChange, BalanceTracking
@@ -192,13 +202,6 @@ for n, label, want in expected:
     print(f"| {label} (pmt {n}) | ${got:,} | ${want} | {ok} |")
 ```
 
-```sh
-mortgagemath schedule --principal 10000 --rate 17.41 --term-months 360 \
-    --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP \
-    --rate-change 13:15.41 --rate-change 25:15.17 --rate-change 37:13.17 \
-    --rate-change 49:12.41  # ... and similarly for years 6-15
-```
-
 **Source.** [12 CFR Part 1026 Appendix H Sample H-14](https://www.ecfr.gov/current/title-12/chapter-X/part-1026/appendix-Appendix%20H%20to%20Part%201026).
 Fixture: `regz_apph_h14_arm_10k_1741_360mo.{toml,csv}`.
 
@@ -214,6 +217,12 @@ amortization. ProEducate publishes a worked \$65,000 / 10%
 rising to 12% / 30-year / 7.5% annual cap example; the library
 reproduces every cell including the explicit \$420.90 of
 year-2 cumulative negative amortization.
+
+```sh
+mortgagemath schedule --principal 65000 --rate 10 --term-months 360 \
+    --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP \
+    --rate-change 13:12:cap=1.075 --format csv
+```
 
 ```{python}
 proeducate = LoanParams(
@@ -246,12 +255,6 @@ print(f"- Year 2 capped P&I (= year-1 × 1.075): **${sched[13].payment}**  (publ
 print(f"- Year 2 monthly principal (negative): **${sched[13].principal}**  (published −$33.19)")
 print(f"- Cumulative neg-am over year 2: **${neg_am}**  (published $420.90)")
 print(f"- Balance after pmt 24: **${sched[24].balance:,}**  (published $65,059.62)")
-```
-
-```sh
-mortgagemath schedule --principal 65000 --rate 10 --term-months 360 \
-    --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP \
-    --rate-change 13:12:cap=1.075 --format csv
 ```
 
 **Source.** [ProEducate *ARM Payment Caps*](https://www.proeducate.com/courses/Finance/PaymentCap.pdf),
@@ -398,6 +401,13 @@ v0.6.0's `payment_override` field pins the payment and applies
 a "round-the-total" final-row trueup, reproducing every published
 cell.
 
+```sh
+mortgagemath schedule --principal 3000 --rate 6 --term-months 139 \
+    --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP \
+    --balance-tracking carry_precision \
+    --payment-override 30 --format table
+```
+
 ```{python}
 fhlbb = LoanParams(
     principal=Decimal("3000.00"),
@@ -415,13 +425,6 @@ for n in (1, 138, 139):
           f"interest=${inst.interest} principal=${inst.principal} "
           f"balance=${inst.balance}")
 print(f"\nFinal payment: ${sched[139].payment}  (FHLBB published $29.27)")
-```
-
-```sh
-mortgagemath schedule --principal 3000 --rate 6 --term-months 139 \
-    --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP \
-    --balance-tracking carry_precision \
-    --payment-override 30 --format table
 ```
 
 **Source.** [FHLBB *Federal Home Loan Bank Review*, Vol. 1 No.
@@ -453,6 +456,12 @@ $\left(1 + j_2/200\right)^{2/12} - 1$. For `j_2 = 5%`, this is
 $(1.025)^{1/6} - 1 \approx 0.41239\%$, *not* $5/12 \approx 0.4167\%$.
 :::
 
+```sh
+mortgagemath payment --principal 350100 --rate 4.9 --term-months 36 \
+    --amortization-period-months 240 --compounding semi_annual \
+    --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP
+```
+
 ```{python}
 chans = LoanParams(
     principal=Decimal("350100"),
@@ -468,12 +477,6 @@ print(f"Monthly P&I:                          ${periodic_payment(chans):,}")
 sched = amortization_schedule(chans)
 print(f"Balance after pmt 36 (renewal balloon): ${sched[36].balance:,}")
 print(f"  (Olivier published: $2,281.73 / $316,593.49)")
-```
-
-```sh
-mortgagemath payment --principal 350100 --rate 4.9 --term-months 36 \
-    --amortization-period-months 240 --compounding semi_annual \
-    --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP
 ```
 
 **Source.** [Olivier, *Business Math: A Step-by-Step Handbook*
