@@ -1,16 +1,16 @@
 name: vignettes
 
 # Renders the Quarto vignettes under docs/vignettes/ and:
-#  - on push to main: deploys the HTML site to the gh-pages branch
-#    (served at https://<owner>.github.io/<repo>/)
+#  - on push to main: deploys the HTML site (served at
+#    https://<owner>.github.io/<repo>/) and refreshes the committed
+#    PDFs under docs/vignettes/rendered/ via a follow-up commit.
+#  - on pull_request that touches docs/vignettes/**: re-renders the
+#    PDFs and pushes them back to the PR branch so reviewers can
+#    click each PDF in the PR's "Files Changed" tab and view it
+#    inline in GitHub's built-in PDF viewer (with old↔new slider).
 #  - on tag (v*): rebuilds and uploads the PDFs as workflow artifacts
 #    (the release workflow can pull them and attach to the GitHub
 #    Release; or the user can attach manually from the run page).
-#
-# The committed copies under docs/vignettes/rendered/ are independent
-# of this workflow.  They are refreshed manually before each release
-# tag and let users browsing the GitHub repo file tree click a PDF
-# without leaving the repo.
 
 on:
   push:
@@ -19,10 +19,14 @@ on:
     paths:
       - "docs/vignettes/**"
       - ".github/workflows/vignettes.yml"
+  pull_request:
+    paths:
+      - "docs/vignettes/**"
+      - ".github/workflows/vignettes.yml"
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write          # commits the refreshed PDFs back to the PR / main
   pages: write
   id-token: write
 
@@ -31,6 +35,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          # On pull_request, check out the PR head branch directly
+          # (not the default detached merge ref) so the refresh step
+          # below can push refreshed PDFs back to that branch.  On
+          # push/tag/dispatch this resolves to the current ref and
+          # is a no-op.  fetch-depth: 0 ensures `git push` can
+          # fast-forward without a "shallow update not allowed"
+          # error.
+          ref: ${{ github.event.pull_request.head.ref || github.ref }}
+          fetch-depth: 0
 
       - name: Set up Python 3.13
         uses: actions/setup-python@v5
@@ -65,8 +79,36 @@ jobs:
           path: docs/vignettes/_site/*.pdf
           retention-days: 90
 
+      - name: Refresh committed PDFs and push back to the PR / main
+        # Commit the freshly-rendered PDFs back to the source branch
+        # so reviewers can open each PDF directly from the PR's
+        # "Files Changed" tab (GitHub renders PDFs inline with an
+        # old↔new slider).  Skips fork PRs (no push permission) and
+        # short-circuits when the rendered PDFs are byte-identical
+        # to the committed copies, avoiding empty commits.  No CI
+        # loop is possible here: pushes made by GITHUB_TOKEN do not
+        # trigger workflow runs (per GitHub Actions docs).
+        if: |
+          (github.event_name == 'pull_request' &&
+           github.event.pull_request.head.repo.full_name == github.repository) ||
+          github.ref == 'refs/heads/main'
+        run: |
+          set -e
+          mkdir -p docs/vignettes/rendered
+          cp docs/vignettes/_site/*.pdf docs/vignettes/rendered/
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/vignettes/rendered/*.pdf
+          if git diff --cached --quiet; then
+            echo "Rendered PDFs unchanged — nothing to commit."
+            exit 0
+          fi
+          git commit -m "Refresh rendered vignette PDFs"
+          git push
+
   deploy-pages:
-    # Only deploy from main pushes; tag pushes only build artifacts.
+    # Only deploy from main pushes; tag pushes only build artifacts;
+    # PRs publish previews via the in-PR PDF refresh step above.
     if: github.ref == 'refs/heads/main'
     needs: render
     runs-on: ubuntu-latest
