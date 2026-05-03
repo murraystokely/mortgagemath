@@ -41,6 +41,7 @@ def _loan_from_toml(toml_data: dict) -> LoanParams:
         for rc in loan.get("rate_schedule", ())
     )
     payment_override = loan.get("payment_override")
+    fee_per_period = loan.get("fee_per_period")
     return LoanParams(
         principal=Decimal(loan["principal"]),
         annual_rate=Decimal(loan["annual_rate"]),
@@ -55,6 +56,7 @@ def _loan_from_toml(toml_data: dict) -> LoanParams:
         payment_frequency=PaymentFrequency(payment_frequency_str),
         rate_schedule=rate_schedule,
         payment_override=Decimal(payment_override) if payment_override is not None else None,
+        fee_per_period=(Decimal(fee_per_period) if fee_per_period is not None else Decimal("0")),
     )
 
 
@@ -107,6 +109,13 @@ class TestBankSchedules:
             assert inst.balance == expected_balance, (
                 f"Payment #{n}: balance {inst.balance} != {expected_balance}"
             )
+
+            # Optional fee column for fee-loaded fixtures.  Older CSVs
+            # without a `fee` column trivially accept the default
+            # Decimal("0.00").
+            if "fee" in row:
+                expected_fee = Decimal(row["fee"])
+                assert inst.fee == expected_fee, f"Payment #{n}: fee {inst.fee} != {expected_fee}"
 
     def test_balloon_at_term_matches(self, bank_schedule):
         """Validate the published balloon at term, if any.

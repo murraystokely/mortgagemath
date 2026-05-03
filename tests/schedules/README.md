@@ -74,6 +74,7 @@ independently verified.
 | `payment_frequency` | `"monthly"` (default), `"semi_monthly"`, `"biweekly"`, `"weekly"`, `"quarterly"`, `"annual"` | Cadence of payments. `term_months * payments_per_year` must be divisible by 12. |
 | `rate_schedule` | array of tables (optional) | ARM rate-change schedule; see below. |
 | `payment_override` | string (Decimal, optional) | Pin the periodic payment to this value; the schedule's final row absorbs the residual. Reproduces the historical "given-payment, find-term" convention (FHLBB 1935 *Review*). Currently incompatible with `rate_schedule`. |
+| `fee_per_period` | string (Decimal, optional) | Flat amount added to each installment's `payment` on top of the closed-form interest+principal value. Models the modern French *tableau d'amortissement* convention of pricing *assurance emprunteur* as `taux × original_principal` paid as a flat amount per period, and the 1852 Crédit Foncier *annuité* loading. Default `"0"`. |
 
 #### `[[loan.rate_schedule]]` (ARMs)
 

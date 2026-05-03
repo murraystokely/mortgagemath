@@ -49,6 +49,26 @@ def _recast_payment_pair(
     return raw, raw.quantize(_PENNY, rounding=rounding)
 
 
+def _apply_fee(inst: Installment, fee: Decimal) -> Installment:
+    """Return a copy of ``inst`` with ``fee`` added to ``payment``.
+
+    Used to apply ``LoanParams.fee_per_period`` uniformly to every
+    schedule row.  The fee is treated as a flat amount in the loan's
+    currency; quantize the input to cents so the resulting payment
+    has consistent precision.
+    """
+    fee_cents = fee.quantize(_PENNY)
+    return Installment(
+        number=inst.number,
+        payment=inst.payment + fee_cents,
+        interest=inst.interest,
+        principal=inst.principal,
+        total_interest=inst.total_interest,
+        balance=inst.balance,
+        fee=fee_cents,
+    )
+
+
 def _next_rate_change(
     rate_schedule: tuple[RateChange, ...], idx: int, payment_number: int
 ) -> RateChange | None:
@@ -112,15 +132,26 @@ def amortization_schedule(loan: LoanParams) -> list[Installment]:
             payment overpayment from rounding.
     """
     if loan.day_count == DayCount.THIRTY_360:
-        return _schedule_thirty_360(loan)
-    if loan.day_count == DayCount.ACTUAL_360:
+        sched = _schedule_thirty_360(loan)
+    elif loan.day_count == DayCount.ACTUAL_360:
         if loan.start_date is None:
             raise ValueError(
                 "ACTUAL_360 schedule requires loan.start_date "
                 "(the issue date / first interest-accrual period)"
             )
-        return _schedule_actual_360(loan)
-    raise ValueError(f"unsupported day_count: {loan.day_count}")  # pragma: no cover
+        sched = _schedule_actual_360(loan)
+    else:  # pragma: no cover
+        raise ValueError(f"unsupported day_count: {loan.day_count}")
+
+    # Apply the optional per-period fee uniformly to every installment
+    # row (row 0 is the initial state and has no payment, so it keeps
+    # fee=0).  The fee adds to Installment.payment but does not alter
+    # interest, principal, total_interest, or balance: the closed-form
+    # arithmetic and balance accounting are untouched.
+    fee = loan.fee_per_period
+    if fee:
+        sched = [sched[0], *(_apply_fee(inst, fee) for inst in sched[1:])]
+    return sched
 
 
 def _schedule_thirty_360(loan: LoanParams) -> list[Installment]:

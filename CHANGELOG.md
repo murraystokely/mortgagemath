@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-05-03
+
+### Added
+
+- **`LoanParams.fee_per_period`** — flat amount added to each
+  installment's ``payment`` on top of the closed-form
+  interest+principal value. Models the structure of the 1852
+  Crédit Foncier de France *annuité* (which embedded
+  *frais d'administration* + *fonds de réserve* + *impôt* as a
+  constant loading on top of the actuarial
+  interest+amortissement) and the modern French *tableau
+  d'amortissement* convention of pricing *assurance emprunteur*
+  as ``taux × original_principal`` paid as a flat amount per
+  period. Closed-form payment derivation, balance accounting,
+  and rate-schedule recasts are all unaffected: the fee rides on
+  top.
+- **`Installment.fee`** field exposing the per-row loading.
+  When ``fee_per_period`` is the default ``Decimal("0")``,
+  ``Installment.fee`` is also ``Decimal("0.00")`` and behavior
+  is byte-identical to v0.6.0.
+- **Synthetic fee-loaded fixture**
+  (``synthetic_fee_loaded_240k_400_60mo_assur80``) — EUR 240,000
+  / 4.0% nominal monthly / 60 months with EUR 80/mo flat
+  *assurance* loading. Exercises the new field cell-for-cell.
+  Fixture #37.
+
+### Notes
+
+- The canonical Crédit Foncier 1852 schedule (Wolowski) and
+  modern French *tableau d'amortissement* row-level fixtures are
+  not in this release. Wolowski publishes only the rate
+  decomposition (no row-by-row schedule); modern French bank-
+  website examples publish year-aggregate sums computed at
+  unrounded precision (Crédit Agricole's €100,000 / 3.8% / 10yr
+  example, for instance, totals year-1 principal at €8,380.64
+  via 12 × unrounded payment, while the library's row-by-row
+  rounded sum gives €8,380.60). A separate aggregate-precision
+  display mode would be required to match those publications;
+  see the open question discussed during the v0.6.1 cycle.
+
+### Documentation
+
+- Top-level README, ``docs/vignettes/README.md``, and
+  ``docs/sphinx/vignettes.md`` updated to reference the four-
+  vignette set introduced in v0.6.0 (the three single-fixture
+  vignettes folded into ``examples.qmd`` were still cited in
+  these locations).
+
 ## [0.6.0] - 2026-05-02
 
 ### Added

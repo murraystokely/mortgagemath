@@ -1,0 +1,57 @@
+# Synthetic boundary fixture exercising the v0.6.1 `fee_per_period`
+# field.  Mirrors the modern French *tableau d'amortissement*
+# structure: closed-form interest+principal at a monthly-compounded
+# nominal rate, plus a flat-amount per-period assurance loading.
+#
+# Loan: EUR 240,000 / 4.0% nominal monthly / 60 months, with a flat
+# EUR 80 per-month "assurance emprunteur" — equivalent to a
+# 0.40% annual taux d'assurance × original principal:
+#
+#   80 × 12 = 960 = 0.40% of 240,000
+#
+# Parameters were chosen so the closed-form payment (4419.97) and
+# the per-row interest accruals are well-behaved under HALF_UP
+# rounding without rounding-mode-dependent boundary cases.  The
+# library's pure interest+principal arithmetic is unchanged from
+# v0.6.0; the only new behavior is that each Installment.payment
+# now equals interest + principal + 80.00, and Installment.fee
+# exposes the loading.
+#
+# Cross-verification: the row-level invariant
+# `principal + interest + fee == payment` holds for every row,
+# and the aggregate invariant
+# `sum(payment) == principal + sum(interest) + sum(fee)`
+# holds (= EUR 269,997.89 = 240,000 + 25,197.89 + 4,800.00).
+#
+# Cited as "synthetic" rather than "tableau d'amortissement
+# example from <bank>" because Crédit Agricole, Meilleurtaux,
+# Cardif and similar publish per-year aggregates rather than
+# per-month rows, with year-level totals computed at unrounded
+# precision — values that the library's row-by-row Decimal
+# rounding cannot reproduce to the centime under the strict
+# no-partial-fixtures rule.  When a verifiable row-level published
+# table surfaces, this synthetic fixture will be supplemented
+# with a citing-fixture under a non-synthetic kind.
+
+[loan]
+principal = "240000.00"
+annual_rate = "4.0"
+term_months = 60
+day_count = "30/360"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+balance_tracking = "round_each"
+fee_per_period = "80.00"
+
+[source]
+kind = "synthetic"
+country = "n/a"
+license = "n/a (synthetic)"
+short_label = "Synthetic fee-loaded"
+bib_key = "synthetic_fee_loaded"
+bib_title = "Synthetic fee-loaded annuity"
+citation = "Synthetic boundary case constructed for this library to exercise the v0.6.1 `LoanParams.fee_per_period` field. Models the modern French *tableau d'amortissement* structure (closed-form interest+principal under monthly compounding, plus flat-amount per-period *assurance emprunteur*) at parameters where the row-by-row arithmetic is internally consistent under HALF_UP rounding."
+notes = "EUR 240,000 / 4.0% nominal monthly / 60mo with EUR 80/mo assurance (= 0.40% × original principal annual). Closed-form P+I = 4419.97; gross échéance = 4499.97 with 80.00 fee per row."
+
+[expected]
+periodic_payment = "4419.97"
