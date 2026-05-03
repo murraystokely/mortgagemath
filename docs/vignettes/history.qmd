@@ -368,10 +368,21 @@ $297,500 first term and renewal).
 **France — direct CF descendants.** The Crédit Foncier de
 France itself was wound down in 2013, but the institutional model
 — a long-term, fixed-rate, fee-loaded *annuité* — persists in
-French residential mortgage practice. Modern French published
-schedules retain the *taux effectif global* (TEG) loading and so,
-as in 1852, are not directly reproducible by a pure
-interest+principal model.
+French residential mortgage practice. Modern French residential
+*tableaux d'amortissement* in actual *offres de prêt* (the
+borrower-facing PDF that lenders are statutorily required to
+provide) are row-level cents-precision documents that the
+library reproduces directly; v0.6.1's `fee_per_period` field
+covers the *assurance emprunteur* loading that is the dominant
+fee component of a modern French *échéance*. Public bank
+educational webpages (Crédit Agricole, Meilleurtaux, ANIL,
+service-public.fr) typically show only year-aggregate totals
+without a per-month table, and the rounding convention behind
+those aggregates is not documented; several different row-level
+conventions can produce identical year sums, so those pages are
+not fixture-grade sources. A non-synthetic French fixture awaits
+publication of a row-level *offre de prêt* in the public
+domain.
 
 **Australia and the Australasian colonial period.** **Carl
 Pinschof's** 1892 paper "The Credit Foncier System," delivered

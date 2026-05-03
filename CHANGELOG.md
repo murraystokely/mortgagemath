@@ -38,14 +38,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The canonical Crédit Foncier 1852 schedule (Wolowski) and
   modern French *tableau d'amortissement* row-level fixtures are
   not in this release. Wolowski publishes only the rate
-  decomposition (no row-by-row schedule); modern French bank-
-  website examples publish year-aggregate sums computed at
-  unrounded precision (Crédit Agricole's €100,000 / 3.8% / 10yr
-  example, for instance, totals year-1 principal at €8,380.64
-  via 12 × unrounded payment, while the library's row-by-row
-  rounded sum gives €8,380.60). A separate aggregate-precision
-  display mode would be required to match those publications;
-  see the open question discussed during the v0.6.1 cycle.
+  decomposition (no row-by-row schedule). Modern French
+  bank-website examples (Crédit Agricole, Meilleurtaux, ANIL,
+  service-public.fr) typically show only *year-aggregate*
+  totals on their educational pages — no per-month row-level
+  table is published, and the rounding convention behind those
+  aggregates is not documented. Several different row-level
+  conventions would produce the same year aggregates (constant
+  cents-rounded payment plus 1-cent monthly adjustments;
+  unrounded-payment aggregation; etc.), so these pages are not
+  fixture-grade sources. Real French borrower-facing *offres
+  de prêt* are row-level cents-precision documents that the
+  library reproduces with its existing rounding modes; one will
+  be added as a fixture when a public example surfaces.
 
 ### Documentation
 
