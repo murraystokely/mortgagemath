@@ -9,6 +9,23 @@ entries.
 
 ## Functions
 
+### Convenience constructors
+
+These helpers choose common, fixture-backed defaults and return
+ordinary validated `LoanParams` objects. Use `LoanParams` directly
+when you need every parameter explicitly.
+
+```{eval-rst}
+.. autofunction:: mortgagemath.fixed_rate_mortgage
+.. autofunction:: mortgagemath.us_30_year_fixed
+.. autofunction:: mortgagemath.us_15_year_fixed
+.. autofunction:: mortgagemath.canada_fixed_j2
+.. autofunction:: mortgagemath.us_actual_360_commercial
+.. autofunction:: mortgagemath.fixed_payment_mortgage
+```
+
+### Calculations
+
 ```{eval-rst}
 .. autofunction:: mortgagemath.periodic_payment
 .. autofunction:: mortgagemath.monthly_payment

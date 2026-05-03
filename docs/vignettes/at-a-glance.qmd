@@ -40,14 +40,9 @@ mortgagemath schedule --principal 300000 --rate 6.5 --term-months 360 \
 
 ```{python}
 #| output: false
-from decimal import Decimal
-from mortgagemath import LoanParams, periodic_payment, amortization_schedule
+from mortgagemath import us_30_year_fixed, periodic_payment, amortization_schedule
 
-loan = LoanParams(
-    principal=Decimal("300000"),
-    annual_rate=Decimal("6.5"),
-    term_months=360,
-)
+loan = us_30_year_fixed("300000", "6.5")
 pmt = periodic_payment(loan)        # Decimal("1896.21")
 sched = amortization_schedule(loan)  # closes at $0.00 on payment 360
 ```
@@ -73,7 +68,12 @@ for n in (1, 240, 360):
 A wide variety of mortgage types can be represented by setting the
 parameters below. A robust test suite validates schedules from
 financial textbooks, regulatory documents, and other sources for
-US, UK, and Canadian mortgages by choosing the right settings.
+US and Canadian mortgages, plus actuarial and finance-textbook
+examples, by choosing the right settings.
+
+For common cases, start with a convenience constructor:
+`us_30_year_fixed`, `us_15_year_fixed`, `canada_fixed_j2`,
+`us_actual_360_commercial`, or `fixed_payment_mortgage`.
 
 **Required.**
 

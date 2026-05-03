@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Convenience constructors for common mortgage configurations.**
+  `fixed_rate_mortgage(...)`, `us_30_year_fixed(...)`,
+  `us_15_year_fixed(...)`, `canada_fixed_j2(...)`,
+  `us_actual_360_commercial(...)`, and
+  `fixed_payment_mortgage(...)` return ordinary validated
+  `LoanParams` objects while choosing the fixture-backed defaults
+  most users need first.
+
 ## [0.6.1] - 2026-05-03
 
 Stabilization release: removes review blockers found after
