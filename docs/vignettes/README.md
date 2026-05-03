@@ -1,17 +1,19 @@
 # mortgagemath vignettes
 
-Five vignettes covering the library at-a-glance, the full validated-
-fixture table, ARM mechanics (Reg Z H-14), payment caps with negative
-amortization (ProEducate), and Canadian semi-annual mortgages.
+Four vignettes covering the library at-a-glance, the full validated-
+fixture table, country-organized worked examples (US fixed / ARMs /
+commercial / synthetic, Canadian *j_2*, …), and an academic history
+of the level-payment mortgage.
 
 ## Sources
 
 - `index.qmd` — landing page (HTML only)
 - `at-a-glance.qmd` — 1-page overview
-- `validation.qmd` — 27-fixture parameter matrix + bibliography
-- `arm-regz-h14.qmd` — Reg Z Sample H-14 ARM walkthrough
-- `payment-caps-proeducate.qmd` — payment cap + negative amortization
-- `canadian-j2.qmd` — Canadian semi-annual (`j_2`) convention
+- `validation.qmd` — 36-fixture parameter matrix + bibliography
+- `examples.qmd` — country-organized worked examples (US, Canada,
+  France, UK, Australia)
+- `history.qmd` — institutional and mathematical history with
+  academic bibliography
 
 ## Build
 

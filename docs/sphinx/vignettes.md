@@ -11,7 +11,7 @@ executed during render, and every published-source value reproduces
 to the cent.  Built with [Quarto](https://quarto.org/) and the
 [typst](https://typst.app/) PDF engine.
 
-## The five vignettes
+## The four vignettes
 
 ### At a glance
 
@@ -24,38 +24,39 @@ list.
 
 ### Validation against published sources
 
-The full **27-fixture × 6-parameter table** showing the exact
+The full **36-fixture × 8-parameter table** showing the exact
 `LoanParams` settings required to match each published source, plus
-a curated bibliography keyed by source.  Generated dynamically from
-the test fixture TOML files so it stays current as fixtures land.
+a bibliography keyed by source.  Generated dynamically from the test
+fixture TOML files so it stays current as fixtures land.
 
 - HTML: <https://murraystokely.github.io/mortgagemath/validation.html>
 - PDF: [`validation.pdf`](https://github.com/murraystokely/mortgagemath/blob/main/docs/vignettes/rendered/validation.pdf)
 
-### Reg Z Sample H-14: an ARM walkthrough
+### Worked examples
 
-The regulatory worked example for a 1/1 Adjustable-Rate Mortgage
-with periodic and lifetime caps.  Cap derivation table, encoded
-`LoanParams`, and live anchor verification of all 11 published
-checkpoints.
+A country-organized walkthrough of every loan type the library
+covers, with a uniform structure per example: scenario, equivalent
+`mortgagemath` CLI invocation, ``LoanParams(...)`` Python literal,
+live schedule produced by the library, and source citation.
+Sections: United States (CFPB H-25(B), OpenStax, Fannie Mae §1103,
+Reg Z H-14 ARM, ProEducate payment cap with negative amortization,
+Geltner CRE, half-cent synthetic boundary, Skinner 1913 effective-
+annual, Arcones SOA FM annual, FHLBB 1935 given-payment), Canada
+(Olivier Chans monthly *j_2*, eCampus quarterly *j_2*), France, UK,
+Australia.  First-page table of contents.
 
-- HTML: <https://murraystokely.github.io/mortgagemath/arm-regz-h14.html>
-- PDF: [`arm-regz-h14.pdf`](https://github.com/murraystokely/mortgagemath/blob/main/docs/vignettes/rendered/arm-regz-h14.pdf)
+- HTML: <https://murraystokely.github.io/mortgagemath/examples.html>
+- PDF: [`examples.pdf`](https://github.com/murraystokely/mortgagemath/blob/main/docs/vignettes/rendered/examples.pdf)
 
-### Payment caps and negative amortization
+### A short history of the level-payment mortgage
 
-The ProEducate worked example with a row-by-row trace of the
-rate-change boundary (months 10–25) showing where the cap binds and
-the schedule enters negative amortization.
+Academic-style treatment of the institutional and mathematical
+history of the residential mortgage loan, from the medieval
+*mortuum vadium* through the New Deal direct-reduction
+standardization to ARMs and modern conventions.  Detailed
+bibliography of primary and secondary sources (Rose & Snowden NBER
+WP 18388, FHLBB *Review* March 1935, Wolowski 1852, Wright 1894,
+Skinner 1913, …).
 
-- HTML: <https://murraystokely.github.io/mortgagemath/payment-caps-proeducate.html>
-- PDF: [`payment-caps-proeducate.pdf`](https://github.com/murraystokely/mortgagemath/blob/main/docs/vignettes/rendered/payment-caps-proeducate.pdf)
-
-### Canadian semi-annual mortgages
-
-The *Interest Act* §6 convention with worked Olivier (Chans) and
-eCampus Ontario (§4.4.1) reproductions; math display of the j_2 →
-periodic-rate derivation.
-
-- HTML: <https://murraystokely.github.io/mortgagemath/canadian-j2.html>
-- PDF: [`canadian-j2.pdf`](https://github.com/murraystokely/mortgagemath/blob/main/docs/vignettes/rendered/canadian-j2.pdf)
+- HTML: <https://murraystokely.github.io/mortgagemath/history.html>
+- PDF: [`history.pdf`](https://github.com/murraystokely/mortgagemath/blob/main/docs/vignettes/rendered/history.pdf)

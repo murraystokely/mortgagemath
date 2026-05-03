@@ -18,12 +18,11 @@ Cent-accurate mortgage amortization for Python — validated against CFPB, Fanni
 ## Documentation
 
 - **[Read the Docs](https://mortgagemath.readthedocs.io/)** — installation, quickstart, full API reference, and changelog
-- **Vignettes** — five branded PDFs covering the library at-a-glance, validated sources, ARMs, payment caps, and Canadian j_2 mortgages:
+- **Vignettes** — four branded PDFs:
   - [At a glance](docs/vignettes/rendered/at-a-glance.pdf) — 1-page overview
-  - [Validation against published sources](docs/vignettes/rendered/validation.pdf) — full 27-fixture parameter matrix + bibliography
-  - [Reg Z H-14 ARM walkthrough](docs/vignettes/rendered/arm-regz-h14.pdf)
-  - [Payment caps and negative amortization](docs/vignettes/rendered/payment-caps-proeducate.pdf)
-  - [Canadian semi-annual mortgages](docs/vignettes/rendered/canadian-j2.pdf)
+  - [Validation against published sources](docs/vignettes/rendered/validation.pdf) — full 36-fixture parameter matrix + bibliography
+  - [Worked examples](docs/vignettes/rendered/examples.pdf) — country-organized example collection (US 30yr fixed, ARMs with rate / payment caps, commercial Actual/360, Canadian *j_2*, FHLBB 1935, …)
+  - [A short history of the level-payment mortgage](docs/vignettes/rendered/history.pdf) — academic context with bibliography
 - **HTML site**: [murraystokely.github.io/mortgagemath](https://murraystokely.github.io/mortgagemath/) (rendered vignettes with navigation and search)
 
 ## Use Cases
