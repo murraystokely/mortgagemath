@@ -438,21 +438,26 @@ Three classes of historically-important contracts are deliberately
    cannot reproduce a published *annuité* that includes
    commission, reserve, and tax components. This is the gap
    that §10 below proposes to close.
-3. **Given-payment, find-term contracts** like the FHLBB *Review*
-   1935 Plan A schedule. The library is closed-form: term is
-   input, payment is output. The 1935 convention chose payment
-   first and let the term and final-payment trueup follow.
-   Adding a "find-term" mode is not on the roadmap because no
-   post-1968 American regulatory or lender source uses it.
+An earlier-flagged exclusion has since been closed:
 
-These exclusions narrow the library's scope to roughly the period
-**1934–present** in the United States (with the Skinner 1913
-piano example an important pre-New-Deal exception, and the
-Canadian, French, and Australian-relevant worked examples extending the
-convention coverage internationally). Within that window the
-library reproduces every published cent in 35 worked examples
-spanning regulatory disclosures, GSE servicing guides, and
-open-licensed textbook problems.
+- **Given-payment, find-term contracts** like the FHLBB *Review*
+  1935 Plan A schedule. The 1935 convention chose payment first
+  and let the term and final-payment trueup follow. v0.6.0's
+  ``LoanParams.payment_override`` field reproduces this
+  cell-for-cell against the FHLBB Plan A fixture (\$3,000 / 6%
+  / \$30 monthly; 138 full payments + 139th of \$29.27).
+
+These exclusions narrow the library's scope to the post-1934
+American direct-reduction convention plus the Skinner 1913 piano
+single-anchor pre-New-Deal exception, the FHLBB 1935 given-payment
+convention (via ``payment_override``), the Canadian *Interest
+Act* §6 semi-annual convention, and the SOA Exam FM annual
+schedules. Within that window the library reproduces 36
+published worked-example schedules cell-for-cell; on the small
+number of historical sources that themselves carry an internal
+arithmetic typo (notably two rows of the Geltner CRE Ch 20
+schedule), the divergent rows are documented in the fixture
+``notes`` field rather than forced into the corpus.
 
 ## 10. A planned extension: the per-period fee
 

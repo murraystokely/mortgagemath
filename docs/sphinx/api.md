@@ -1,9 +1,11 @@
 # API reference
 
-```{eval-rst}
-.. automodule:: mortgagemath
-   :members:
-```
+The explicit listings below cover every public function, dataclass,
+enum, and warning. ``conf.py`` enables
+``autodoc_default_options = {"members": True}``, so each
+``autoclass`` directive auto-includes its members; we omit a
+top-level ``automodule`` directive to avoid duplicate index
+entries.
 
 ## Functions
 

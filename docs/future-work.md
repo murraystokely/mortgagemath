@@ -60,22 +60,24 @@ divergences that could mask real bugs.
 
 ### Sources requiring algorithms the library does not implement
 
-- **Various Canadian textbook examples** (Maksim's Apartment, the
-  Olivers, the Chans, Kerry's Toyota Rav4). Use the semi-annual
-  compounding required by Canadian mortgage law (the periodic rate is
-  derived from a semi-annually-compounded nominal rate, not from
-  monthly compounding). The library uses monthly compounding only.
-- **Kerry's Toyota Rav4** specifically also chose a non-actuarial
-  whole-dollar payment ($2,691 instead of the closed-form $2,690.05),
-  which puts the loan outside the closed-form annuity model.
+- **Kerry's Toyota Rav4** chose a non-actuarial whole-dollar
+  payment ($2,691 instead of the closed-form $2,690.05), which
+  puts the loan outside the closed-form annuity model. (As of
+  v0.6.0, ``LoanParams.payment_override`` could in principle
+  reproduce this if the source published a row-level schedule;
+  it does not.)
 - **William Hart, *Mathematics of Investment*** (1924, archive.org)
   — worked example uses mill-precision (3 decimals), incompatible with
   the library's cent-rounding.
 
+Note: Canadian *Interest Act* §6 semi-annual compounding shipped
+in v0.3.0 (``Compounding.SEMI_ANNUAL``). Multiple Canadian
+fixtures (Olivier Chans first term + renewal; eCampus Ontario
+§4.4.1 first term + renewal; eCampus §4.3 Erika / Johnetta /
+Pearline) are now in the test suite.
+
 ## Possible future work
 
-- Investigate semi-annual / annual compounding to support Canadian
-  mortgages and certain bond/annuity examples.
 - See "Actual/360 commercial loans" below.
 - See "Carry-precision textbooks" below for sources that still don't
   match even with `BalanceTracking.CARRY_PRECISION`.

@@ -5,6 +5,8 @@ from datetime import date
 from decimal import Decimal
 from enum import Enum
 
+_PENNY = Decimal("0.01")
+
 
 class EarlyPayoffWarning(UserWarning):
     """Schedule terminated before ``term_months`` due to rounding overpayment.
@@ -297,6 +299,8 @@ class LoanParams:
 
         # Number of payments must be a whole number for the schedule loop.
         ppy = self.payment_frequency.payments_per_year
+        if self.term_months <= 0:
+            raise ValueError(f"term_months must be positive, got {self.term_months}")
         if (self.term_months * ppy) % 12 != 0:
             raise ValueError(
                 f"term_months={self.term_months} * payments_per_year={ppy} "
@@ -304,14 +308,29 @@ class LoanParams:
                 f"payments. Adjust term_months so the total is an integer "
                 f"number of payments at the chosen frequency."
             )
-        if (
-            self.amortization_period_months is not None
-            and (self.amortization_period_months * ppy) % 12 != 0
-        ):
-            raise ValueError(
-                f"amortization_period_months={self.amortization_period_months} "
-                f"* payments_per_year={ppy} is not divisible by 12."
-            )
+
+        # amortization_period_months validation lives here (in v0.6.1,
+        # moved from periodic_payment) so payment_override loans —
+        # which return the override directly without invoking
+        # periodic_payment's guards — get the same checks.
+        if self.amortization_period_months is not None:
+            if self.amortization_period_months <= 0:
+                raise ValueError(
+                    f"amortization_period_months must be positive when set, "
+                    f"got {self.amortization_period_months}"
+                )
+            if self.amortization_period_months < self.term_months:
+                raise ValueError(
+                    f"amortization_period_months ({self.amortization_period_months}) "
+                    f"must be >= term_months ({self.term_months}). A shorter "
+                    f"amortization basis would over-amortize and drive the "
+                    f"balance negative before the term ends."
+                )
+            if (self.amortization_period_months * ppy) % 12 != 0:
+                raise ValueError(
+                    f"amortization_period_months={self.amortization_period_months} "
+                    f"* payments_per_year={ppy} is not divisible by 12."
+                )
 
         # Rate-schedule validation. v0.4.0 ships Tier 1 ARMs (explicit
         # rate-change list) for THIRTY_360 fully-amortizing loans only;
@@ -355,11 +374,33 @@ class LoanParams:
                 raise ValueError(
                     f"payment_override must be positive when set, got {self.payment_override}"
                 )
+            # Reject non-cent overrides: a Decimal("99.999") would let
+            # public Installment rows carry sub-cent payment amounts,
+            # which violates the cents-precision contract.
+            if self.payment_override != self.payment_override.quantize(_PENNY):
+                raise ValueError(
+                    f"payment_override must be denominated in whole cents "
+                    f"(two-decimal Decimal), got {self.payment_override}"
+                )
             if self.rate_schedule:
                 raise ValueError(
                     "payment_override is currently incompatible with rate_schedule. "
                     "When a published source motivates combining them, the override will "
                     "take precedence and ARM payment caps will be ignored."
+                )
+            # The override path treats the schedule as a fixed-rate,
+            # fully-amortizing loan with the user's chosen payment
+            # absorbed by the final-row trueup. Balloon basis (amort
+            # period > term) was never tested with the override, and
+            # without a published source it's not on the roadmap.
+            if (
+                self.amortization_period_months is not None
+                and self.amortization_period_months != self.term_months
+            ):
+                raise ValueError(
+                    "payment_override is supported for fully-amortizing loans only. "
+                    "Set amortization_period_months=None or amortization_period_months "
+                    "== term_months when using payment_override."
                 )
 
     @property
