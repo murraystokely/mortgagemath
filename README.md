@@ -68,6 +68,17 @@ if every value matches the published source exactly.
 
 ## Quick example
 
+The CFPB's Closing Disclosure Sample H-25(B) — $162,000 at
+3.875% for 30 years — from the command line:
+
+```sh
+mortgagemath schedule --principal 162000 --rate 3.875 --term-months 360 \
+    --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP \
+    --format csv
+```
+
+The same loan from Python:
+
 ```python
 from decimal import Decimal
 from mortgagemath import (
@@ -75,7 +86,6 @@ from mortgagemath import (
     periodic_payment, amortization_schedule,
 )
 
-# CFPB Closing Disclosure Sample H-25(B): $162,000 / 3.875% / 30 yr
 loan = LoanParams(
     principal=Decimal("162000.00"),
     annual_rate=Decimal("3.875"),
@@ -91,14 +101,6 @@ print(sched[1].principal)           # Decimal("238.65")
 print(sched[-1].balance)            # Decimal("0.00")  exact closure
 ```
 
-Or from the CLI:
-
-```sh
-mortgagemath schedule --principal 162000 --rate 3.875 --term-months 360 \
-    --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP \
-    --format csv
-```
-
 For Canadian *j_2* mortgages, US ARMs (with rate caps and
 payment caps), commercial Actual/360 with balloon, and the FHLBB
 1935 given-payment convention, see the **[Worked
@@ -106,9 +108,11 @@ examples](docs/vignettes/rendered/examples.pdf)** vignette.
 
 ## What's validated
 
-37 paired fixtures (TOML loan parameters + CSV schedule) under
-`tests/schedules/`; each reproduces every published cell from
-its source to the cent. Sources span:
+37 fully published amortization tables from government regulatory
+documents, GSE servicing guides, and academic textbooks, exercised
+by a test suite of more than 300 tests that runs on every push and
+every release to ensure every cent on every row matches the
+published source exactly. The sources span:
 
 - **Regulatory disclosures** — CFPB Sample H-25(B); 12 CFR
   Part 1026 Appendix H Sample H-14 (the 1982–1996 1/1 ARM with
