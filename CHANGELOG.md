@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`CLAUDE.md`** at the project root documenting project-specific
+  rules (strict complexity-threshold; synthetic-fixture-only
+  features are not enough; no-partial-fixtures), branch-naming
+  convention (`vX.Y.Z-<feature>` for releases vs `<feature>-wip`
+  for unversioned preliminary work), the active
+  `fee-per-period-wip` WIP branch with its trigger-source
+  watchlist, and the open research priority of finding more
+  real published worked amortization examples.
+
+### Changed
+
+- **README tightened from 527 to 164 lines** (~70% reduction),
+  matching the norm for focused Python packages (requests ~110,
+  pydantic ~160, httpx ~200). Three overlapping "why" sections
+  consolidated into one. Five Quick Start examples reduced to
+  one (CFPB H-25(B), with CLI form before Python form). Detailed
+  rounding / balance-tracking / day-count / API-reference
+  reference sections moved to the canonical Read the Docs site
+  to stop drifting out of sync. Lint badge commented out (kept
+  in source); Python pyversions badge dropped (redundant with
+  the PyPI badge).
+- **README "What's validated" section** now leads with
+  substantive nouns ("37 fully published amortization tables
+  from government regulatory documents, GSE servicing guides,
+  and academic textbooks, exercised by a test suite of more
+  than 300 tests…") rather than internal-test-suite vocabulary
+  ("paired fixtures (TOML loan parameters + CSV schedule)
+  under tests/schedules/").
+- **Doc references to the three v0.6.0-folded vignettes**
+  (`arm-regz-h14`, `payment-caps-proeducate`, `canadian-j2`)
+  updated in `README.md`, `docs/vignettes/README.md`, and
+  `docs/sphinx/vignettes.md` to point at the consolidated
+  `examples.qmd` vignette.
+
+### Notes
+
+- No library code changes in this period. v0.6.0's library
+  surface (including `LoanParams.payment_override` and the
+  FHLBB 1935 fixture) is unchanged.
+
 ## [0.6.0] - 2026-05-02
 
 ### Added
