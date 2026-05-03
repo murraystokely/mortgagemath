@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.7.0] - 2026-05-03
+## [0.6.1] - 2026-05-03
 
 Stabilization release: removes review blockers found after
 v0.6.0 and makes the public documentation, Read the Docs build,
@@ -106,11 +106,11 @@ and release artifacts trustworthy. No new mortgage features.
 
 ### Documentation
 
-- 11 new regression tests (`tests/test_v07_regressions.py`)
+- 11 new regression tests (`tests/test_v061_regressions.py`)
   pin the Decimal-context-independence guarantee, the
-  carry-precision early-payoff guard, and the v0.7.0
+  carry-precision early-payoff guard, and the v0.6.1
   validation moves.
-- `docs/v0.7-plan.md` records the stabilization-release plan.
+- `docs/v0.6.1-plan.md` records the stabilization-release plan.
 
 ## [0.6.0] - 2026-05-02
 

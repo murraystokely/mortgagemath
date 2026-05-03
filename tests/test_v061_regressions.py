@@ -1,7 +1,7 @@
-"""Regression tests for v0.7.0 stabilization fixes.
+"""Regression tests for v0.6.1 stabilization fixes.
 
 Each test in this module pins behavior introduced or hardened in
-v0.7.0:
+v0.6.1:
 
 1. ``test_*_independent_of_global_decimal_precision`` — schedule
    generation must produce the same cents output regardless of
@@ -66,7 +66,7 @@ def test_actual_360_independent_of_global_decimal_precision() -> None:
     # Default ambient precision (Python's 28 digits): must match.
     assert amortization_schedule(loan)[120].balance == expected_balloon
 
-    # Low ambient precision: must still match. Without the v0.7.0
+    # Low ambient precision: must still match. Without the v0.6.1
     # localcontext() wrap the result was Decimal("20885505.23") —
     # a 60-cent drift on a $25 M schedule.
     with _with_low_prec(10):
@@ -178,7 +178,7 @@ def test_payment_override_rejects_balloon_basis() -> None:
 
 
 def test_amortization_period_must_be_at_least_term() -> None:
-    """Validation moved to LoanParams.__post_init__ in v0.7.0."""
+    """Validation moved to LoanParams.__post_init__ in v0.6.1."""
     with pytest.raises(ValueError, match="must be >= term_months"):
         LoanParams(
             principal=Decimal("1000"),

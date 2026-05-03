@@ -309,7 +309,7 @@ class LoanParams:
                 f"number of payments at the chosen frequency."
             )
 
-        # amortization_period_months validation lives here (in v0.7.0,
+        # amortization_period_months validation lives here (in v0.6.1,
         # moved from periodic_payment) so payment_override loans —
         # which return the override directly without invoking
         # periodic_payment's guards — get the same checks.

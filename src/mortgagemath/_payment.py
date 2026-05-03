@@ -99,7 +99,7 @@ def periodic_payment(loan: LoanParams) -> Decimal:
             positive, or the day_count is unsupported.
     """
     # term_months and amortization_period_months invariants are
-    # enforced by LoanParams.__post_init__ (v0.7.0); this function
+    # enforced by LoanParams.__post_init__ (v0.6.1); this function
     # checks only the value-level invariants the constructor cannot
     # express in the dataclass.
     if loan.principal <= 0:
