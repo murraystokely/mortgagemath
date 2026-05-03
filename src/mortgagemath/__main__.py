@@ -252,6 +252,16 @@ def _add_loan_args(parser: argparse.ArgumentParser) -> None:
         "the residual. Reproduces the FHLBB 1935 'given-payment, find-term' "
         "convention. Currently incompatible with --rate-change.",
     )
+    parser.add_argument(
+        "--fee-per-period",
+        type=Decimal,
+        default=Decimal("0"),
+        metavar="AMOUNT",
+        help="Flat amount added to each Installment.payment on top of the "
+        "closed-form interest+principal value. Models the modern French "
+        "*assurance emprunteur* loading and the 1852 Credit Foncier "
+        "*annuité* shape. Default 0 (no loading).",
+    )
 
 
 def _params_from_args(args: argparse.Namespace) -> LoanParams:
@@ -269,6 +279,7 @@ def _params_from_args(args: argparse.Namespace) -> LoanParams:
         payment_frequency=PaymentFrequency(args.payment_frequency),
         rate_schedule=tuple(args.rate_change),
         payment_override=args.payment_override,
+        fee_per_period=args.fee_per_period,
     )
 
 

@@ -20,7 +20,7 @@ Cent-accurate mortgage amortization for Python — validated against CFPB, Fanni
 - **[Read the Docs](https://mortgagemath.readthedocs.io/)** — installation, quickstart, full API reference, and changelog
 - **Vignettes** — four branded PDFs:
   - [At a glance](docs/vignettes/rendered/at-a-glance.pdf) — 1-page overview
-  - [Validation against published sources](docs/vignettes/rendered/validation.pdf) — full 36-fixture parameter matrix + bibliography
+  - [Validation against published sources](docs/vignettes/rendered/validation.pdf) — full 37-fixture parameter matrix + bibliography
   - [Worked examples](docs/vignettes/rendered/examples.pdf) — country-organized example collection (US 30yr fixed, ARMs with rate / payment caps, commercial Actual/360, Canadian *j_2*, FHLBB 1935, …)
   - [A short history of the level-payment mortgage](docs/vignettes/rendered/history.pdf) — academic context with bibliography
 - **HTML site**: [murraystokely.github.io/mortgagemath](https://murraystokely.github.io/mortgagemath/) (rendered vignettes with navigation and search)
@@ -444,6 +444,14 @@ Frozen dataclass defining a fixed-rate mortgage.
 | `day_count` | `DayCount` | `THIRTY_360` | Day count convention |
 | `payment_rounding` | `PaymentRounding` | `ROUND_UP` | How to round the monthly payment |
 | `interest_rounding` | `PaymentRounding` | `ROUND_HALF_UP` | How to round each month's interest |
+| `start_date` | `date \| None` | `None` | Issue date; required for `ACTUAL_360` |
+| `amortization_period_months` | `int \| None` | `None` | Set when `> term_months` for balloon loans |
+| `balance_tracking` | `BalanceTracking` | `ROUND_EACH` | `ROUND_EACH` (US lender) or `CARRY_PRECISION` (Excel / CRE textbook) |
+| `compounding` | `Compounding` | `MONTHLY` | `MONTHLY` (US) · `SEMI_ANNUAL` (Canadian j_2) · `ANNUAL` |
+| `payment_frequency` | `PaymentFrequency` | `MONTHLY` | Cadence (monthly to annual) |
+| `rate_schedule` | `tuple[RateChange, ...]` | `()` | ARM rate-change schedule (optional payment caps with neg-am) |
+| `payment_override` | `Decimal \| None` | `None` | Pin the periodic payment to a chosen value; final row absorbs the residual (FHLBB 1935 given-payment, find-term convention) |
+| `fee_per_period` | `Decimal` | `Decimal("0")` | Flat amount added to each `Installment.payment` on top of the closed-form interest+principal value (modern French *assurance emprunteur*; 1852 Crédit Foncier *annuité* loading) |
 
 ### `monthly_payment(loan: LoanParams) -> Decimal`
 
@@ -466,6 +474,7 @@ Frozen dataclass for a single payment.
 | `principal` | `Decimal` | Principal portion |
 | `total_interest` | `Decimal` | Cumulative interest paid through this payment |
 | `balance` | `Decimal` | Remaining balance after this payment |
+| `fee` | `Decimal` | Flat per-period loading from `LoanParams.fee_per_period` (default `Decimal("0.00")`) |
 
 ## Test Suite
 

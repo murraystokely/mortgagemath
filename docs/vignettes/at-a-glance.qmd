@@ -91,3 +91,5 @@ US, UK, and Canadian mortgages by choosing the right settings.
 - **`compounding`** — `MONTHLY` (US) · `SEMI_ANNUAL` (Canadian j_2) · `ANNUAL`
 - **`payment_frequency`** — `MONTHLY` · `SEMI_MONTHLY` · `BIWEEKLY` · `WEEKLY` · `QUARTERLY` · `ANNUAL`
 - **`rate_schedule`** — list of `RateChange` (rate change at any payment, optional recast, optional payment cap with neg-am)
+- **`payment_override`** — pin the periodic payment to a chosen value; the schedule's final row absorbs the residual (FHLBB 1935 "given-payment, find-term" convention)
+- **`fee_per_period`** — flat amount added to each `Installment.payment` on top of the closed-form interest+principal value (modern French *assurance emprunteur*; 1852 Crédit Foncier *annuité* loading)

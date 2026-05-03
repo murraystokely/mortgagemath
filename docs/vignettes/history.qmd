@@ -150,8 +150,9 @@ testimony but only bond-side schedules) — currently passes
 validation. The structural pattern recurs: when an institution's
 contract embeds servicing fees or taxes into the *annuité*
 itself, a pure interest+principal model cannot reproduce it.
-A planned extension to the library — a per-period fee field on
-``LoanParams`` — would close this gap; see §10 below.
+v0.6.1 closed this gap with a ``fee_per_period`` field on
+``LoanParams`` and a matching ``fee`` field on ``Installment``;
+see §10 below.
 
 ## 4. American building & loan associations (1831–1934)
 
@@ -434,7 +435,7 @@ practice:
 - Multi-rate ARM schedules with optional payment caps and
   capitalized negative amortization.
 
-Three classes of historically-important contracts are deliberately
+Two classes of historically-important contracts are deliberately
 *not* modeled, and the reasons are themselves part of the history:
 
 1. **Share-accumulation B&L loans** (the dominant U.S. structure
@@ -443,108 +444,88 @@ Three classes of historically-important contracts are deliberately
    the share account as a parallel ledger would require an
    entirely separate data structure that has no application to
    any post-1934 loan.
-2. **Loaded-annuity contracts** like the Crédit Foncier (1852+)
-   and modern French residential mortgages with embedded TEG.
-   The library's `interest + principal = payment` invariant
-   cannot reproduce a published *annuité* that includes
-   commission, reserve, and tax components. This is the gap
-   that §10 below proposes to close.
-3. **Given-payment, find-term contracts** like the FHLBB *Review*
-   1935 Plan A schedule. The library is closed-form: term is
-   input, payment is output. The 1935 convention chose payment
-   first and let the term and final-payment trueup follow.
-   Adding a "find-term" mode is not on the roadmap because no
-   post-1968 American regulatory or lender source uses it.
+2. **Variable-fee loaded annuities** — commission-de-gestion
+   proportional to outstanding balance, stepped insurance
+   bucketed by borrower age, separate-cadence garantie
+   schedules. The flat-amount-per-period ``fee_per_period``
+   field added in v0.6.1 (see §10) covers the common modern
+   French *assurance emprunteur* structure and the 1852 CF
+   loading shape; declining-balance and stepped fees are left
+   for a later extension if a specific verifiable source
+   motivates them.
 
-These exclusions narrow the library's scope to roughly the period
-**1934–present** in the United States (with the Skinner 1913
-piano example an important pre-New-Deal exception, and the
-Canadian, French, and Australian-relevant worked examples extending the
-convention coverage internationally). Within that window the
-library reproduces every published cent in 35 worked examples
-spanning regulatory disclosures, GSE servicing guides, and
-open-licensed textbook problems.
+Two earlier-flagged exclusions have since been closed:
 
-## 10. A planned extension: the per-period fee
+- **Given-payment, find-term contracts** (FHLBB *Review* 1935
+  Plan A): the v0.6.0 ``LoanParams.payment_override`` field
+  reproduces the 1935 convention cell-for-cell.
+- **Flat-loaded annuities** (modern French *assurance
+  emprunteur* structure; 1852 CF *frais + réserve + impôt*
+  loading): v0.6.1's ``fee_per_period`` covers them.
 
-The Crédit Foncier exclusion from §3 is the most consequential
-gap in the library's coverage of 19th-century European mortgage
-practice. The structural problem is straightforward: CF rows
-publish `annuité = interest + amortissement + frais + réserve +
-impôt`, with the last three components rolled into a single
-flat-amount loading on top of the actuarially-pure
-interest-plus-principal value.
+The library's documented coverage stretches from the Skinner
+1913 piano example through the FHLBB 1935 schedule, the post-
+1968 American regulatory and GSE corpus, the Canadian *Interest
+Act* §6 semi-annual convention, and the modern flat-loaded
+European *annuité* shape. Within that window the library
+reproduces every published cent in 37 worked examples spanning
+regulatory disclosures, GSE servicing guides, and open-licensed
+textbook problems.
 
-A minimal extension would add an optional `fee_per_period`
-parameter to ``LoanParams`` and a corresponding `fee` field on
-the `Installment` record:
+## 10. The per-period fee (v0.6.1)
 
-```python
-@dataclass(frozen=True)
-class LoanParams:
-    # ... all existing fields ...
-    fee_per_period: Decimal = Decimal("0")  # flat amount added to each
-                                            # period's published payment
+v0.6.1 added an optional ``fee_per_period`` field to
+``LoanParams`` and a corresponding ``fee`` field on
+``Installment``, addressing the loaded-annuity gap discussed in
+§3 and §9. The CF problem is straightforward: rows publish
+``annuité = interest + amortissement + frais + réserve + impôt``,
+with the last three components rolled into a flat-amount
+loading on top of the actuarially-pure interest-plus-principal
+value.
 
-@dataclass(frozen=True)
-class Installment:
-    number: int
-    payment: Decimal      # = interest + principal + fee  (gross annuity)
-    interest: Decimal
-    principal: Decimal
-    fee: Decimal          # default 0.00; non-zero only for fee-loaded loans
-    balance: Decimal
-```
+Semantics of ``fee_per_period``:
 
-Semantics:
-
-- `periodic_payment(loan)` continues to return the *actuarially-
-  pure* P+I closed-form value. The `fee_per_period` is added by
-  ``amortization_schedule`` to each `Installment.payment` after
-  the schedule is built, so the principal/interest split is
-  unchanged.
-- `Installment.fee` exposes the loading cleanly, so consumers can
-  recover either the gross annuity (the published figure) or the
-  stripped P+I (what the underlying interest rate accrues against)
-  as needed.
-- The fee is treated as a *per-period flat amount in the loan's
-  currency*, not a percentage. Sources that publish the loading
-  as a percentage of original principal (CF: 0.50 fr. per 100 fr.
-  per year) require a one-line preprocessing step:
+- The closed-form ``periodic_payment(loan)`` continues to return
+  the actuarially-pure P+I value. The fee is added by
+  ``amortization_schedule`` to each
+  ``Installment.payment`` after the schedule is built; closed-
+  form payment derivation, balance accounting, and rate-schedule
+  recasts are all unaffected.
+- ``Installment.fee`` exposes the per-row loading. Consumers
+  can recover the gross *annuité* the borrower paid as
+  ``Installment.payment`` directly, or the stripped P+I
+  (the basis of the underlying interest rate) as
+  ``Installment.payment - Installment.fee``.
+- The fee is a flat amount per period in the loan's currency,
+  not a percentage. Sources that publish the loading as a
+  percentage of original principal (CF: 0.50 fr. per 100 fr.
+  per year; modern French *taux d'assurance*: 0.36% × original
+  principal annual) require a one-line preprocessing step:
   ``fee_per_period = original_principal * fee_pct / payments_per_year``.
 
-For Wolowski's 1852 4½% / 39-year canonical example the math
-works out cleanly: the closed-form payment at 4.50% annual over
-39 years on 100 fr. of principal is 5.485 fr. ≈ 5.50 fr., and a
-fixed 0.50-fr. annual fee lifts the published *annuité* to
-6.00 fr., matching the source. Whether the full Wolowski schedule
-(or any other CF schedule) reproduces row-by-row at that rate is
-an empirical question we can answer only by reading the source
-itself — and the row-level CF tables in Bellet's 1854 *Guide*
-and Josseau's 1872 *Traité* are currently behind JavaScript walls
-on Gallica and Trove that have resisted automated retrieval.
+Worked example: ``LoanParams(principal=Decimal("240000"),
+annual_rate=Decimal("4"), term_months=60,
+fee_per_period=Decimal("80"))`` produces a closed-form P+I of
+\$4,419.97 and a gross *échéance* of \$4,499.97 = P+I + flat
+\$80/mo loading — the modern French structure.
 
-The library's working rule is to add new parameters only when
-they unlock matching a specific verifiable published source. The
-order of operations is therefore:
+The canonical CF and modern French *offre de prêt* row-level
+fixtures have not yet shipped. Wolowski's 1852 essay publishes
+only the rate decomposition, not a row-by-row schedule; modern
+French bank educational webpages (Crédit Agricole,
+Meilleurtaux, ANIL) typically show only year-aggregate totals
+without per-month rows or a documented rounding convention,
+which under the strict no-partial-fixtures rule disqualifies
+them as fixture sources. Real French *offres de prêt* are
+row-level cents-precision documents that ``fee_per_period``
+reproduces directly; one will land as a non-synthetic fixture
+when a public example surfaces.
 
-1. Manually retrieve the row-level CF tables from Bellet, Josseau,
-   or *The Argus*'s 1892 Pinschof paper (which advocated a
-   Victorian state mortgage bank on CF lines and may include a
-   sample schedule).
-2. Validate, by hand or with a small script, that the closed-form
-   P+I plus a fixed fee reproduces every printed cell.
-3. *Then* add the `fee_per_period` field and ship the CF fixture
-   along with the feature.
-
-The same extension would also accept a class of contemporary
-French TEG-loaded amortization tables and several
-non-French-mortgage examples (e.g. early-twentieth-century
-Australian *credit foncier*–style state-bank schedules) where a
-fixed periodic loading rides on top of the closed-form payment.
 Variable-fee structures (commission-de-gestion proportional to
-outstanding balance, or stepped-fee schedules) are left for a
-later extension if any specific verifiable source motivates them.
+outstanding balance, stepped-fee insurance bucketed by
+borrower age, separate-cadence garantie payments) are left for
+a later extension if and when a specific verifiable source
+motivates them.
 
 ## Bibliography
 

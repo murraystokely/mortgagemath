@@ -100,6 +100,63 @@ print(periodic_payment(loan))              # Decimal("141947.25")
 print(sched[120].balance)                  # Decimal("20885505.83") — balloon at term
 ```
 
+## Pinning the payment (FHLBB 1935 given-payment convention)
+
+Pre-1968 American building-and-loan practice often chose a round
+periodic payment (typically 1% of original principal per month)
+and accepted whatever final-payment trueup the math produced.
+The ``payment_override`` field reproduces this:
+
+```python
+from mortgagemath import LoanParams, BalanceTracking, PaymentRounding
+
+# FHLBB Federal Home Loan Bank Review (March 1935) Plan A:
+# $3,000 / 6% / payment chosen as 1% = $30 / month.
+loan = LoanParams(
+    principal=Decimal("3000.00"),
+    annual_rate=Decimal("6"),
+    term_months=139,
+    payment_rounding=PaymentRounding.ROUND_HALF_UP,
+    interest_rounding=PaymentRounding.ROUND_HALF_UP,
+    balance_tracking=BalanceTracking.CARRY_PRECISION,
+    payment_override=Decimal("30.00"),
+)
+sched = amortization_schedule(loan)
+print(sched[138].payment)   # Decimal("30.00")
+print(sched[139].payment)   # Decimal("29.27") — final-row trueup
+```
+
+## Fee-loaded *annuité* (modern French / CF style)
+
+A ``fee_per_period`` field on ``LoanParams`` adds a flat amount
+per period to each ``Installment.payment``. It models the
+modern French *tableau d'amortissement* convention of pricing
+*assurance emprunteur* as ``taux × original_principal`` paid as
+a flat amount per month, and the 1852 Crédit Foncier *annuité*
+loading shape (frais d'administration + fonds de réserve +
+impôt rolled into a constant per-period amount on top of the
+actuarial interest+amortissement):
+
+```python
+loan = LoanParams(
+    principal=Decimal("240000.00"),
+    annual_rate=Decimal("4.0"),
+    term_months=60,
+    payment_rounding=PaymentRounding.ROUND_HALF_UP,
+    interest_rounding=PaymentRounding.ROUND_HALF_UP,
+    fee_per_period=Decimal("80.00"),  # 0.40% × original principal annual
+)
+print(periodic_payment(loan))         # Decimal("4419.97") — pure P+I
+sched = amortization_schedule(loan)
+print(sched[1].payment)               # Decimal("4499.97") — gross échéance
+print(sched[1].fee)                   # Decimal("80.00")
+```
+
+The closed-form ``periodic_payment(loan)`` continues to return
+the actuarially-pure interest+principal value; the fee rides on
+top in ``Installment.payment``, with ``Installment.fee`` exposing
+the loading separately.
+
 ## Command line
 
 ```sh
@@ -114,6 +171,16 @@ mortgagemath schedule --principal 131250 --rate 4.25 --term-months 360 \
 mortgagemath schedule --principal 200000 --rate 5.7 --term-months 360 \
     --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP \
     --rate-change 61:7.2 --format json
+
+# FHLBB 1935 Plan A — pinned payment with final-row trueup
+mortgagemath schedule --principal 3000 --rate 6 --term-months 139 \
+    --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP \
+    --balance-tracking carry_precision --payment-override 30 --format table
+
+# Fee-loaded annuité — modern French / Crédit Foncier style
+mortgagemath schedule --principal 240000 --rate 4 --term-months 60 \
+    --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP \
+    --fee-per-period 80 --format table
 ```
 
 `mortgagemath --help` and `mortgagemath <subcommand> --help` document

@@ -24,7 +24,7 @@ list.
 
 ### Validation against published sources
 
-The full **36-fixture × 8-parameter table** showing the exact
+The full **37-fixture × 8-parameter table** showing the exact
 `LoanParams` settings required to match each published source, plus
 a bibliography keyed by source.  Generated dynamically from the test
 fixture TOML files so it stays current as fixtures land.

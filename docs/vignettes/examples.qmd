@@ -543,26 +543,68 @@ wrong.
 
 # France
 
-The 1852 Crédit Foncier de France structure embeds an
-administrative loading (frais d'administration + fonds de
-réserve + impôt = 0.50 fr. per 100 fr. principal per year on a
-5.50-fr. interest+amortization base) into the published *annuité*
-of 6.00 fr. per 100 fr. — a structure the library's pure
-interest+principal model cannot, at present, reproduce.
-Modern French *tableaux d'amortissement* by contrast separate
-*capital amorti*, *intérêts*, and *assurance emprunteur* into
-distinct columns; the *capital + intérêts* slice is matchable
-under the library's existing closed-form at standard nominal
-rates with no extension.
+## Fee-loaded *échéance* (fee_per_period)
 
-A planned `fee_per_period` field on `LoanParams` (see
-*History* §10) would let the library reproduce CF-style combined
-*annuités* and any modern French published table that shows only
-a *total échéance* with insurance loaded in. Shipping the
-feature is conditional on first retrieving one verifiable
-row-level CF or modern-French source the library can match
-cell-for-cell. No France fixture currently ships in
-`mortgagemath`.
+**Scenario.** A modern French *tableau d'amortissement* prices
+*assurance emprunteur* as a flat amount per period
+(``taux_d_assurance × original_principal / 12``) added to the
+closed-form interest+principal *échéance*. The 1852 Crédit
+Foncier de France *annuité* used the same structural shape: a
+loaded payment that combined the actuarial interest +
+amortissement with a fixed administrative + reserve + tax
+loading. v0.6.1's ``LoanParams.fee_per_period`` field models
+both: it adds a flat amount per period to each
+``Installment.payment``, surfaces the loading as
+``Installment.fee``, and leaves the closed-form payment
+derivation, balance accounting, and rate-schedule recasts
+untouched.
+
+```sh
+mortgagemath schedule --principal 240000 --rate 4 --term-months 60 \
+    --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP \
+    --fee-per-period 80 --format table
+```
+
+```{python}
+fee_loaded = LoanParams(
+    principal=Decimal("240000.00"),
+    annual_rate=Decimal("4.0"),
+    term_months=60,
+    payment_rounding=PaymentRounding.ROUND_HALF_UP,
+    interest_rounding=PaymentRounding.ROUND_HALF_UP,
+    balance_tracking=BalanceTracking.ROUND_EACH,
+    fee_per_period=Decimal("80.00"),  # 0.40% × original principal annual
+)
+sched = amortization_schedule(fee_loaded)
+print(f"Closed-form P+I:        ${periodic_payment(fee_loaded):,}")
+print(f"Gross échéance (row 1): ${sched[1].payment:,}  "
+      f"= P (${sched[1].principal:,}) + I (${sched[1].interest}) + "
+      f"fee (${sched[1].fee})")
+total_int = sum(s.interest for s in sched[1:])
+total_fee = sum(s.fee for s in sched[1:])
+print(f"Total interest:         ${total_int:,}")
+print(f"Total assurance:        ${total_fee:,}  "
+      f"(= 60 × $80.00 over the 5-year loan)")
+```
+
+**Source.** Synthetic boundary case constructed for this library.
+Fixture: `synthetic_fee_loaded_240k_400_60mo_assur80.{toml,csv}`.
+
+## Why no canonical CF or bank fixture yet
+
+The 1852 Crédit Foncier essay (Wolowski) publishes only the rate
+decomposition (4.50 fr. interest + 1.00 fr. amortissement +
+0.50 fr. combined frais/réserve/impôt = 6.00 fr. *annuité*),
+not a row-by-row schedule. Modern French bank educational
+webpages (Crédit Agricole, Meilleurtaux, ANIL,
+service-public.fr) publish only year-level aggregate totals
+without per-month rows or a documented rounding convention —
+several different row-level conventions can produce identical
+year sums, so those pages are not fixture-grade sources. Real
+French borrower-facing *offres de prêt* are row-level cents-
+precision documents this library reproduces directly with
+``fee_per_period``; one will ship as a non-synthetic fixture
+when a public example surfaces.
 
 # United Kingdom
 
