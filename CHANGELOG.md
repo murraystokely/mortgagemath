@@ -7,18 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+## [0.7.0] - 2026-05-03
 
-- **`CLAUDE.md`** at the project root documenting project-specific
-  rules (strict complexity-threshold; synthetic-fixture-only
-  features are not enough; no-partial-fixtures), branch-naming
-  convention (`vX.Y.Z-<feature>` for releases vs `<feature>-wip`
-  for unversioned preliminary work), the active
-  `fee-per-period-wip` WIP branch with its trigger-source
-  watchlist, and the open research priority of finding more
-  real published worked amortization examples.
+Stabilization release: removes review blockers found after
+v0.6.0 and makes the public documentation, Read the Docs build,
+and release artifacts trustworthy. No new mortgage features.
+
+### Fixed
+
+- **Schedule math no longer depends on the caller's ambient
+  Decimal context.** `amortization_schedule(...)` now runs under
+  an explicit 50-digit `localcontext()` (matching what
+  `periodic_payment()` already does). Without this guard, a
+  caller who lowered `decimal.getcontext().prec` could silently
+  shift the Fannie Mae §1103 SARM published $20,885,505.83
+  balloon to $20,885,505.23 — a 60-cent error on a $25 M
+  schedule. Cent-accurate guarantees now hold under any
+  reasonable Decimal context.
+- **`payment_override` no longer overpays into negative
+  balances.** The carry-precision schedule path gains the
+  early-payoff guard the round-each path already has. An
+  over-large override (e.g., `$500/mo` on a `$1,000 / 12mo`
+  loan) now truncates the schedule at the actual payoff period
+  with `EarlyPayoffWarning` instead of producing rows with
+  negative balance, negative interest, or negative final
+  payment.
+- **`payment_override` validation now happens at construction
+  time.** `LoanParams.__post_init__` rejects:
+  - non-cent overrides (e.g. `Decimal("99.999")`),
+  - overrides combined with a balloon
+    (`amortization_period_months > term_months`).
+  General `amortization_period_months` validation (positivity
+  and `>= term_months`) was also moved from `periodic_payment`
+  into `__post_init__`, so override loans (which return the
+  pinned payment without invoking `periodic_payment`'s guards)
+  are checked too.
+- **`.readthedocs.yaml` install path normalized** to `path: .`
+  (a stray local-drift typo had been seen in some checkouts).
+- **Sphinx docs build cleanly under `-W` strict mode.**
+  Duplicated autodoc indexing in `api.md` removed; MyST
+  `:start-after:` marker in `changelog.md` simplified; one
+  cross-reference link in CHANGELOG.md changed to an absolute
+  GitHub URL so it resolves both inside and outside the docs
+  tree.
 
 ### Changed
+
+- **`CLAUDE.md`** added at the project root in the post-v0.6.0
+  period documenting project-specific rules (strict
+  complexity-threshold; synthetic-fixture-only features are not
+  enough; no-partial-fixtures), branch-naming convention
+  (`vX.Y.Z-<feature>` for releases vs `<feature>-wip` for
+  unversioned preliminary work), the active `fee-per-period-wip`
+  WIP branch with its trigger-source watchlist, and the open
+  research priority of finding more real published worked
+  amortization examples.
 
 - **README tightened from 527 to 164 lines** (~70% reduction),
   matching the norm for focused Python packages (requests ~110,
@@ -43,11 +86,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `docs/sphinx/vignettes.md` to point at the consolidated
   `examples.qmd` vignette.
 
-### Notes
+- **Public fixture-count claims and validation language
+  unified.** Top-level README, `docs/sphinx/index.md`, and
+  `docs/sphinx/vignettes.md` had drifted across releases (37,
+  27, 36 respectively). They now agree on the actual count
+  (36 paired TOML/CSV fixtures). The README's "every published
+  cell matches" tagline was softened to "every committed
+  fixture cell reproduces its source value to the cent" — a
+  more defensible claim that acknowledges the small number of
+  historical sources (notably two rows of the Geltner CRE
+  example) where the source itself contains an internal
+  arithmetic typo and the divergent rows are documented rather
+  than forced into the corpus.
+- **Stale "future work" entries removed.** Canadian semi-annual
+  compounding shipped in v0.3.0 and is now documented as
+  shipped (was still listed as missing). The History vignette
+  §9 no longer claims "Given-payment, find-term contracts are
+  not modeled" — v0.6.0's `payment_override` covers them.
 
-- No library code changes in this period. v0.6.0's library
-  surface (including `LoanParams.payment_override` and the
-  FHLBB 1935 fixture) is unchanged.
+### Documentation
+
+- 11 new regression tests (`tests/test_v07_regressions.py`)
+  pin the Decimal-context-independence guarantee, the
+  carry-precision early-payoff guard, and the v0.7.0
+  validation moves.
+- `docs/v0.7-plan.md` records the stabilization-release plan.
 
 ## [0.6.0] - 2026-05-02
 
@@ -499,7 +562,8 @@ First public release.
   OpenStax *Contemporary Mathematics* worked examples, Las Positas
   *Math for Liberal Arts* examples, the Mississippi State Extension
   P3920 publication, and synthetic half-cent boundary cases. See
-  [`docs/accuracy.md`](docs/accuracy.md) for the full source table.
+  [`docs/accuracy.md`](https://github.com/murraystokely/mortgagemath/blob/main/docs/accuracy.md)
+  for the full source table.
 - 100% test coverage on `src/mortgagemath/`. 144 tests, including
   parametric structural invariants and per-fixture validation.
 - CI workflows: tests on Python 3.11/3.12/3.13/3.14 (Ubuntu),

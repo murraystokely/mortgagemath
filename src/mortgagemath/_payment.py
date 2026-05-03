@@ -98,10 +98,12 @@ def periodic_payment(loan: LoanParams) -> Decimal:
         ValueError: If principal, term_months, or annual_rate is not
             positive, or the day_count is unsupported.
     """
+    # term_months and amortization_period_months invariants are
+    # enforced by LoanParams.__post_init__ (v0.7.0); this function
+    # checks only the value-level invariants the constructor cannot
+    # express in the dataclass.
     if loan.principal <= 0:
         raise ValueError(f"principal must be positive, got {loan.principal}")
-    if loan.term_months <= 0:
-        raise ValueError(f"term_months must be positive, got {loan.term_months}")
     if loan.annual_rate <= 0:
         raise ValueError(
             f"annual_rate must be positive, got {loan.annual_rate}. "
@@ -115,19 +117,6 @@ def periodic_payment(loan: LoanParams) -> Decimal:
     # value is not the published anchor for these schedules.
     if loan.payment_override is not None:
         return loan.payment_override
-    if loan.amortization_period_months is not None:
-        if loan.amortization_period_months <= 0:
-            raise ValueError(
-                f"amortization_period_months must be positive when set, "
-                f"got {loan.amortization_period_months}"
-            )
-        if loan.amortization_period_months < loan.term_months:
-            raise ValueError(
-                f"amortization_period_months ({loan.amortization_period_months}) "
-                f"must be >= term_months ({loan.term_months}). A shorter "
-                f"amortization basis would over-amortize and drive the "
-                f"balance negative before the term ends."
-            )
     if loan.day_count not in (DayCount.THIRTY_360, DayCount.ACTUAL_360):  # pragma: no cover
         raise ValueError(f"unsupported day_count: {loan.day_count}")
 

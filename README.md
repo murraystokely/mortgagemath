@@ -15,10 +15,10 @@
 **Cent-accurate mortgage amortization for Python.** Validated
 against CFPB regulatory disclosures, Fannie Mae GSE servicing
 guides, the Reg Z Sample H-14 ARM, the FHLBB *Federal Home Loan
-Bank Review* of March 1935, and 30+ open-licensed textbook
-worked examples — every published cell matches to the cent.
-Decimal end-to-end; no runtime dependencies beyond the Python
-standard library.
+Bank Review* of March 1935, and 30+ open-licensed and modern
+copyrighted textbook worked examples — every committed fixture
+cell reproduces its source value to the cent. Decimal end-to-end;
+no runtime dependencies beyond the Python standard library.
 
 ## Why mortgagemath?
 
@@ -43,7 +43,7 @@ conventions actual lenders use:
   payment caps, and capitalized negative amortization
 - **Exact zero ending balance** — the final row trues up so
   the schedule lands at $0.00
-- **37 cell-for-cell validated fixtures** auto-discovered by
+- **36 cell-for-cell validated fixtures** auto-discovered by
   `pytest`
 
 ## Installation
@@ -108,11 +108,14 @@ examples](docs/vignettes/rendered/examples.pdf)** vignette.
 
 ## What's validated
 
-37 fully published amortization tables from government regulatory
+36 fully published amortization tables from government regulatory
 documents, GSE servicing guides, and academic textbooks, exercised
 by a test suite of more than 300 tests that runs on every push and
-every release to ensure every cent on every row matches the
-published source exactly. The sources span:
+every release. Every committed fixture cell reproduces its source
+value to the cent; on the small number of historical sources that
+themselves contain an internal arithmetic typo (e.g., two rows of
+the Geltner CRE example), the divergent rows are documented rather
+than forced into the corpus. The sources span:
 
 - **Regulatory disclosures** — CFPB Sample H-25(B); 12 CFR
   Part 1026 Appendix H Sample H-14 (the 1982–1996 1/1 ARM with
@@ -133,7 +136,7 @@ published source exactly. The sources span:
 
 See the **[Validation
 vignette](docs/vignettes/rendered/validation.pdf)** for the full
-37-fixture × 8-parameter matrix and bibliography, generated
+36-fixture × 8-parameter matrix and bibliography, generated
 directly from the fixture `[source]` blocks.
 
 ## Documentation

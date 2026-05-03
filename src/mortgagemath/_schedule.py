@@ -111,15 +111,25 @@ def amortization_schedule(loan: LoanParams) -> list[Installment]:
             amortizes the loan before its scheduled end due to periodic
             payment overpayment from rounding.
     """
-    if loan.day_count == DayCount.THIRTY_360:
-        return _schedule_thirty_360(loan)
-    if loan.day_count == DayCount.ACTUAL_360:
-        if loan.start_date is None:
-            raise ValueError(
-                "ACTUAL_360 schedule requires loan.start_date "
-                "(the issue date / first interest-accrual period)"
-            )
-        return _schedule_actual_360(loan)
+    # All schedule paths run under an explicit 50-digit local Decimal
+    # context so cent accuracy doesn't depend on the caller's ambient
+    # context. periodic_payment() already does this for the closed-form
+    # value; the schedule generator follows the same policy.  Without
+    # this wrap, a caller who lowered global precision (e.g.
+    # decimal.getcontext().prec = 10) could silently shift Fannie Mae
+    # §1103's published $20,885,505.83 balloon to $20,885,505.23 — a
+    # 60-cent error on a $25 M schedule.
+    with localcontext() as ctx:
+        ctx.prec = 50
+        if loan.day_count == DayCount.THIRTY_360:
+            return _schedule_thirty_360(loan)
+        if loan.day_count == DayCount.ACTUAL_360:
+            if loan.start_date is None:
+                raise ValueError(
+                    "ACTUAL_360 schedule requires loan.start_date "
+                    "(the issue date / first interest-accrual period)"
+                )
+            return _schedule_actual_360(loan)
     raise ValueError(f"unsupported day_count: {loan.day_count}")  # pragma: no cover
 
 
@@ -311,13 +321,29 @@ def _schedule_thirty_360_carry_precision(loan: LoanParams) -> list[Installment]:
         interest_raw = balance * periodic_rate
         interest_disp = interest_raw.quantize(_PENNY, rounding=interest_rounding)
 
-        if i == total_payments and fully_amortizing:
+        is_scheduled_final = i == total_payments and fully_amortizing
+
+        # Early-payoff guard for the carry-precision path. Symmetrical
+        # to the round-each guard above: when the level payment (raw)
+        # would amortize the entire remaining balance in this row, we
+        # treat it as an early payoff. Triggered most commonly by an
+        # over-large payment_override but the invariant is general —
+        # any over-payment that would otherwise drive the balance
+        # negative is caught here. Without this guard a $1000 / 5% /
+        # 12mo loan with payment_override=$500 silently produced
+        # negative balances and a negative final-row payment.
+        will_pay_off_early = (
+            (not is_scheduled_final) and fully_amortizing and (pmt_raw - interest_raw >= balance)
+        )
+
+        if is_scheduled_final or will_pay_off_early:
             # Final payment of a fully amortizing loan: zero balance exactly.
-            if loan.payment_override is not None:
-                # FHLBB-style trueup: round the full-precision (balance +
-                # interest) sum once to cents, then derive principal.
-                # This matches the published source's "round-the-total"
-                # convention rather than rounding components independently.
+            if loan.payment_override is not None or will_pay_off_early:
+                # Round-the-total trueup: round the full-precision
+                # (balance + interest) sum once to cents, then derive
+                # principal. Matches FHLBB 1935's published
+                # round-the-total convention and avoids the
+                # round-components-independently drift.
                 actual_pmt_raw = balance + interest_raw
                 actual_pmt = actual_pmt_raw.quantize(_PENNY, rounding=payment_rounding)
                 principal_disp = actual_pmt - interest_disp
@@ -344,6 +370,17 @@ def _schedule_thirty_360_carry_precision(loan: LoanParams) -> list[Installment]:
                 balance=balance_disp,
             )
         )
+
+        if will_pay_off_early:
+            warnings.warn(
+                f"Loan paid off at period {i} of total_payments={total_payments}; "
+                f"schedule truncated. The level payment {pmt_disp} (or "
+                f"payment_override) overpays the closed-form value enough to "
+                f"amortize the loan early.",
+                EarlyPayoffWarning,
+                stacklevel=2,
+            )
+            break
 
     return schedule
 
