@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-05-02
+
+### Added
+
+- **`LoanParams.payment_override`** — pin the periodic payment to
+  a chosen value instead of deriving it from the closed-form
+  annuity formula. The schedule's final row absorbs the residual
+  balance, with the published payment computed from the
+  full-precision `balance + interest` rounded once. Reproduces
+  the historical "given-payment, find-term" convention used by
+  pre-1968 American building-and-loan associations and the
+  earliest U.S. federal direct-reduction schedules.
+- **FHLBB *Federal Home Loan Bank Review* (March 1935)
+  Direct-Reduction Plan A fixture** — \$3,000 / 6% / 138 monthly
+  payments of \$30 + 139th of \$29.27. The earliest U.S.
+  federal-authority publication of a worked direct-reduction
+  amortization schedule, validated cell-for-cell against the
+  source. (Fixture #36.)
+- **`mortgagemath schedule --payment-override AMOUNT`** CLI flag
+  exposing the new field.
+
+### Changed
+
+- **Vignette set consolidated from six to four.** The three
+  single-fixture vignettes (`arm-regz-h14`, `payment-caps-proeducate`,
+  `canadian-j2`) are folded into a new comprehensive
+  `examples.qmd` organized by country convention then by loan
+  type. The four-vignette set is now: *At a glance*,
+  *Validation*, *Examples*, *History*. Every example block in
+  the new vignette has a uniform structure: scenario,
+  `LoanParams(...)` literal, equivalent CLI invocation, live
+  Python chunk producing the schedule and published-source
+  anchors, citation + fixture filename.
+
+### Documentation
+
+- `docs/v0.6-plan.md` records the design decisions for this
+  release, including the deferred `fee_per_period` field whose
+  ship trigger is conditional on retrieving one row-level
+  Crédit Foncier or modern French source.
+- `docs/sphinx/installation.md` self-check sample updated to
+  reflect v0.6.0.
+
 ## [0.5.2] - 2026-05-02
 
 ### Added

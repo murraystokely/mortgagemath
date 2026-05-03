@@ -251,6 +251,18 @@ class LoanParams:
             ``WEEKLY`` (52/yr), ``QUARTERLY`` (4/yr), and ``ANNUAL``
             (1/yr).  ``term_months * payments_per_year`` must be
             divisible by 12.
+        payment_override: When set, pin the periodic payment to this
+            value (in the loan's currency) instead of deriving it from
+            the closed-form annuity formula.  The schedule's final row
+            absorbs whatever residual balance remains after
+            ``term_months - 1`` full payments — the final payment is
+            ``balance_before_final + final_period_interest`` rounded
+            once to cents.  This unlocks the historical "given-payment,
+            find-term" convention used by the FHLBB *Federal Home Loan
+            Bank Review* of March 1935 (Direct-Reduction Plan A:
+            $3,000 / 6% / $30 monthly / 138 full payments + 139th of
+            $29.27).  Defaults to ``None`` (use the closed-form value).
+            Currently incompatible with non-empty ``rate_schedule``.
     """
 
     principal: Decimal
@@ -265,6 +277,7 @@ class LoanParams:
     compounding: Compounding = Compounding.MONTHLY
     payment_frequency: PaymentFrequency = PaymentFrequency.MONTHLY
     rate_schedule: tuple[RateChange, ...] = ()
+    payment_override: Decimal | None = None
 
     def __post_init__(self) -> None:
         """Validate cross-field invariants."""
@@ -332,6 +345,22 @@ class LoanParams:
                         f"{total_payments}"
                     )
                 prev = rc.effective_payment_number
+
+        # payment_override constraints. v0.6.0 supports the override
+        # for fully-amortizing fixed-rate loans only; combining it with
+        # rate_schedule semantics is deferred until a published source
+        # motivates it.
+        if self.payment_override is not None:
+            if self.payment_override <= 0:
+                raise ValueError(
+                    f"payment_override must be positive when set, got {self.payment_override}"
+                )
+            if self.rate_schedule:
+                raise ValueError(
+                    "payment_override is currently incompatible with rate_schedule. "
+                    "When a published source motivates combining them, the override will "
+                    "take precedence and ARM payment caps will be ignored."
+                )
 
     @property
     def _total_payments(self) -> int:

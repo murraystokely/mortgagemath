@@ -1,0 +1,49 @@
+# Federal Home Loan Bank Board, *Federal Home Loan Bank Review*,
+# Vol. 1 No. 6 (March 1935), pp. 187–198: "Direct-Reduction Plan
+# vs. Share-Accumulation Plan."  The earliest U.S. federal-authority
+# publication of a worked direct-reduction amortization schedule.
+#
+# Plan A (interest credited monthly) parameters:
+#   principal: $3,000.00
+#   nominal annual rate: 6%
+#   monthly compounding, monthly payments
+#   payment chosen by convention as 1% of original principal = $30.00
+#   term: 138 full payments + a 139th of $29.27 (FHLBB pp. 196-197).
+#
+# This is the "given-payment, find-term" convention dominant in
+# pre-1968 American B&L practice: the lender chose a round payment
+# (usually a percentage of the original principal) and accepted
+# whatever final-payment trueup the math produced.  The library's
+# default closed-form mode (term in, payment out) cannot reproduce
+# this — for term=139 at 6% on $3000 it derives a payment of
+# $29.9964 → $30.00 and a final-row trueup of $29.35.  The
+# published $29.27 is the carry-precision balance after 138
+# payments × (1 + r), rounded once.
+#
+# v0.6.0's `payment_override` field lets the user pin the payment
+# to $30.00 and applies the FHLBB-style "round-the-total" trueup
+# at the final row, reproducing every published cent.
+
+[loan]
+principal = "3000.00"
+annual_rate = "6"
+term_months = 139
+day_count = "30/360"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+balance_tracking = "carry_precision"
+payment_override = "30.00"
+
+[source]
+kind = "regulatory_example"
+country = "US"
+license = "public domain"
+short_label = "FHLBB 1935 Plan A"
+bib_key = "fhlbb_1935"
+bib_title = "FHLBB *Review* (March 1935)"
+citation = "Federal Home Loan Bank Board. \"Direct-Reduction Plan vs. Share-Accumulation Plan,\" *Federal Home Loan Bank Review*, Vol. 1, No. 6 (March 1935), pp. 187–198. FRASER: <https://fraser.stlouisfed.org/title/federal-home-loan-bank-review-116/march-1935-2083>"
+url = "https://fraser.stlouisfed.org/title/federal-home-loan-bank-review-116/march-1935-2083"
+notes = "Direct-Reduction Plan A. The earliest US federal-authority publication of a worked direct-reduction amortization schedule. Validates the v0.6.0 payment_override field against a chosen-payment convention (1% of original principal monthly, with the final payment absorbing the residual)."
+
+[expected]
+periodic_payment = "30.00"

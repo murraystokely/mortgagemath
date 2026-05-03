@@ -232,6 +232,12 @@ def _schedule_thirty_360_carry_precision(loan: LoanParams) -> list[Installment]:
     Per-row ``principal + interest == payment`` invariant still holds; the
     final payment may differ from the regular payment by 1-2 cents to
     land balance at exactly $0.00.
+
+    When ``loan.payment_override`` is set, the override is the level
+    payment for every full row and the final-row trueup is derived from
+    the full-precision ``balance + interest`` rounded once — the
+    historical "given-payment, find-term" convention used by the FHLBB
+    March 1935 *Review* schedules.
     """
     interest_rounding = _ROUNDING_MAP[loan.interest_rounding]
     periodic_rate = _periodic_rate(loan)
@@ -240,12 +246,17 @@ def _schedule_thirty_360_carry_precision(loan: LoanParams) -> list[Installment]:
     # Validate via periodic_payment (enforces guards) and reuse rounded display.
     pmt_disp = periodic_payment(loan)
 
-    # Unrounded closed-form payment, carried internally.
-    n = loan._amort_payments
-    with localcontext() as ctx:
-        ctx.prec = 50
-        factor = (_ONE + periodic_rate) ** n
-        pmt_raw = (loan.principal * periodic_rate * factor) / (factor - _ONE)
+    if loan.payment_override is not None:
+        # Override: skip the closed-form derivation entirely and use the
+        # pinned value as both the displayed and full-precision payment.
+        pmt_raw = pmt_disp
+    else:
+        # Unrounded closed-form payment, carried internally.
+        n = loan._amort_payments
+        with localcontext() as ctx:
+            ctx.prec = 50
+            factor = (_ONE + periodic_rate) ** n
+            pmt_raw = (loan.principal * periodic_rate * factor) / (factor - _ONE)
 
     fully_amortizing = loan.amortization_period_months is None or (
         loan.amortization_period_months == loan.term_months
@@ -302,8 +313,17 @@ def _schedule_thirty_360_carry_precision(loan: LoanParams) -> list[Installment]:
 
         if i == total_payments and fully_amortizing:
             # Final payment of a fully amortizing loan: zero balance exactly.
-            principal_disp = balance.quantize(_PENNY, rounding=interest_rounding)
-            actual_pmt = principal_disp + interest_disp
+            if loan.payment_override is not None:
+                # FHLBB-style trueup: round the full-precision (balance +
+                # interest) sum once to cents, then derive principal.
+                # This matches the published source's "round-the-total"
+                # convention rather than rounding components independently.
+                actual_pmt_raw = balance + interest_raw
+                actual_pmt = actual_pmt_raw.quantize(_PENNY, rounding=payment_rounding)
+                principal_disp = actual_pmt - interest_disp
+            else:
+                principal_disp = balance.quantize(_PENNY, rounding=interest_rounding)
+                actual_pmt = principal_disp + interest_disp
             balance = _ZERO
             balance_disp = _ZERO
         else:

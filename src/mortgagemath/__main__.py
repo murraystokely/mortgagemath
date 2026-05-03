@@ -242,6 +242,16 @@ def _add_loan_args(parser: argparse.ArgumentParser) -> None:
         help="Rate change for ARM (repeatable). Examples: --rate-change 61:7.2, "
         "--rate-change 13:12:cap=1.075 (7.5%% payment cap)",
     )
+    parser.add_argument(
+        "--payment-override",
+        type=Decimal,
+        default=None,
+        metavar="AMOUNT",
+        help="Pin the periodic payment to AMOUNT instead of deriving it from "
+        "the closed-form annuity formula. The schedule's final row absorbs "
+        "the residual. Reproduces the FHLBB 1935 'given-payment, find-term' "
+        "convention. Currently incompatible with --rate-change.",
+    )
 
 
 def _params_from_args(args: argparse.Namespace) -> LoanParams:
@@ -258,6 +268,7 @@ def _params_from_args(args: argparse.Namespace) -> LoanParams:
         compounding=Compounding(args.compounding),
         payment_frequency=PaymentFrequency(args.payment_frequency),
         rate_schedule=tuple(args.rate_change),
+        payment_override=args.payment_override,
     )
 
 
