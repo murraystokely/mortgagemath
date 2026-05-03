@@ -35,6 +35,8 @@ jobs:
     permissions:
       # Required for PyPI Trusted Publishing (OIDC token issuance).
       id-token: write
+      # Required to create the GitHub Release page.
+      contents: write
 
     steps:
       - name: Check out source at the tag being released
@@ -58,3 +60,52 @@ jobs:
 
       - name: Publish to PyPI (Trusted Publisher / OIDC)
         run: uv publish
+
+      - name: Create GitHub Release
+        # Extract the version's section from CHANGELOG.md, append the
+        # SHA-256 block from the freshly-built dist/, and a Links
+        # section pointing at PyPI / Read the Docs / vignettes / the
+        # full changelog.  Then create the GitHub Release with
+        # `gh release create`.  Idempotent on tag re-runs only if the
+        # prior release was deleted; otherwise this step fails loudly,
+        # which is the desired behaviour (don't silently overwrite).
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          VERSION="${TAG#v}"
+
+          # Extract the matching `## [X.Y.Z]` block, trimming leading/
+          # trailing blank lines.
+          NOTES=$(awk -v ver="$VERSION" '
+            $0 ~ "^## \\[" ver "\\]" { found=1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md)
+          if [ -z "$NOTES" ]; then
+            echo "::error::Could not find CHANGELOG.md section for version $VERSION"
+            exit 1
+          fi
+
+          {
+            echo "$NOTES"
+            echo
+            echo "### PyPI artifacts (SHA-256)"
+            echo
+            echo '```'
+            (cd dist && sha256sum *)
+            echo '```'
+            echo
+            echo "### Links"
+            echo
+            echo "- 📦 PyPI: <https://pypi.org/project/mortgagemath/$VERSION/>"
+            echo "- 📖 Read the Docs: <https://mortgagemath.readthedocs.io/>"
+            echo "- 📑 Vignettes (HTML): <https://murraystokely.github.io/mortgagemath/>"
+            echo "- 📜 Full changelog: [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/$TAG/CHANGELOG.md)"
+          } > release-notes.md
+
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --notes-file release-notes.md \
+            --repo "${{ github.repository }}"
