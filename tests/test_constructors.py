@@ -140,6 +140,11 @@ def test_constructor_rejects_invalid_decimal_input():
         us_30_year_fixed("not-a-number", "6")
 
 
+def test_constructor_rejects_float_input():
+    with pytest.raises(ValueError, match="float inputs are rejected"):
+        us_30_year_fixed(100000.0, "6")
+
+
 def test_constructor_rejects_nonpositive_years():
     with pytest.raises(ValueError, match="term_years must be positive"):
         fixed_rate_mortgage("100000", "6", 0)

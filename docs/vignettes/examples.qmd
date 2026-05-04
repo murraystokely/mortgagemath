@@ -56,9 +56,7 @@ mortgagemath payment --principal 162000 --rate 3.875 --term-months 360 \
 ```{python}
 from decimal import Decimal
 from mortgagemath import (
-    Compounding,
     LoanParams,
-    PaymentFrequency,
     PaymentRounding,
     amortization_schedule,
     canada_fixed_j2,

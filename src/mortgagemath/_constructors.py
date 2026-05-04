@@ -19,6 +19,11 @@ def _decimal(value: Decimal | int | str, field_name: str) -> Decimal:
     """Normalize public constructor inputs to Decimal."""
     if isinstance(value, Decimal):
         return value
+    if isinstance(value, float):
+        raise ValueError(
+            f"{field_name} must be a Decimal, int, or decimal string; "
+            "float inputs are rejected to avoid binary floating-point drift"
+        )
     try:
         return Decimal(str(value))
     except (InvalidOperation, ValueError) as exc:
@@ -148,7 +153,9 @@ def us_actual_360_commercial(
     This preset matches the Fannie Mae Multifamily style: monthly
     payments, monthly compounding, Actual/360 interest accrual, and a
     possible balloon when ``term_years`` is shorter than
-    ``amortization_years``.
+    ``amortization_years``. ``start_date`` is required because
+    Actual/360 schedules compute interest from the calendar days in
+    each accrual period.
     """
     term_months = _years_to_months(term_years, "term_years")
     amortization_months = _years_to_months(amortization_years, "amortization_years")
@@ -180,7 +187,9 @@ def fixed_payment_mortgage(
     the chosen periodic payment until the final row trues up the
     remaining balance. The default carry-precision balance tracking is
     the historical given-payment convention validated against the
-    FHLBB 1935 Direct-Reduction Plan A fixture.
+    FHLBB 1935 Direct-Reduction Plan A fixture. ``term_months`` is
+    explicit rather than a year count because historical fixed-payment
+    examples can end after non-whole-year terms such as 139 months.
     """
     return LoanParams(
         principal=_decimal(principal, "principal"),

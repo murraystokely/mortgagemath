@@ -22,6 +22,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   should run the same formatting, lint, type-check, and test gates
   expected by pre-commit/CI.
 
+### Fixed
+
+- **Corrected the Canadian `j_2` quickstart payment.** The
+  25-year, monthly-payment example now shows `Decimal("1744.81")`,
+  matching the semi-annual-compounding calculation and the new
+  `canada_fixed_j2(...)` regression test. The previous
+  `Decimal("1747.45")` value was stale documentation.
+
 ## [0.6.1] - 2026-05-03
 
 Stabilization release: removes review blockers found after
