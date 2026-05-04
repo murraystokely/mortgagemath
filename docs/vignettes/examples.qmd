@@ -264,6 +264,38 @@ print(f"- Balance after pmt 24: **${sched[24].balance:,}**  (published $65,059.6
 **Source.** [ProEducate *ARM Payment Caps*](https://www.proeducate.com/courses/Finance/PaymentCap.pdf),
 2014. Fixture: `proeducate_arm_pmt_cap_65k_10pct_to_12pct_360mo.{toml,csv}`.
 
+## Interest-only period (CFPB IO Sample)
+
+**Scenario.** The CFPB sample Loan Estimate for a "5 Year Interest
+Only" loan. For the first 60 months, the borrower pays only
+accrued interest ($703.33); no principal is amortized and the
+balance remains at $211,000. After month 60, the loan recasts and
+fully amortizes over the remaining 25 years (300 payments).
+
+```sh
+mortgagemath schedule --principal 211000 --rate 4 --term-months 360 \
+    --interest-only-months 60 --payment-rounding ROUND_HALF_UP \
+    --interest-rounding ROUND_HALF_UP --format table
+```
+
+```{python}
+cfpb_io = LoanParams(
+    principal=Decimal("211000"),
+    annual_rate=Decimal("4"),
+    term_months=360,
+    interest_only_months=60,
+    payment_rounding=PaymentRounding.ROUND_HALF_UP,
+    interest_rounding=PaymentRounding.ROUND_HALF_UP,
+)
+sched = amortization_schedule(cfpb_io)
+print(f"IO payment (pmt 1-60):  ${sched[1].payment}   (CFPB: $703.33)")
+print(f"Amortizing (pmt 61):    ${sched[61].payment} (recast over 25yr)")
+```
+
+**Source.** [CFPB sample "Interest Only, Adjustable Rate Loan"
+(2014)](https://www.consumerfinance.gov/policy-compliance/guidance/mortgage-resources/tila-respa-integrated-disclosures/forms-samples/).
+Fixture: `cfpb_io_adjustable_sample_211k_4pct.{toml,csv}`.
+
 ## Carry-precision graduate-CRE (Geltner Ch 20)
 
 **Scenario.** Geltner et al., *Commercial Real Estate Analysis
@@ -319,6 +351,28 @@ for rounding, expected in [
 **Sources.** Synthetic boundary fixtures.
 `synthetic_halfcent_halfup_360_480_100001p25.{toml,csv}` and
 companions.
+
+## Zero-interest promotional financing (synthetic)
+
+**Scenario.** A $999 consumer loan offered at 0% APR for 24
+months. For zero-interest loans, the closed-form annuity formula
+is undefined; the library switches to a simple principal division
+landed at zero. $999 / 24 = $41.625, which rounds to $41.63
+under standard ROUND_HALF_UP.
+
+```{python}
+zero_promo = LoanParams(
+    principal=Decimal("999"),
+    annual_rate=Decimal("0"),
+    term_months=24,
+    payment_rounding=PaymentRounding.ROUND_HALF_UP,
+)
+print(f"0% Monthly P&I: ${periodic_payment(zero_promo)}  "
+      f"(Expected: $41.63)")
+```
+
+**Source.** Synthetic zero-interest fixture.
+`zero_interest_promo_999_24mo.{toml,csv}`.
 
 ## Effective-annual on monthly cadence (Skinner 1913 piano)
 
@@ -509,6 +563,33 @@ CC-BY-4.0. Fixture:
 `ecampus_finmath_4_4_1_297500_380_q_36mo_term_240mo.{toml,csv}`
 plus the renewal companion at `j_2` = 2.5%.
 
+## Accelerated Bi-Weekly (RBC Example)
+
+**Scenario.** The most common Canadian mortgage enhancement:
+take the standard monthly payment, divide it by two, and pay that
+amount every two weeks (26 times per year). This results in
+approximately one extra monthly payment per year applied to
+principal. An RBC worked example ($350,000 / 5.0% / 25 years)
+shows the accelerated bi-weekly payment is exactly half the monthly
+payment, paying the loan off in ~21.4 years.
+
+```{python}
+from mortgagemath import canada_accelerated_biweekly
+
+rbc_accel = canada_accelerated_biweekly(
+    principal="350000",
+    annual_rate="5",
+    amortization_years=25,
+)
+print(f"Accelerated Bi-Weekly: ${periodic_payment(rbc_accel)}")
+sched = amortization_schedule(rbc_accel)
+print(f"Actual payoff period:  {sched[-1].number} bi-weekly payments")
+```
+
+**Source.** [RBC Accelerated Bi-Weekly
+Payments](https://www.rbcroyalbank.com/mortgages/accelerated-bi-weekly-payments.html).
+Fixture: `rbc_accelerated_biweekly_350k_5pct_25yr.{toml,csv}`.
+
 ## Monthly compounding on Canadian textbook examples
 
 The same eCampus textbook also publishes US-convention examples
@@ -564,11 +645,34 @@ mechanically a duplicate of an existing U.S. example. This
 section reserves the slot until a specific U.K. published table
 surfaces.
 
-# Australia
+# Australia / Nordic
 
-Victoria's **Credit Foncier Act 1896** established a state-owned
-mortgage bank on the CF model, and the term *credit foncier*
-persisted in Australian mortgage-banking parlance for decades
-thereafter. A 1900s–1950s state-bank schedule with fee loading
-would land here, contingent on the planned `fee_per_period`
-extension shipping and a verifiable source.
+## Swedish Serial Loan (Rak amortering)
+
+**Scenario.** Swedish mortgages often use *rak amortering*
+(straight-line amortization), where the principal payment is
+constant every month and interest decreases. Total payments
+start high and drop over the loan life. $1.2 M SEK / 4% /
+20 years.
+
+```sh
+mortgagemath schedule --principal 1200000 --rate 4 --term-months 240 \
+    --amortization-type serial --format table
+```
+
+```{python}
+from mortgagemath import AmortizationType
+
+sweden = LoanParams(
+    principal=Decimal("1200000"),
+    annual_rate=Decimal("4"),
+    term_months=240,
+    amortization_type=AmortizationType.SERIAL,
+)
+sched = amortization_schedule(sweden)
+print(f"Month 1 payment: ${sched[1].payment} (5000 principal + 4000 int)")
+print(f"Month 2 payment: ${sched[2].payment} (5000 principal + 3983.33 int)")
+```
+
+**Source.** [Nordea: *Rak amortering eller annuitet?*](https://www.nordea.se/privat/lan/bolan/rak-amortering-eller-annuitet.html).
+Fixture: `swedish_serial_rak_1200k_4pct_20yr.{toml,csv}`.

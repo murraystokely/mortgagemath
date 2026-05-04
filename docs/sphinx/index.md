@@ -24,7 +24,7 @@ changelog
 
 Most Python amortization libraries float-drift by one cent or more
 against published lender statements, regulatory disclosures, and
-textbook worked examples. `mortgagemath`'s 36-fixture validation
+textbook worked examples. `mortgagemath`'s 40-fixture validation
 suite ships paired loan-parameter and schedule files for every
 loan; every committed fixture cell reproduces its source value to
 the cent. Sources include:

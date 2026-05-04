@@ -172,9 +172,17 @@ Searches to repeat periodically:
 
 - Test fixtures live under ``tests/schedules/<name>.{toml,csv}``;
   ``tests/schedules/README.md`` documents the schema.
-- Validation vignette is data-driven from the fixture ``[source]``
-  blocks; bibliography auto-generates from per-fixture ``citation``
-  fields.
+- **Vignette updates are mandatory.** Every new feature or fixture that
+  expands the library's structural or country coverage MUST be
+  documented in the relevant vignettes:
+  - **Worked examples** (``docs/vignettes/examples.qmd``): Add a new
+    section with the scenario, CLI/Python examples, and source
+    citation.
+  - **Validation** (``docs/vignettes/validation.qmd``): This vignette
+    is data-driven from the fixture ``[source]`` blocks, but the
+    prose introduction or hardcoded summary counts in related files
+    (like ``README.md`` and ``docs/sphinx/vignettes.md``) must be
+    synchronized.
 - Every branch that changes public API, behavior, tests, packaging,
   documentation, workflows, fixtures, or agent guidance must update
   ``CHANGELOG.md`` in the same branch. Put unreleased work under

@@ -1,0 +1,19 @@
+[loan]
+principal = "1200000"
+annual_rate = "4"
+term_months = 240
+amortization_type = "serial"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[expected]
+periodic_payment = "9000.00"
+
+[source]
+kind = "textbook"
+short_label = "Sweden Serial"
+bib_key = "SwedenSerial"
+bib_title = "Swedish Rak Amortering"
+citation = "Straight-line amortization (rak amortering) standard Swedish worked example. <https://math.libretexts.org/Bookshelves/Applied_Mathematics/Business_Math_(Olivier)/13:_Understanding_Amortization_and_its_Applications/13.01:_Straight-Line_Amortization>"
+country = "SE"
+license = "public domain"

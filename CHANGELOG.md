@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Zero-Interest Loan Support.** Support for loans with `annual_rate=0`.
+  Returns `principal / total_payments` rounded appropriately.
+- **Swedish Serial Loans (*Rak amortering*).** Support for constant-principal
+  (serial) amortization where the total payment decreases over time.
+  Enabled via `AmortizationType.SERIAL` in `LoanParams`.
+- **Interest-Only (IO) Periods.** Support for a period of interest-only
+  payments before amortization begins. Configurable via
+  `interest_only_months` in `LoanParams`. The loan recasts and amortizes
+  over the remaining term after the IO period ends.
+- **Canadian Accelerated Bi-Weekly.** A new convenience constructor
+  `canada_accelerated_biweekly(...)` that derives the accelerated
+  bi-weekly payment (monthly / 2) used by major Canadian banks.
+- **4 New Validated Fixtures.** Added fixtures for Swedish Serial loans,
+  CFPB Interest-Only samples, Canadian Accelerated Bi-Weekly, and
+  Zero-Interest promotional financing.
+
+### Fixed
+
+- **`periodic_payment` now returns the initial payment.** For
+  interest-only and serial loans, the function returns the payment
+  owed in the first period, consistent with lender disclosures.
+- **Recast logic in schedule generation.** Fixed a bug where
+  recasting after an IO period would fail for zero-interest loans
+  or when `interest_only_months` was zero.
+
 - **Pandas and Data Visualization vignette.** A new documentation vignette
   (`docs/vignettes/pandas.qmd`) demonstrating how to convert amortization
   schedules into `pandas.DataFrame` objects for vectorized analysis and
