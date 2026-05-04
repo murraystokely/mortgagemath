@@ -111,6 +111,44 @@ payment caps), commercial Actual/360 with balloon, and the FHLBB
 1935 given-payment convention, see the **[Worked
 examples](docs/vignettes/rendered/examples.pdf)** vignette.
 
+## Pandas and Matplotlib Integration
+
+Because `mortgagemath` returns pure Python dataclasses mapping directly to numerical values, it integrates seamlessly into the data science ecosystem.
+
+You can easily convert an amortization schedule into a `pandas.DataFrame` to do vectorized analysis, date math, or plot the results with `matplotlib`.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/murraystokely/mortgagemath/main/pandas_plot.png" alt="Pandas Plot" width="600">
+</p>
+
+```python
+import pandas as pd
+import matplotlib.pyplot as plt
+from mortgagemath import us_30_year_fixed, amortization_schedule
+
+# 1. Create a schedule
+loan = us_30_year_fixed("300000", "6.5")
+schedule = amortization_schedule(loan)
+
+# 2. Convert to DataFrame
+df = pd.DataFrame(schedule)
+
+# 3. Quick plot of Principal vs Interest over time
+df_plot = df[df["number"] > 0]
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.stackplot(
+    df_plot["number"],
+    df_plot["principal"].astype(float),
+    df_plot["interest"].astype(float),
+    labels=['Principal', 'Interest']
+)
+ax.set_title("Amortization Schedule")
+ax.legend(loc='upper right')
+plt.show()
+```
+
+See the **[Pandas and Data Visualization](docs/vignettes/rendered/pandas.pdf)** vignette for more examples, including date offsets and scenario analysis.
+
 ## What's validated
 
 36 fully published amortization tables from government regulatory
@@ -153,6 +191,7 @@ directly from the fixture `[source]` blocks.
 | **[Validation](docs/vignettes/rendered/validation.pdf)** | Audit / risk review — full fixture matrix + bibliography |
 | **[Worked examples](docs/vignettes/rendered/examples.pdf)** | Picking the right configuration by country and loan type |
 | **[History](docs/vignettes/rendered/history.pdf)** | Academic context — institutional and mathematical history of the level-payment mortgage |
+| **[Pandas & Viz](docs/vignettes/rendered/pandas.pdf)** | How to use Pandas DataFrames and plot schedules with Matplotlib |
 | **[HTML site](https://murraystokely.github.io/mortgagemath/)** | Vignettes with navigation and search |
 
 ## Reporting a discrepancy
