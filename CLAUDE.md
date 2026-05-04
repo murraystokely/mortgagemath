@@ -192,7 +192,15 @@ Searches to repeat periodically:
   pre-commit/CI expect for the files you touched. First, ensure your
   environment is synced with `uv sync --extra dev`. Then, at minimum,
   run `uv run ruff format`, `uv run ruff check`, `uv run mypy`, and
-  `uv run pytest`. If `pre-commit` is installed, prefer
+  `uv run pytest`.
+
+- **Vignette validation is mandatory.** If you touched `src/` or `tests/schedules/`,
+  verify that vignettes still render correctly. If Quarto is installed
+  locally, run `quarto render` in `docs/vignettes/`. If not, carefully
+  review the `.qmd` files for any logic that depends on fixture
+  schemas (e.g. `docs/vignettes/validation.qmd`).
+
+- If `pre-commit` is installed, prefer
   `pre-commit run --all-files` because it catches formatting,
   whitespace, YAML/TOML, large-file, ruff, and mypy hooks in one command.
 - CHANGELOG dates use the user's local timezone (typically
