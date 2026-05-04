@@ -17,7 +17,8 @@ against CFPB regulatory disclosures, Fannie Mae GSE servicing
 guides, the Reg Z Sample H-14 ARM, the FHLBB *Federal Home Loan
 Bank Review* of March 1935, and 30+ open-licensed and modern
 copyrighted textbook worked examples — every committed fixture
-cell reproduces its source value to the cent. Decimal end-to-end;
+matches its published anchors (periodic payment, balloon, or
+full schedule) to the cent. Decimal end-to-end;
 no runtime dependencies beyond the Python standard library.
 
 ## Why mortgagemath?
@@ -45,8 +46,8 @@ conventions actual lenders use:
   `j_2`, Actual/360 commercial, and fixed-payment loans
 - **Exact zero ending balance** — the final row trues up so
   the schedule lands at $0.00
-- **40 cell-for-cell validated fixtures** auto-discovered by
-  `pytest`
+- **40 validated fixtures** (including 15+ full-schedule cell-for-cell
+  matches) auto-discovered by `pytest`
 
 ## Installation
 
