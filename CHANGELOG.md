@@ -21,9 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Canadian Accelerated Bi-Weekly.** A new convenience constructor
   `canada_accelerated_biweekly(...)` that derives the accelerated
   bi-weekly payment (monthly / 2) used by major Canadian banks.
-- **4 New Validated Fixtures.** Added fixtures for Swedish Serial loans,
-  CFPB Interest-Only samples, Canadian Accelerated Bi-Weekly, and
-  Zero-Interest promotional financing.
+- **4 New Validated Fixtures.** Added fixtures for Swedish Serial loans
+  (SBAB), CFPB Interest-Only samples, Canadian Accelerated Bi-Weekly (RBC),
+  and Zero-Interest promotional financing.
 
 ### Fixed
 

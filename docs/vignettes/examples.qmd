@@ -652,11 +652,11 @@ surfaces.
 **Scenario.** Swedish mortgages often use *rak amortering*
 (straight-line amortization), where the principal payment is
 constant every month and interest decreases. Total payments
-start high and drop over the loan life. $1.2 M SEK / 4% /
-20 years.
+start high and drop over the loan life. $1.0 M SEK / 2.92% /
+40 years.
 
 ```sh
-mortgagemath schedule --principal 1200000 --rate 4 --term-months 240 \
+mortgagemath schedule --principal 1000000 --rate 2.92 --term-months 480 \
     --amortization-type serial --format table
 ```
 
@@ -664,15 +664,15 @@ mortgagemath schedule --principal 1200000 --rate 4 --term-months 240 \
 from mortgagemath import AmortizationType
 
 sweden = LoanParams(
-    principal=Decimal("1200000"),
-    annual_rate=Decimal("4"),
-    term_months=240,
+    principal=Decimal("1000000"),
+    annual_rate=Decimal("2.92"),
+    term_months=480,
     amortization_type=AmortizationType.SERIAL,
 )
 sched = amortization_schedule(sweden)
-print(f"Month 1 payment: ${sched[1].payment} (5000 principal + 4000 int)")
-print(f"Month 2 payment: ${sched[2].payment} (5000 principal + 3983.33 int)")
+print(f"Month 1 payment: ${sched[1].payment} (2083.33 principal + 2433.33 int)")
+print(f"Month 2 payment: ${sched[2].payment} (2083.33 principal + 2428.26 int)")
 ```
 
-**Source.** [Nordea: *Rak amortering eller annuitet?*](https://www.nordea.se/privat/lan/bolan/rak-amortering-eller-annuitet.html).
-Fixture: `swedish_serial_rak_1200k_4pct_20yr.{toml,csv}`.
+**Source.** [SBAB: *Amortering*](https://www.sbab.se/1/privat/lana/bolan/sa_fungerar_bolan/amortering.html).
+Fixture: `swedish_serial_rak_1000k_292pct_40yr.{toml,csv}`.

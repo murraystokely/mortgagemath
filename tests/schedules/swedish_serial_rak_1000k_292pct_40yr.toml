@@ -1,0 +1,20 @@
+[loan]
+principal = "1000000"
+annual_rate = "2.92"
+term_months = 480
+amortization_type = "serial"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[expected]
+periodic_payment = "4516.66"
+
+[source]
+kind = "calculator"
+short_label = "SBAB Sweden"
+bib_key = "SBAB"
+bib_title = "SBAB Sweden"
+citation = "SBAB Sweden 'rak amortering' (serial loan) worked example. <https://www.sbab.se/1/privat/lana/bolan/sa_fungerar_bolan/amortering.html>"
+country = "SE"
+license = "public domain"
+notes = "Matches the SBAB published worked example for rak amortering. Validates the first three months with cents precision."
