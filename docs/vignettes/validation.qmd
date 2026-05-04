@@ -101,7 +101,7 @@ for stem, data in fixtures:
     rows.append((
         label,
         fmt_loan(loan),
-        DAY_SHORT[loan["day_count"]],
+        DAY_SHORT[loan.get("day_count", "30/360")],
         BAL_SHORT[loan.get("balance_tracking", "round_each")],
         RND_SHORT[loan["payment_rounding"]],
         COMP_SHORT[loan.get("compounding", "monthly")],

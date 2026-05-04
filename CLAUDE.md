@@ -172,21 +172,37 @@ Searches to repeat periodically:
 
 - Test fixtures live under ``tests/schedules/<name>.{toml,csv}``;
   ``tests/schedules/README.md`` documents the schema.
-- Validation vignette is data-driven from the fixture ``[source]``
-  blocks; bibliography auto-generates from per-fixture ``citation``
-  fields.
+- **Vignette updates are mandatory.** Every new feature or fixture that
+  expands the library's structural or country coverage MUST be
+  documented in the relevant vignettes:
+  - **Worked examples** (``docs/vignettes/examples.qmd``): Add a new
+    section with the scenario, CLI/Python examples, and source
+    citation.
+  - **Validation** (``docs/vignettes/validation.qmd``): This vignette
+    is data-driven from the fixture ``[source]`` blocks, but the
+    prose introduction or hardcoded summary counts in related files
+    (like ``README.md`` and ``docs/sphinx/vignettes.md``) must be
+    synchronized.
 - Every branch that changes public API, behavior, tests, packaging,
   documentation, workflows, fixtures, or agent guidance must update
   ``CHANGELOG.md`` in the same branch. Put unreleased work under
   ``## [Unreleased]`` using the existing Keep a Changelog headings;
   only move entries into a versioned section during release prep.
 - Before opening or updating a PR, run the same local gates that
-  pre-commit/CI expect for the files you touched. At minimum, run
-  ``ruff format --check`` (or ``ruff format`` before committing),
-  ``ruff check``, ``mypy``, and the relevant ``pytest`` target. If
-  ``pre-commit`` is installed, prefer ``pre-commit run --all-files``
-  because it catches formatting, whitespace, YAML/TOML, large-file,
-  ruff, and mypy hooks in one command.
+  pre-commit/CI expect for the files you touched. First, ensure your
+  environment is synced with `uv sync --extra dev`. Then, at minimum,
+  run `uv run ruff format`, `uv run ruff check`, `uv run mypy`, and
+  `uv run pytest`.
+
+- **Vignette validation is mandatory.** If you touched `src/` or `tests/schedules/`,
+  verify that vignettes still render correctly. If Quarto is installed
+  locally, run `quarto render` in `docs/vignettes/`. If not, carefully
+  review the `.qmd` files for any logic that depends on fixture
+  schemas (e.g. `docs/vignettes/validation.qmd`).
+
+- If `pre-commit` is installed, prefer
+  `pre-commit run --all-files` because it catches formatting,
+  whitespace, YAML/TOML, large-file, ruff, and mypy hooks in one command.
 - CHANGELOG dates use the user's local timezone (typically
   US/Pacific). Don't anchor to nearby entries; read today's date
   from the system reminder.

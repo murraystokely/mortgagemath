@@ -1,0 +1,19 @@
+[loan]
+principal = "211000"
+annual_rate = "4"
+term_months = 360
+interest_only_months = 60
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[expected]
+periodic_payment = "703.33"
+
+[source]
+kind = "regulatory_example"
+short_label = "CFPB IO Sample"
+bib_key = "CFPB_IO"
+bib_title = "CFPB Interest-Only Loan"
+citation = "CFPB sample Loan Estimate for an Interest-Only loan. <https://www.consumerfinance.gov/policy-compliance/guidance/mortgage-resources/tila-respa-integrated-disclosures/forms-samples/>"
+country = "US"
+license = "public domain"

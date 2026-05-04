@@ -8,6 +8,7 @@ from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _version
 
 from mortgagemath._constructors import (
+    canada_accelerated_biweekly,
     canada_fixed_j2,
     fixed_payment_mortgage,
     fixed_rate_mortgage,
@@ -18,6 +19,7 @@ from mortgagemath._constructors import (
 from mortgagemath._payment import monthly_payment, periodic_payment
 from mortgagemath._schedule import amortization_schedule
 from mortgagemath._types import (
+    AmortizationType,
     BalanceTracking,
     Compounding,
     DayCount,
@@ -34,8 +36,8 @@ try:
 except PackageNotFoundError:  # pragma: no cover - editable/sdist edge case
     __version__ = "0+unknown"
 del _version, PackageNotFoundError
-
 __all__ = [
+    "AmortizationType",
     "BalanceTracking",
     "Compounding",
     "DayCount",
@@ -47,6 +49,7 @@ __all__ = [
     "RateChange",
     "__version__",
     "amortization_schedule",
+    "canada_accelerated_biweekly",
     "canada_fixed_j2",
     "fixed_payment_mortgage",
     "fixed_rate_mortgage",

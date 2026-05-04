@@ -133,6 +133,23 @@ class BalanceTracking(Enum):
     CARRY_PRECISION = "carry_precision"
 
 
+class AmortizationType(Enum):
+    """Method used to calculate repayment installments.
+
+    ANNUITY (the default) is the standard amortizing mortgage: level
+    payments cover both interest and principal, with the principal
+    portion increasing over time.
+
+    SERIAL (Constant Principal) is the convention used in Nordic
+    countries (Swedish "Rak amortering"): the principal payment is
+    constant every period, while the interest payment decreases as the
+    balance is paid off, causing the total payment to drop over time.
+    """
+
+    ANNUITY = "annuity"
+    SERIAL = "serial"
+
+
 @dataclass(frozen=True, slots=True)
 class RateChange:
     """A scheduled rate change for an Adjustable-Rate Mortgage (ARM).
@@ -265,6 +282,12 @@ class LoanParams:
             $3,000 / 6% / $30 monthly / 138 full payments + 139th of
             $29.27).  Defaults to ``None`` (use the closed-form value).
             Currently incompatible with non-empty ``rate_schedule``.
+        amortization_type: Method used to calculate installments.
+            Defaults to ``ANNUITY``. ``SERIAL`` (Constant Principal)
+            is used for Nordic-style loans.
+        interest_only_months: Number of months at the start of the loan
+            where only interest is paid. After this period, the loan
+            recasts and amortizes over the remaining term. Defaults to 0.
     """
 
     principal: Decimal
@@ -280,6 +303,8 @@ class LoanParams:
     payment_frequency: PaymentFrequency = PaymentFrequency.MONTHLY
     rate_schedule: tuple[RateChange, ...] = ()
     payment_override: Decimal | None = None
+    amortization_type: AmortizationType = AmortizationType.ANNUITY
+    interest_only_months: int = 0
 
     def __post_init__(self) -> None:
         """Validate cross-field invariants."""
@@ -308,6 +333,39 @@ class LoanParams:
                 f"payments. Adjust term_months so the total is an integer "
                 f"number of payments at the chosen frequency."
             )
+
+        # interest_only_months validation.
+        if self.interest_only_months < 0:
+            raise ValueError(
+                f"interest_only_months must be non-negative, got {self.interest_only_months}"
+            )
+        if self.interest_only_months > self.term_months:
+            raise ValueError(
+                f"interest_only_months ({self.interest_only_months}) "
+                f"cannot exceed term_months ({self.term_months})"
+            )
+        if (self.interest_only_months * ppy) % 12 != 0:
+            raise ValueError(
+                f"interest_only_months={self.interest_only_months} "
+                f"* payments_per_year={ppy} is not divisible by 12."
+            )
+
+        # amortization_type validation. SERIAL is currently limited to
+        # THIRTY_360 and fixed-rate.
+        if self.amortization_type == AmortizationType.SERIAL:
+            if self.day_count != DayCount.THIRTY_360:
+                raise ValueError(
+                    "AmortizationType.SERIAL is only supported for "
+                    f"DayCount.THIRTY_360; got {self.day_count}"
+                )
+            if self.rate_schedule:
+                raise ValueError(
+                    "AmortizationType.SERIAL with rate_schedule is not currently supported."
+                )
+            if self.interest_only_months > 0:
+                raise ValueError(
+                    "AmortizationType.SERIAL with interest_only_months is not currently supported."
+                )
 
         # amortization_period_months validation lives here (in v0.6.1,
         # moved from periodic_payment) so payment_override loans —

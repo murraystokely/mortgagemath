@@ -16,3 +16,4 @@ docs/vignettes/_site/
 docs/vignettes/_freeze/
 docs/vignettes/.quarto/
 docs/sphinx/_build/
+venv/

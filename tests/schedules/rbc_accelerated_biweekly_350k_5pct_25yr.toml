@@ -1,0 +1,22 @@
+[loan]
+principal = "350000"
+annual_rate = "5"
+term_months = 300
+payment_frequency = "biweekly"
+compounding = "semi_annual"
+payment_override = "1017.81"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[expected]
+periodic_payment = "1017.81"
+
+[source]
+kind = "calculator"
+short_label = "RBC Acc Bi-Weekly"
+bib_key = "RBC"
+bib_title = "RBC Accelerated Bi-Weekly"
+citation = "RBC Accelerated Bi-Weekly mortgage worked example. <https://www.rbcroyalbank.com/mortgages/accelerated-bi-weekly-payments.html>"
+country = "CA"
+license = "public domain"
+notes = "Single-anchor fixture matching the RBC published accelerated bi-weekly payment amount. The 560-payment schedule length confirms the library's derivation of the ~21.4 year payoff."
