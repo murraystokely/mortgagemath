@@ -32,28 +32,49 @@ total, balloon at term). Partial matches go in
 
 ## Local development
 
+### Prerequisites
+
+This project uses [uv](https://docs.astral.sh/uv/) for dependency
+management. Install it first if you don't have it:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
+
+### Setup
+
+```bash
 git clone https://github.com/murraystokely/mortgagemath.git
 cd mortgagemath
-uv run --with pytest --with-editable . pytest
+uv sync --extra dev
 ```
 
-Before opening a PR, run the same checks CI runs:
+This creates a virtual environment and installs the package in editable
+mode along with all dev tools (ruff, mypy, pytest, pytest-cov).
 
-```
-uv run --with 'ruff>=0.6' --with-editable . ruff check src/ tests/
-uv run --with 'ruff>=0.6' --with-editable . ruff format --check src/ tests/
-uv run --with 'mypy>=1.10' --with-editable . mypy
-uv run --with pytest --with pytest-cov --with-editable . pytest --cov=src/mortgagemath
+### Running checks
+
+```bash
+uv run ruff format --check src/ tests/   # formatting
+uv run ruff check src/ tests/            # linting
+uv run mypy                              # type checking
+uv run pytest                            # tests
+uv run pytest --cov=src/mortgagemath     # tests + coverage
 ```
 
-Optional: set up [pre-commit](https://pre-commit.com/) to run these on
-every commit:
+Before opening a PR, run at least the four checks above — they match
+what CI runs.
 
+### Pre-commit hooks (optional)
+
+To run these checks automatically on every commit:
+
+```bash
+uv run pre-commit install
 ```
-pip install pre-commit
-pre-commit install
-```
+
+Then `pre-commit run --all-files` catches formatting, whitespace,
+YAML/TOML, large-file, ruff, and mypy issues in one command.
 
 ## Privacy
 

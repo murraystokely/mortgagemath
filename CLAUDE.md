@@ -43,6 +43,12 @@ What does NOT count:
   pre-1929 actuarial textbooks; bank pages where 12 × rounded
   payment ≠ published year total).
 - Synthetic constructions designed to motivate a feature.
+- URLs that return 404, 403, or redirect to an unrelated page.
+- Sources the contributor cannot demonstrate they actually retrieved
+  and read. Fabricated citations to real institutions — inventing
+  plausible loan parameters and attributing them to a bank, regulator,
+  or textbook that never published them — are treated as academic
+  fraud and will result in the entire PR being rejected.
 
 ### 2. No synthetic-fixture-only features
 
@@ -74,6 +80,49 @@ its source, or be removed entirely. If a published schedule shows 5
 rows and the library matches 4 of 5, the fixture does not ship.
 Single-anchor fixtures (only the periodic payment is published) are
 fine; partial-schedule fixtures are not.
+
+### 4. Source verification
+
+Every non-synthetic fixture must cite a source that a human reviewer
+can retrieve and spot-check.
+
+- The ``url`` field in ``[source]`` (or the URL embedded in the
+  ``citation`` string) must resolve — not 404, 403, or redirect to
+  an unrelated page — at the time the fixture PR is opened. If the
+  page is behind a JS wall or paywall, the ``notes`` field must say
+  so and include a persistent identifier (DOI, Gallica ARK, Trove
+  NLA ID, HathiTrust record URL, or equivalent) so a human can
+  verify the content through a browser or library portal.
+
+- The PR description for any new non-synthetic fixture must include
+  a **Source verification** section containing: (1) the direct URL
+  or persistent identifier, (2) a description of where on the page
+  or document the table or anchor value appears (e.g. "Table 3,
+  page 12" or "the worked example under heading *Rak amortering*"),
+  and (3) at least 3 spot-checked values transcribed verbatim from
+  the source alongside the library's computed values.
+
+- An agent (automated contributor) must NOT invent fixture
+  parameters and then search for a source that might match. The
+  workflow is: retrieve the source first, transcribe the published
+  values, then configure ``LoanParams`` to reproduce them. If the
+  source cannot be retrieved programmatically (JS wall, paywall),
+  the agent must flag it for human retrieval and place the feature
+  on a WIP branch — not fabricate a fixture and cite an
+  unreachable URL.
+
+- If a cited URL becomes unavailable after merge, the fixture is
+  not removed (the numerical values are still uncopyrightable
+  facts), but the ``notes`` field should be updated with a
+  retrieval date and any archived copy (Wayback Machine,
+  institutional cache).
+
+This rule was added after the v0.7.0 cycle, when a PR included a
+fixture attributed to SBAB (a Swedish mortgage bank) with a URL
+that returned 404 and a page that contained no worked numerical
+example. The fixture parameters were fabricated by an automated
+agent and labeled ``kind = "calculator"`` with notes claiming they
+matched a published example that did not exist.
 
 ## Branch naming
 
@@ -168,25 +217,75 @@ Searches to repeat periodically:
 - French academic repositories (HAL, Persée) for cited CF tables
 - Trove (Australian) and Papers Past (NZ) for colonial-era schedules
 
+## Development environment setup
+
+This project uses [uv](https://docs.astral.sh/uv/) for dependency
+management. All dev tools (ruff, mypy, pytest) are installed through
+uv — nothing needs to be installed globally.
+
+### One-time setup
+
+```bash
+# Install uv (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Clone and sync dev dependencies
+git clone https://github.com/murraystokely/mortgagemath.git
+cd mortgagemath
+uv sync --extra dev
+```
+
+### Running checks
+
+After ``uv sync --extra dev``, all tools are available via
+``uv run``:
+
+```bash
+uv run ruff format --check src/ tests/   # formatting
+uv run ruff check src/ tests/            # linting
+uv run mypy                              # type checking
+uv run pytest                            # tests
+uv run pytest --cov=src/mortgagemath     # tests + coverage
+```
+
+Or run everything at once with pre-commit (optional):
+
+```bash
+uv run pre-commit install        # one-time hook setup
+uv run pre-commit run --all-files
+```
+
+Agents and contributors must run at least ``ruff format --check``,
+``ruff check``, ``mypy``, and the relevant ``pytest`` target before
+opening or updating a PR. All commands above assume ``uv sync
+--extra dev`` has been run in the working directory.
+
 ## Project conventions
 
 - Test fixtures live under ``tests/schedules/<name>.{toml,csv}``;
-  ``tests/schedules/README.md`` documents the schema.
-- Validation vignette is data-driven from the fixture ``[source]``
-  blocks; bibliography auto-generates from per-fixture ``citation``
-  fields.
+  ``tests/schedules/README.md`` documents the schema. The test suite
+  uses three complementary patterns:
+  - **Fixture tests** (``test_bank_schedules.py``): validate that the
+    library reproduces published values from authoritative sources.
+    One fixture = one published example.
+  - **Version regression tests** (``test_vXYZ_regressions.py``): pin
+    bug fixes that involve error paths, warnings, or environmental
+    edge cases (e.g. Decimal context independence) that cannot be
+    expressed as a fixture. Named by the version that introduced the
+    fix.
+  - **Structural / invariant tests** (``test_schedule.py``,
+    ``test_payment.py``, etc.): verify mathematical properties that
+    must hold across all loans (balance monotonicity, principal +
+    interest = payment, etc.).
 - Every branch that changes public API, behavior, tests, packaging,
   documentation, workflows, fixtures, or agent guidance must update
   ``CHANGELOG.md`` in the same branch. Put unreleased work under
   ``## [Unreleased]`` using the existing Keep a Changelog headings;
   only move entries into a versioned section during release prep.
-- Before opening or updating a PR, run the same local gates that
-  pre-commit/CI expect for the files you touched. At minimum, run
-  ``ruff format --check`` (or ``ruff format`` before committing),
-  ``ruff check``, ``mypy``, and the relevant ``pytest`` target. If
-  ``pre-commit`` is installed, prefer ``pre-commit run --all-files``
-  because it catches formatting, whitespace, YAML/TOML, large-file,
-  ruff, and mypy hooks in one command.
+- Before opening or updating a PR, run the local gates documented
+  in §"Development environment setup" above. If ``pre-commit`` is
+  installed, ``uv run pre-commit run --all-files`` covers everything
+  in one command.
 - CHANGELOG dates use the user's local timezone (typically
   US/Pacific). Don't anchor to nearby entries; read today's date
   from the system reminder.
