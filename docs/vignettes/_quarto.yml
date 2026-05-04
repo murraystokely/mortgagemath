@@ -16,6 +16,8 @@ website:
         text: Validation
       - href: examples.qmd
         text: Examples
+      - href: pandas.qmd
+        text: Pandas & Viz
       - href: history.qmd
         text: History
     right:
