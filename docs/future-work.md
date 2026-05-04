@@ -78,6 +78,75 @@ Pearline) are now in the test suite.
 
 ## Possible future work
 
+### Deferred library features
+
+These features have been investigated but not shipped, either because
+no verifiable published source was found or because the feature is
+blocked on source retrieval.
+
+- **`fee_per_period`** — flat per-period loading for Crédit Foncier
+  and modern French *assurance emprunteur* schedules. Complete
+  implementation exists on the ``fee-per-period-wip`` branch. Blocked
+  on finding a row-level published source; see CLAUDE.md for trigger
+  sources to watch. (Investigated in v0.6.0 cycle.)
+- **Variable / declining-balance fees** — insurance computed on
+  remaining balance ("assurance sur le capital restant dû"), stepped
+  insurance schedules, or frais de garantie at a different cadence.
+  Would require a ``FeeSchedule`` data type. No published source
+  found.
+- **``IndexedRateSchedule``** (Tier 2 ARM) — library-side derivation
+  of post-cap rates from raw index history, margin, periodic cap,
+  lifetime cap, and floor. Currently only one source (Reg Z Sample
+  H-14) motivates it, which is below the complexity threshold. The
+  existing Tier 1 ``rate_schedule`` with hand-computed post-cap
+  rates reproduces H-14 exactly.
+- **``DayCount.ACTUAL_365``** — Australian convention. API sketched
+  but no published cents-level worked example with daily accruals
+  found.
+- **APR / TAEG validation** — Reg Z Appendix J actuarial-method APR.
+  Requires modeling all upfront and ongoing fees; significantly
+  larger scope than current library.
+- **Graduated payment mortgages** — Reg Z Sample H-15 and FHA
+  Section 245 Plan III. Bundles with payment-cap mechanics but no
+  second published source found beyond the regulatory examples.
+- **Offset mortgages** — common in UK and Australia. Requires
+  allowing a variable principal balance input, which adds significant
+  complexity to the current pure-math approach.
+- **Bausparvertrag / Bauspardarlehen** (Germany/Austria) — complex
+  product with a savings-phase transition. The library could handle
+  the loan phase, but no specific worked example identified.
+- **CLI ``summary`` subcommand** — output total interest, payoff
+  date, APR. Low priority; the information is derivable from
+  ``schedule`` output.
+
+### Unresolved regional gaps
+
+- **Republic of Ireland** — lender disclosures diverge €0.75–€1.12
+  with no documented day-count convention. Deferred until a primary
+  source publishes the algorithm.
+- **UK reversion-to-SVR multi-rate** — needs Tier 1 ARM rate schedule
+  plus a UK-specific verifiable example. None found.
+- **Germany / *Pfandbrief* tradition** — conceptually important but
+  no specific public worked example identified.
+- **Pre-1968 American sources beyond FHLBB 1935** — Bodfish 1931 on
+  HathiTrust is JS-walled. A digitized B&L annual report from the
+  1880s-1920s with a worked schedule would be a major find.
+
+### European regulatory source leads
+
+These regulatory bodies may publish worked examples suitable as
+fixtures, but have not yet been investigated in depth:
+
+- **FCA (UK)** — Annual Percentage Rate of Charge (APRC) calculation
+  examples using standard UK practices.
+- **Finansinspektionen (Sweden)** — "Amorteringskrav" guidelines on
+  how serial or mixed loans must be calculated.
+- **BaFin / PAngV (Germany)** — "Preisangabenverordnung" effective
+  interest rate (Effektivzinssatz) calculation examples for standard
+  "Annuitätendarlehen."
+
+### Other sections
+
 - See "Actual/360 commercial loans" below.
 - See "Carry-precision textbooks" below for sources that still don't
   match even with `BalanceTracking.CARRY_PRECISION`.
