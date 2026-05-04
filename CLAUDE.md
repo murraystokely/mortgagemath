@@ -175,6 +175,11 @@ Searches to repeat periodically:
 - Validation vignette is data-driven from the fixture ``[source]``
   blocks; bibliography auto-generates from per-fixture ``citation``
   fields.
+- Every branch that changes public API, behavior, tests, packaging,
+  documentation, workflows, fixtures, or agent guidance must update
+  ``CHANGELOG.md`` in the same branch. Put unreleased work under
+  ``## [Unreleased]`` using the existing Keep a Changelog headings;
+  only move entries into a versioned section during release prep.
 - CHANGELOG dates use the user's local timezone (typically
   US/Pacific). Don't anchor to nearby entries; read today's date
   from the system reminder.
