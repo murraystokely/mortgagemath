@@ -155,7 +155,12 @@ The clear gaps are:
   important (the *Hypothekenbanken* model influenced both the CF
   *obligations foncières* and U.S. mortgage-backed securities), but
   no specific public worked example identified yet.
-- **Pre-1968 American sources beyond FHLBB 1935.** Bodfish 1931
+- **Nordic / Sweden:** zero fixtures. *Rak amortering* (serial
+  amortization) is the standard Nordic convention. Methodology is
+  well-known, but no row-level published worked example from a bank or
+  textbook has been retrieved yet.
+- **Pre-1968 American sources beyond FHLBB 1935.**
+ Bodfish 1931
   *History of Building and Loan in the United States* is on
   HathiTrust but most volumes are JS-walled. A digitized B&L annual
   report from the 1880s-1920s with a worked share-accumulation OR
@@ -214,3 +219,27 @@ Searches to repeat periodically:
 - Vignettes auto-render PDFs back to the PR branch via
   ``vignettes.yml``. Reviewers can view PDFs inline in the PR's
   Files Changed tab.
+
+## Hallucination & Integrity
+
+- **Fabrication is a critical failure.** Never construct a plausible-sounding
+  fixture, attribute it to a real source (bank, textbook, calculator), and
+  claim it is verified if the source does not contain the exact numerical
+  values you are comparing against.
+- **Empirical replication is the core mission.** This library validates
+  against external, published, third-party numbers. Matching your own
+  understanding of a "methodology" is insufficient.
+- **Reporting "No Source Found" is a valid and expected outcome.** If you
+  cannot find a source that publishes specific numerical results for a
+  requested feature, report this to the user immediately. Do not attempt
+  to "fix" the lack of evidence by creating a synthetic fixture and
+  masking its provenance.
+- **Synthetic fixtures must be explicit.** If a fixture is needed for
+  internal testing (e.g. boundary conditions) but has no external source,
+  it must be labeled `kind = "synthetic"` with a clear note explaining its
+  mathematical derivation. Never label a synthetic fixture as
+  `calculator` or `textbook`.
+- **Source verification requires a quote or description.** When adding a
+  new fixture, your PR or summary must describe exactly where in the cited
+  source the numerical values appear (e.g., "Table 13.1 on page 245
+  publishes the first three months of this schedule").

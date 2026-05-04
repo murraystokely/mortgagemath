@@ -8,7 +8,6 @@ from datetime import date
 from decimal import Decimal
 
 from mortgagemath import (
-    AmortizationType,
     BalanceTracking,
     Compounding,
     DayCount,
@@ -30,7 +29,6 @@ def _loan_from_toml(toml_data: dict) -> LoanParams:
     balance_tracking_str = loan.get("balance_tracking", "round_each")
     compounding_str = loan.get("compounding", "monthly")
     payment_frequency_str = loan.get("payment_frequency", "monthly")
-    amortization_type_str = loan.get("amortization_type", "annuity")
     rate_schedule = tuple(
         RateChange(
             effective_payment_number=int(rc["effective_payment_number"]),
@@ -57,7 +55,6 @@ def _loan_from_toml(toml_data: dict) -> LoanParams:
         payment_frequency=PaymentFrequency(payment_frequency_str),
         rate_schedule=rate_schedule,
         payment_override=Decimal(payment_override) if payment_override is not None else None,
-        amortization_type=AmortizationType(amortization_type_str),
         interest_only_months=loan.get("interest_only_months", 0),
     )
 

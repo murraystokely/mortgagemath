@@ -644,35 +644,3 @@ converge with the U.S. convention; a U.K. fixture is
 mechanically a duplicate of an existing U.S. example. This
 section reserves the slot until a specific U.K. published table
 surfaces.
-
-# Australia / Nordic
-
-## Swedish Serial Loan (Rak amortering)
-
-**Scenario.** Swedish mortgages often use *rak amortering*
-(straight-line amortization), where the principal payment is
-constant every month and interest decreases. Total payments
-start high and drop over the loan life. $1.0 M SEK / 2.92% /
-40 years.
-
-```sh
-mortgagemath schedule --principal 1000000 --rate 2.92 --term-months 480 \
-    --amortization-type serial --format table
-```
-
-```{python}
-from mortgagemath import AmortizationType
-
-sweden = LoanParams(
-    principal=Decimal("1000000"),
-    annual_rate=Decimal("2.92"),
-    term_months=480,
-    amortization_type=AmortizationType.SERIAL,
-)
-sched = amortization_schedule(sweden)
-print(f"Month 1 payment: ${sched[1].payment} (2083.33 principal + 2433.33 int)")
-print(f"Month 2 payment: ${sched[2].payment} (2083.33 principal + 2428.26 int)")
-```
-
-**Source.** [SBAB: *Amortering*](https://www.sbab.se/1/privat/lana/bolan/sa_fungerar_bolan/amortering.html).
-Fixture: `swedish_serial_rak_1000k_292pct_40yr.{toml,csv}`.

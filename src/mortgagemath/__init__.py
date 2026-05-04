@@ -19,7 +19,6 @@ from mortgagemath._constructors import (
 from mortgagemath._payment import monthly_payment, periodic_payment
 from mortgagemath._schedule import amortization_schedule
 from mortgagemath._types import (
-    AmortizationType,
     BalanceTracking,
     Compounding,
     DayCount,
@@ -37,7 +36,6 @@ except PackageNotFoundError:  # pragma: no cover - editable/sdist edge case
     __version__ = "0+unknown"
 del _version, PackageNotFoundError
 __all__ = [
-    "AmortizationType",
     "BalanceTracking",
     "Compounding",
     "DayCount",

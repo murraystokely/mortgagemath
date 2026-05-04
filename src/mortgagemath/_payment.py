@@ -4,7 +4,6 @@ import decimal
 from decimal import Decimal, localcontext
 
 from mortgagemath._types import (
-    AmortizationType,
     Compounding,
     DayCount,
     LoanParams,
@@ -120,13 +119,6 @@ def periodic_payment(loan: LoanParams) -> Decimal:
     if loan.interest_only_months > 0:
         # Initial payment is interest-only.
         return (loan.principal * r).quantize(_PENNY, rounding=rounding)
-
-    if loan.amortization_type == AmortizationType.SERIAL:
-        # First payment = (principal / n) + (principal * r).
-        # Principal slice follows ROUND_HALF_UP in _schedule_serial.
-        principal_pmt = (loan.principal / n).quantize(_PENNY, rounding=decimal.ROUND_HALF_UP)
-        interest_pmt = (loan.principal * r).quantize(_PENNY, rounding=rounding)
-        return principal_pmt + interest_pmt
 
     if r == 0:
         # For zero-interest loans, the annuity formula is undefined.

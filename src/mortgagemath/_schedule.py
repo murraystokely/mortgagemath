@@ -7,7 +7,6 @@ from decimal import Decimal, localcontext
 
 from mortgagemath._payment import _periodic_rate, _periodic_rate_for, periodic_payment
 from mortgagemath._types import (
-    AmortizationType,
     BalanceTracking,
     DayCount,
     EarlyPayoffWarning,
@@ -126,8 +125,6 @@ def amortization_schedule(loan: LoanParams) -> list[Installment]:
     # 60-cent error on a $25 M schedule.
     with localcontext() as ctx:
         ctx.prec = 50
-        if loan.amortization_type == AmortizationType.SERIAL:
-            return _schedule_serial(loan)
         if loan.day_count == DayCount.THIRTY_360:
             return _schedule_thirty_360(loan)
         if loan.day_count == DayCount.ACTUAL_360:
@@ -144,58 +141,6 @@ def _schedule_thirty_360(loan: LoanParams) -> list[Installment]:
     if loan.balance_tracking == BalanceTracking.CARRY_PRECISION:
         return _schedule_thirty_360_carry_precision(loan)
     return _schedule_thirty_360_round_each(loan)
-
-
-def _schedule_serial(loan: LoanParams) -> list[Installment]:
-    """Generate a Serial (Constant Principal) amortization schedule.
-
-    Common in Nordic countries (Swedish "Rak amortering"). The principal
-    payment is constant every period, and the interest decreases.
-    """
-    interest_rounding = _ROUNDING_MAP[loan.interest_rounding]
-    periodic_rate = _periodic_rate(loan)
-    total_payments = loan._total_payments
-    balance = loan.principal
-    total_interest = _ZERO
-
-    # Principal per period is fixed: principal / total_payments.
-    # Swedish convention typically rounds the principal slice to cents.
-    principal_pmt = (loan.principal / total_payments).quantize(
-        _PENNY, rounding=decimal.ROUND_HALF_UP
-    )
-
-    schedule: list[Installment] = [
-        Installment(
-            number=0,
-            payment=_ZERO,
-            interest=_ZERO,
-            principal=_ZERO,
-            total_interest=_ZERO,
-            balance=balance,
-        )
-    ]
-
-    for i in range(1, total_payments + 1):
-        interest = (balance * periodic_rate).quantize(_PENNY, rounding=interest_rounding)
-
-        principal_slice = balance if i == total_payments else principal_pmt
-
-        payment = principal_slice + interest
-        balance -= principal_slice
-        total_interest += interest
-
-        schedule.append(
-            Installment(
-                number=i,
-                payment=payment,
-                interest=interest,
-                principal=principal_slice,
-                total_interest=total_interest,
-                balance=balance,
-            )
-        )
-
-    return schedule
 
 
 def _schedule_thirty_360_round_each(loan: LoanParams) -> list[Installment]:

@@ -46,7 +46,7 @@ conventions actual lenders use:
   `j_2`, Actual/360 commercial, and fixed-payment loans
 - **Exact zero ending balance** — the final row trues up so
   the schedule lands at $0.00
-- **40 validated fixtures** (including 15+ full-schedule cell-for-cell
+- **39 validated fixtures** (including 15+ full-schedule cell-for-cell
   matches) auto-discovered by `pytest`
 
 ## Installation
