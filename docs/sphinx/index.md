@@ -50,14 +50,9 @@ rather than forced into the fixture corpus. See the
 ## At a glance
 
 ```python
-from decimal import Decimal
-from mortgagemath import LoanParams, periodic_payment, amortization_schedule
+from mortgagemath import us_30_year_fixed, periodic_payment, amortization_schedule
 
-loan = LoanParams(
-    principal=Decimal("300000"),
-    annual_rate=Decimal("6.5"),
-    term_months=360,
-)
+loan = us_30_year_fixed("300000", "6.5")
 print(periodic_payment(loan))   # Decimal("1896.21")
 sched = amortization_schedule(loan)
 print(sched[-1].balance)        # Decimal("0.00") — exact closure

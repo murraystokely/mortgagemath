@@ -27,10 +27,11 @@ print(f"_mortgagemath {mortgagemath.__version__} · "
 This vignette catalogs the loan types `mortgagemath` reproduces
 to the cent against published sources, organized by country
 convention. Each example shows: a one-paragraph **scenario**, the
-exact ``LoanParams(...)`` configuration, the equivalent
-``mortgagemath`` CLI invocation, a live Python chunk emitting the
-schedule and the published anchors it matches, and a citation
-linking to both the source document and the fixture file.
+exact ``LoanParams`` configuration (sometimes via a convenience
+constructor), the equivalent ``mortgagemath`` CLI invocation, a live
+Python chunk emitting the schedule and the published anchors it
+matches, and a citation linking to both the source document and the
+fixture file.
 
 For the broader institutional and mathematical history see the
 *History* vignette; for the validated worked-example matrix see
@@ -54,14 +55,22 @@ mortgagemath payment --principal 162000 --rate 3.875 --term-months 360 \
 
 ```{python}
 from decimal import Decimal
-from mortgagemath import LoanParams, PaymentRounding, periodic_payment
+from mortgagemath import (
+    LoanParams,
+    PaymentRounding,
+    amortization_schedule,
+    canada_fixed_j2,
+    fixed_payment_mortgage,
+    periodic_payment,
+    us_15_year_fixed,
+    us_30_year_fixed,
+    us_actual_360_commercial,
+)
 
-cfpb = LoanParams(
-    principal=Decimal("162000.00"),
-    annual_rate=Decimal("3.875"),
-    term_months=360,
+cfpb = us_30_year_fixed(
+    "162000.00",
+    "3.875",
     payment_rounding=PaymentRounding.ROUND_HALF_UP,
-    interest_rounding=PaymentRounding.ROUND_HALF_UP,
 )
 print(f"Monthly P&I: ${periodic_payment(cfpb)}  (CFPB H-25(B): $761.78)")
 ```
@@ -78,10 +87,9 @@ always rounded up to the next penny"* — confirming the library's
 default ROUND_UP convention used by most US residential lenders.
 
 ```{python}
-openstax = LoanParams(
-    principal=Decimal("136700.00"),
-    annual_rate=Decimal("5.75"),
-    term_months=180,
+openstax = us_15_year_fixed(
+    "136700.00",
+    "5.75",
     # ROUND_UP is the default; shown explicitly for clarity.
     payment_rounding=PaymentRounding.ROUND_UP,
     interest_rounding=PaymentRounding.ROUND_HALF_UP,
@@ -111,16 +119,12 @@ mortgagemath schedule --principal 25000000 --rate 5.5 --term-months 120 \
 
 ```{python}
 from datetime import date
-from mortgagemath import DayCount, amortization_schedule
 
-fnma = LoanParams(
-    principal=Decimal("25000000.00"),
-    annual_rate=Decimal("5.5"),
-    term_months=120,
-    amortization_period_months=360,
-    day_count=DayCount.ACTUAL_360,
-    payment_rounding=PaymentRounding.ROUND_HALF_UP,
-    interest_rounding=PaymentRounding.ROUND_HALF_UP,
+fnma = us_actual_360_commercial(
+    "25000000.00",
+    "5.5",
+    term_years=10,
+    amortization_years=30,
     start_date=date(2018, 12, 1),
 )
 sched = amortization_schedule(fnma)
@@ -409,14 +413,11 @@ mortgagemath schedule --principal 3000 --rate 6 --term-months 139 \
 ```
 
 ```{python}
-fhlbb = LoanParams(
-    principal=Decimal("3000.00"),
-    annual_rate=Decimal("6"),
+fhlbb = fixed_payment_mortgage(
+    "3000.00",
+    "6",
+    "30.00",
     term_months=139,
-    payment_rounding=PaymentRounding.ROUND_HALF_UP,
-    interest_rounding=PaymentRounding.ROUND_HALF_UP,
-    balance_tracking=BalanceTracking.CARRY_PRECISION,
-    payment_override=Decimal("30.00"),
 )
 sched = amortization_schedule(fhlbb)
 for n in (1, 138, 139):
@@ -463,16 +464,7 @@ mortgagemath payment --principal 350100 --rate 4.9 --term-months 36 \
 ```
 
 ```{python}
-chans = LoanParams(
-    principal=Decimal("350100"),
-    annual_rate=Decimal("4.9"),
-    term_months=36,
-    amortization_period_months=240,
-    compounding=Compounding.SEMI_ANNUAL,
-    payment_frequency=PaymentFrequency.MONTHLY,
-    payment_rounding=PaymentRounding.ROUND_HALF_UP,
-    interest_rounding=PaymentRounding.ROUND_HALF_UP,
-)
+chans = canada_fixed_j2("350100", "4.9", amortization_years=20, term_years=3)
 print(f"Monthly P&I:                          ${periodic_payment(chans):,}")
 sched = amortization_schedule(chans)
 print(f"Balance after pmt 36 (renewal balloon): ${sched[36].balance:,}")
@@ -495,15 +487,12 @@ example: \$297,500 / `j_2` = 3.8% / 3-year fixed term on a
 20-year amortization, quarterly payments.
 
 ```{python}
-ecampus_q = LoanParams(
-    principal=Decimal("297500"),
-    annual_rate=Decimal("3.8"),
-    term_months=36,
-    amortization_period_months=240,
-    compounding=Compounding.SEMI_ANNUAL,
+ecampus_q = canada_fixed_j2(
+    "297500",
+    "3.8",
+    amortization_years=20,
+    term_years=3,
     payment_frequency=PaymentFrequency.QUARTERLY,
-    payment_rounding=PaymentRounding.ROUND_HALF_UP,
-    interest_rounding=PaymentRounding.ROUND_HALF_UP,
 )
 sched = amortization_schedule(ecampus_q)
 print(f"Quarterly P&I:               ${periodic_payment(ecampus_q):,}")

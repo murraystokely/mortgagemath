@@ -3,14 +3,9 @@
 ## A 30-year fixed-rate residential mortgage
 
 ```python
-from decimal import Decimal
-from mortgagemath import LoanParams, periodic_payment, amortization_schedule
+from mortgagemath import us_30_year_fixed, periodic_payment, amortization_schedule
 
-loan = LoanParams(
-    principal=Decimal("300000"),
-    annual_rate=Decimal("6.5"),
-    term_months=360,
-)
+loan = us_30_year_fixed("300000", "6.5")
 pmt = periodic_payment(loan)         # Decimal("1896.21")
 sched = amortization_schedule(loan)
 print(sched[1].interest)             # Decimal("1625.00")
@@ -22,29 +17,23 @@ Returns a cent-accurate periodic payment and a lender-style
 amortization schedule that lands exactly at `$0.00` on the final
 payment.
 
+The convenience constructors return ordinary `LoanParams` objects.
+Use `LoanParams` directly when you need an uncommon configuration,
+or pass optional rounding overrides when a published source requires
+them.
+
 ## Canadian semi-annual mortgages
 
 The Canadian *Interest Act* §6 quotes rates as semi-annually
-compounded.  Pass `compounding=Compounding.SEMI_ANNUAL`:
+compounded.  The `canada_fixed_j2` helper chooses that convention:
 
 ```python
-from mortgagemath import (
-    LoanParams, Compounding, PaymentFrequency,
-    PaymentRounding, periodic_payment,
-)
+from mortgagemath import canada_fixed_j2, periodic_payment
 
 # Canadian 5-year-term mortgage on a 25-year amortization basis,
 # monthly payments at j_2 = 5%.
-loan = LoanParams(
-    principal=Decimal("300000"),
-    annual_rate=Decimal("5"),
-    term_months=300,                       # full amortization horizon
-    compounding=Compounding.SEMI_ANNUAL,
-    payment_frequency=PaymentFrequency.MONTHLY,
-    payment_rounding=PaymentRounding.ROUND_HALF_UP,
-    interest_rounding=PaymentRounding.ROUND_HALF_UP,
-)
-print(periodic_payment(loan))              # Decimal("1747.45")
+loan = canada_fixed_j2("300000", "5", amortization_years=25, term_years=5)
+print(periodic_payment(loan))              # Decimal("1744.81")
 ```
 
 See {doc}`vignettes` for a full Canadian-mortgage walkthrough.
@@ -54,6 +43,7 @@ See {doc}`vignettes` for a full Canadian-mortgage walkthrough.
 ARMs are modelled via a tuple of `RateChange` entries:
 
 ```python
+from decimal import Decimal
 from mortgagemath import LoanParams, RateChange, PaymentRounding, amortization_schedule
 
 # 5/1 ARM: $200,000 at 5.7%, single rate change at month 61 to 7.2%.
@@ -81,18 +71,19 @@ walkthroughs.
 
 ```python
 from datetime import date
-from mortgagemath import DayCount, amortization_schedule
+from mortgagemath import (
+    amortization_schedule,
+    periodic_payment,
+    us_actual_360_commercial,
+)
 
 # Fannie Mae §1103 Tier 2 SARM: $25M at 5.5%, 10-year term on a
 # 30-year amortization basis, Actual/360 day count.
-loan = LoanParams(
-    principal=Decimal("25000000"),
-    annual_rate=Decimal("5.5"),
-    term_months=120,
-    amortization_period_months=360,
-    day_count=DayCount.ACTUAL_360,
-    payment_rounding=PaymentRounding.ROUND_HALF_UP,
-    interest_rounding=PaymentRounding.ROUND_HALF_UP,
+loan = us_actual_360_commercial(
+    "25000000",
+    "5.5",
+    term_years=10,
+    amortization_years=30,
     start_date=date(2018, 12, 1),
 )
 sched = amortization_schedule(loan)

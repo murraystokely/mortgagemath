@@ -175,6 +175,18 @@ Searches to repeat periodically:
 - Validation vignette is data-driven from the fixture ``[source]``
   blocks; bibliography auto-generates from per-fixture ``citation``
   fields.
+- Every branch that changes public API, behavior, tests, packaging,
+  documentation, workflows, fixtures, or agent guidance must update
+  ``CHANGELOG.md`` in the same branch. Put unreleased work under
+  ``## [Unreleased]`` using the existing Keep a Changelog headings;
+  only move entries into a versioned section during release prep.
+- Before opening or updating a PR, run the same local gates that
+  pre-commit/CI expect for the files you touched. At minimum, run
+  ``ruff format --check`` (or ``ruff format`` before committing),
+  ``ruff check``, ``mypy``, and the relevant ``pytest`` target. If
+  ``pre-commit`` is installed, prefer ``pre-commit run --all-files``
+  because it catches formatting, whitespace, YAML/TOML, large-file,
+  ruff, and mypy hooks in one command.
 - CHANGELOG dates use the user's local timezone (typically
   US/Pacific). Don't anchor to nearby entries; read today's date
   from the system reminder.

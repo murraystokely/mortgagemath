@@ -41,6 +41,8 @@ conventions actual lenders use:
   Act* §6 (`j_2`), effective-annual, weekly through annual
 - **Adjustable-rate mortgages** with rate schedules, optional
   payment caps, and capitalized negative amortization
+- **Convenience constructors** for common US fixed-rate, Canadian
+  `j_2`, Actual/360 commercial, and fixed-payment loans
 - **Exact zero ending balance** — the final row trues up so
   the schedule lands at $0.00
 - **36 cell-for-cell validated fixtures** auto-discovered by
@@ -80,18 +82,15 @@ mortgagemath schedule --principal 162000 --rate 3.875 --term-months 360 \
 The same loan from Python:
 
 ```python
-from decimal import Decimal
 from mortgagemath import (
-    LoanParams, PaymentRounding,
+    PaymentRounding, us_30_year_fixed,
     periodic_payment, amortization_schedule,
 )
 
-loan = LoanParams(
-    principal=Decimal("162000.00"),
-    annual_rate=Decimal("3.875"),
-    term_months=360,
+loan = us_30_year_fixed(
+    "162000.00",
+    "3.875",
     payment_rounding=PaymentRounding.ROUND_HALF_UP,
-    interest_rounding=PaymentRounding.ROUND_HALF_UP,
 )
 
 print(periodic_payment(loan))      # Decimal("761.78")
@@ -100,6 +99,12 @@ print(sched[1].interest)            # Decimal("523.13")
 print(sched[1].principal)           # Decimal("238.65")
 print(sched[-1].balance)            # Decimal("0.00")  exact closure
 ```
+
+The lower-level `LoanParams` dataclass remains available when you
+need every knob explicitly. For the common cases, constructors such
+as `us_30_year_fixed`, `us_15_year_fixed`, `canada_fixed_j2`,
+`us_actual_360_commercial`, and `fixed_payment_mortgage` return
+ordinary validated `LoanParams` objects.
 
 For Canadian *j_2* mortgages, US ARMs (with rate caps and
 payment caps), commercial Actual/360 with balloon, and the FHLBB

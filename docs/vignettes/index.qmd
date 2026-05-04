@@ -20,8 +20,9 @@ print(f"Library version: **{mortgagemath.__version__}** · Rendered "
 amortization schedules reproducing published lender, regulator, and
 textbook examples to the cent. Decimal end-to-end, configurable
 rounding, balance-tracking, day-count, compounding, and payment
-cadence; full ARM support (rate changes, optional recast, optional
-payment caps with negative amortization).
+cadence; convenience constructors for common US, Canadian, and
+Actual/360 loans; full ARM support (rate changes, optional recast,
+optional payment caps with negative amortization).
 
 ## Vignettes
 

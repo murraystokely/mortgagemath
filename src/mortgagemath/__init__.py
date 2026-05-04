@@ -7,6 +7,14 @@ Zero runtime dependencies — only the standard library.
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _version
 
+from mortgagemath._constructors import (
+    canada_fixed_j2,
+    fixed_payment_mortgage,
+    fixed_rate_mortgage,
+    us_15_year_fixed,
+    us_30_year_fixed,
+    us_actual_360_commercial,
+)
 from mortgagemath._payment import monthly_payment, periodic_payment
 from mortgagemath._schedule import amortization_schedule
 from mortgagemath._types import (
@@ -39,6 +47,12 @@ __all__ = [
     "RateChange",
     "__version__",
     "amortization_schedule",
+    "canada_fixed_j2",
+    "fixed_payment_mortgage",
+    "fixed_rate_mortgage",
     "monthly_payment",
     "periodic_payment",
+    "us_15_year_fixed",
+    "us_30_year_fixed",
+    "us_actual_360_commercial",
 ]
