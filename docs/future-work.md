@@ -145,6 +145,192 @@ fixtures, but have not yet been investigated in depth:
   interest rate (Effektivzinssatz) calculation examples for standard
   "Annuitätendarlehen."
 
+## International fixture research (May 2026)
+
+A broad web search across six countries was conducted to find
+published worked amortization examples suitable as test fixtures.
+All agents were blocked from fetching page content directly, so
+findings come from search result snippets only. **Every source
+below requires manual browser verification before creating a
+fixture.** No numbers should be treated as verified until a human
+visits the URL and confirms the published values per CLAUDE.md
+Rule 4 (Source verification).
+
+### Tier 1: Complete or near-complete schedules (verify first)
+
+These sources had most or all rows confirmed across multiple
+independent search snippets.
+
+**France — expertfiscal.fr (4-year annual annuity)**
+
+- URL: <https://expertfiscal.fr/pret-amortissable-annuites-constantes-calcul/>
+- Parameters: €100,000 / 5% / 4 years / annual payments
+- Annuity: €28,201.18
+- All 4 rows appeared in search snippets (year 1: interest
+  €5,000.00, amort €23,201.18, CRD €76,798.82; through year 4:
+  CRD €0). Same example confirmed on public.iutenligne.net and
+  jybaudot.fr.
+- Source type: commercial educational site. Annual periods, not
+  monthly.
+
+**Netherlands — Dutch Wikipedia "Annuïteitenlening" (CC-BY-SA)**
+
+- URL: <https://nl.wikipedia.org/wiki/Annu%C3%AFteitenlening>
+- Parameters: €100,000 / 4% / 10 years / annual payments
+- Annuity: €12,329.09
+- ~8 of 10 rows confirmed in search snippets (year 1: interest
+  €4,000.00, repayment €8,329.09, remaining €91,670.91; through
+  year 9: remaining €11,853.56).
+- CC-BY-SA 4.0 license — strongest licensing of any source found.
+  Annual periods, not monthly.
+
+**Denmark — Vestergaard teacher notes PDF (6-year annual annuity)**
+
+- URL: <https://www.matematikfysik.dk/mat/noter_tillaeg/tillaeg_annuitetsregning.pdf>
+- Parameters: 25,000 kr / 20% / 6 years / annual payments
+- Payment (ydelse): 7,518 kr
+- All 6 rows confirmed across multiple search snippets (year 1:
+  interest 5,000, afdrag 2,518, restgaeld 22,482; through year 6:
+  restgaeld 0).
+- Freely downloadable PDF. Rounded to whole kr (no øre). The 20%
+  rate is pedagogical, not realistic.
+
+**Italy — University of Cagliari PDF (6-year annual annuity)**
+
+- URL: <https://web.unica.it/static/resources/cms/documents/2Ripassodimatematicafinanziaria_1.pdf>
+- Parameters: €100,000 / 5% / 6 years / annual payments
+- Payment (rata): €19,701.75
+- ~5 of 6 rows confirmed in a search snippet (year 1: quota
+  interessi €5,000.00, quota capitale €14,701.75, debito residuo
+  €85,298.25; through year 6: debito residuo €0). Same example
+  appears in Sapienza University (Palestini) slides at
+  <https://memotef.web.uniroma1.it/sites/default/files/file%20lezioni/Slides%20MF%202017%20ammortamento.pdf>.
+- Potential 1-cent ambiguity in year 2 quota capitale (15,436.83
+  vs 15,436.84 across sources) — needs resolution by reading the
+  PDF.
+
+### Tier 2: Monthly schedules (partial row confirmation)
+
+**France — MoneyVox (12-month monthly with assurance)**
+
+- URL: <https://www.moneyvox.fr/credit/tableau-amortissement.php>
+- Parameters: €10,000 / 5% / 12 months / monthly; assurance
+  0.35% = €2.92/month
+- Mensualité hors assurance: €856.07
+- 3 full rows confirmed (month 1: interest €41.67, capital amorti
+  €814.40, CRD €9,185.60; month 2: interest €38.27, capital
+  amorti €817.80, CRD €8,367.80; month 3: interest €34.87, CRD
+  €7,546.60). Interest for months 4–7 also confirmed (€31.44,
+  €28.00, €24.53, €21.04).
+- The assurance column (€2.92/mo on initial capital) is exactly
+  the ``fee_per_period`` pattern. If the full 12-row table can be
+  confirmed, this could be a trigger source for the
+  ``fee-per-period-wip`` branch — though it is a commercial site,
+  not a regulator or textbook.
+
+**France — Wikipedia fr "Amortissement (finance)" (CC-BY-SA)**
+
+- URL: <https://fr.wikipedia.org/wiki/Amortissement_(finance)>
+- Parameters: €1,000 / 12% / 12 months / monthly
+- Mensualité: €88.84; total interest: €66.08
+- Only the payment anchor and total interest confirmed via search.
+  The page reportedly contains a full 12-row table — needs manual
+  verification. CC-BY-SA license.
+
+**Netherlands — Fortus.nl (30-year monthly)**
+
+- URL: <https://fortus.nl/kennisbank/rente-en-aflossing-berekenen/>
+- Parameters: €200,000 / 3.5% / 30 years / monthly
+- Monthly payment: €898.09
+- 3 rows confirmed (month 1: interest €583.33, repayment €314.76,
+  remaining €199,685.24; month 3: interest €581.49, remaining
+  €199,052.97). Unknown how many rows the page publishes.
+
+**Japan — JHF Flat 35 (30-year monthly, single-anchor)**
+
+- URL: <https://www.flat35.com/hajimete/atoz/04.html>
+- Parameters: ¥20,000,000 / 1.5% / 30 years / monthly
+- Payment: ¥69,024
+- Confirmed across multiple independent sources. Government-
+  affiliated (JHF). Unknown whether the page shows a row-level
+  schedule or only the summary comparison.
+
+**Japan — Aeon Bank (35-year monthly)**
+
+- URL: <https://www.aeonbank.co.jp/column/mortgageloan/kinri/keisan/>
+- Parameters: ¥30,000,000 / 1.5% / 35 years / monthly
+- Payment: ¥91,855 (ganri kinto / annuity)
+- First-month interest ¥37,500 confirmed. Also shows gankin kinto
+  (serial) first month payment ¥108,928.
+
+### Tier 3: Single-anchor / partial data
+
+- **South Korea — Banksalad**: ₩100,000,000 / 5% / 20yr =
+  ₩659,956/mo. Months 1 and 16 confirmed. URL:
+  <https://www.banksalad.com/articles/%EC%9B%90%EA%B8%88-%EA%B7%A0%EB%93%B1-%EC%83%81%ED%99%98-vs-%EC%9B%90%EB%A6%AC%EA%B8%88-%EA%B7%A0%EB%93%B1-%EC%83%81%ED%99%98-%EB%82%98%EC%97%90%EA%B2%8C-%EB%A7%9E%EB%8A%94-%EB%8C%80%EC%B6%9C%EC%83%81%ED%99%98-%EC%A0%84%EB%9E%B5%EC%9D%80>
+- **South Korea — KB Capital**: ₩100,000,000 / 3.8% / 96mo =
+  ₩1,209,646/mo. Payment anchor only. URL:
+  <https://m.kbcapital.co.kr/aboutus/cmpgdnc/finLifeDtl.kbc?blbdSeqno=107839>
+- **Denmark — mfgy.dk / RegneRegler.dk**: 12,000 kr / 5% / 4yr
+  annual = 3,384.14 kr. 2 rows confirmed. URLs:
+  <https://sites.google.com/mfgy.dk/matematikb-niveau/5-procent-og-penge/5-8-annuitetsl%C3%A5n>
+  and <https://regneregler.dk/annuitetslaan/>
+- **Italy — andreailmatematico.it**: €50,000 / 10% / 4yr annual
+  = €15,773.54. 2 rows confirmed. URL:
+  <https://andreailmatematico.it/matematica-finanziaria/piani-ammortamento/piano-di-ammortamento-francese-rata-costante/>
+- **Italy — Younited Credit (ammortamento italiano / serial)**:
+  €10,000 / 4% / 5yr annual = constant principal €2,000. All 5
+  rows confirmed but this is serial amortization. URL:
+  <https://it.younited-credit.com/glossario/ammortamento-italiano>
+
+### Tier 4: Promising PDFs needing manual download
+
+These are freely downloadable but could not be fetched by agents.
+
+- **South Korea** — KOCW Hansung University lecture (real estate
+  finance): <http://kocw-n.xcache.kinxcdn.com/data/document/2023/hansung/leeyoungman0115/9-1.pdf>
+- **Italy** — Sapienza MEMOTEF (Palestini slides):
+  <https://memotef.web.uniroma1.it/sites/default/files/file%20lezioni/Slides%20MF%202017%20ammortamento.pdf>
+- **Italy** — AssoCTU Excel worked example:
+  <https://www.assoctu.it/fileadmin/AssoCTU/upload/eventi/documenti/PATTI_2017/Esempio_ammortamento_alla_francese.xlsx>
+- **Denmark** — Auerbach "Renter og annuiteter" (45,000 kr /
+  5.6% / 7yr):
+  <https://www.mathematicus.dk/matematik/kernestof/Renter_og_annuiteter.pdf>
+- **Denmark** — Jakobsen & Svenstrup, Aarhus University (Danish
+  bond schedules):
+  <http://droek2.svenstrup.net/Notater/cashflow.pdf>
+- **France** — IUT en ligne (Paronneau, €12,567 / 5.1% / 7yr):
+  <https://public.iutenligne.net/mathematiques/mathematiques-financieres/paronneau/amortissements/Chapitre-4/index.html>
+
+### Rounding conventions by country
+
+| Country | Convention | Source |
+|---------|-----------|--------|
+| Japan | Truncation (切り捨て / floor) to yen | Flat 35 / bank practice |
+| South Korea | Truncation (절사 / floor) below 1 won | FSS calculator documentation |
+| France / Italy / Netherlands | Standard rounding to cent (likely ROUND_HALF_UP) | Various |
+| Denmark | Varies; some sources round to whole kr, others to øre | Vestergaard (whole kr), mfgy.dk (øre) |
+
+Japan and South Korea both use truncation, not ROUND_HALF_UP. If
+these countries become fixture targets, a ``ROUND_DOWN`` / floor
+rounding mode may be needed in the library.
+
+### Recommended manual verification priority
+
+1. **Dutch Wikipedia** — CC-BY-SA, likely complete 10-row table,
+   trivially verifiable in any browser.
+2. **French Wikipedia** — CC-BY-SA, check if the "Amortissement
+   (finance)" page has a full 12-month table.
+3. **expertfiscal.fr** — all 4 rows already confirmed in search
+   snippets; visit page to transcribe exact values.
+4. **MoneyVox** — if full 12-row table + assurance column confirmed,
+   potential ``fee_per_period`` trigger source.
+5. **University of Cagliari PDF** — download and verify 6-row table;
+   resolve the 1-cent ambiguity.
+6. **Vestergaard Danish PDF** — download and verify 6-row table.
+7. **JHF Flat 35 page** — check whether row-level schedule data
+   exists (would be first Japanese fixture).
+
 ### Other sections
 
 - See "Actual/360 commercial loans" below.
