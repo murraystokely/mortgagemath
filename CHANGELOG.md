@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`docs/vignettes/pandas.qmd`) demonstrating how to convert amortization
   schedules into `pandas.DataFrame` objects for vectorized analysis and
   plotting with `matplotlib`.
+- **Optional `examples` dependency extra.** Added `[project.optional-dependencies]`
+  extra `examples` including `matplotlib`, `pandas`, and `numpy` to support
+  the visualization and data science integration examples.
 - **Plot generation script.** A utility at `docs/vignettes/scripts/generate_plot.py`
   that uses the library and pandas to generate the `pandas_plot.png`
   demonstration image used in the README.
