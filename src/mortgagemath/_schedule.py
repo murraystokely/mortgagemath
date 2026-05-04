@@ -147,7 +147,7 @@ def _schedule_thirty_360(loan: LoanParams) -> list[Installment]:
 
 
 def _schedule_serial(loan: LoanParams) -> list[Installment]:
-    """Serial (Constant Principal) amortization schedule.
+    """Generate a Serial (Constant Principal) amortization schedule.
 
     Common in Nordic countries (Swedish "Rak amortering"). The principal
     payment is constant every period, and the interest decreases.
@@ -178,10 +178,7 @@ def _schedule_serial(loan: LoanParams) -> list[Installment]:
     for i in range(1, total_payments + 1):
         interest = (balance * periodic_rate).quantize(_PENNY, rounding=interest_rounding)
 
-        if i == total_payments:
-            principal_slice = balance
-        else:
-            principal_slice = principal_pmt
+        principal_slice = balance if i == total_payments else principal_pmt
 
         payment = principal_slice + interest
         balance -= principal_slice
@@ -249,9 +246,7 @@ def _schedule_thirty_360_round_each(loan: LoanParams) -> list[Installment]:
         elif io_payments > 0 and i == io_payments + 1:
             # End of interest-only period: recast the level payment.
             remaining = total_payments - io_payments
-            _, pmt = _recast_payment_pair(
-                balance, periodic_rate, remaining, loan.payment_rounding
-            )
+            _, pmt = _recast_payment_pair(balance, periodic_rate, remaining, loan.payment_rounding)
 
         interest = (balance * periodic_rate).quantize(_PENNY, rounding=interest_rounding)
 
@@ -404,7 +399,9 @@ def _schedule_thirty_360_carry_precision(loan: LoanParams) -> list[Installment]:
         else:
             is_scheduled_final = i == total_payments and fully_amortizing
             will_pay_off_early = (
-                (not is_scheduled_final) and fully_amortizing and (pmt_raw - interest_raw >= balance)
+                (not is_scheduled_final)
+                and fully_amortizing
+                and (pmt_raw - interest_raw >= balance)
             )
 
             if is_scheduled_final or will_pay_off_early:
