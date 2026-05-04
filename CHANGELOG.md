@@ -18,7 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   most users need first.
 - **Agent guidance now requires changelog entries for changes.**
   `CLAUDE.md` documents that branch changes should update
-  `CHANGELOG.md` under `[Unreleased]` before review.
+  `CHANGELOG.md` under `[Unreleased]` before review, and that PRs
+  should run the same formatting, lint, type-check, and test gates
+  expected by pre-commit/CI.
 
 ## [0.6.1] - 2026-05-03
 

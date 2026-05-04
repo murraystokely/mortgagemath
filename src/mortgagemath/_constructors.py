@@ -117,9 +117,7 @@ def canada_fixed_j2(
     """
     amortization_months = _years_to_months(amortization_years, "amortization_years")
     term_months = (
-        amortization_months
-        if term_years is None
-        else _years_to_months(term_years, "term_years")
+        amortization_months if term_years is None else _years_to_months(term_years, "term_years")
     )
     amortization_period_months = None if term_years is None else amortization_months
     return LoanParams(
