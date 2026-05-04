@@ -118,7 +118,7 @@ Because `mortgagemath` returns pure Python dataclasses mapping directly to numer
 You can easily convert an amortization schedule into a `pandas.DataFrame` to do vectorized analysis, date math, or plot the results with `matplotlib`.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/murraystokely/mortgagemath/main/pandas_plot.png" alt="Pandas Plot" width="600">
+  <img src="pandas_plot.png" alt="Pandas Plot" width="600">
 </p>
 
 ```python

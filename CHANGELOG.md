@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Pandas and Data Visualization vignette.** A new documentation vignette
+  (`docs/vignettes/pandas.qmd`) demonstrating how to convert amortization
+  schedules into `pandas.DataFrame` objects for vectorized analysis and
+  plotting with `matplotlib`.
+- **Plot generation script.** A utility at `docs/vignettes/scripts/generate_plot.py`
+  that uses the library and pandas to generate the `pandas_plot.png`
+  demonstration image used in the README.
+- **SUGGESTIONS.md moved to docs/.** Relocated the architecture review and
+  global mortgage research suggestions to `docs/SUGGESTIONS.md`.
 - **Convenience constructors for common mortgage configurations.**
   `fixed_rate_mortgage(...)`, `us_30_year_fixed(...)`,
   `us_15_year_fixed(...)`, `canada_fixed_j2(...)`,
