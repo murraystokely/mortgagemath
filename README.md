@@ -151,7 +151,7 @@ See the **[Pandas and Data Visualization](docs/vignettes/rendered/pandas.pdf)** 
 
 ## What's validated
 
-38 fully published amortization tables from government regulatory
+41 fully published amortization tables from government regulatory
 documents, GSE servicing guides, and academic textbooks, exercised
 by a test suite of more than 300 tests that runs on every push and
 every release. Every committed fixture cell reproduces its source
@@ -179,7 +179,7 @@ than forced into the corpus. The sources span:
 
 See the **[Validation
 vignette](docs/vignettes/rendered/validation.pdf)** for the full
-38-fixture × 8-parameter matrix and bibliography, generated
+41-fixture × 8-parameter matrix and bibliography, generated
 directly from the fixture `[source]` blocks.
 
 ## Documentation

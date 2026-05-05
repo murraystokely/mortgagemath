@@ -289,6 +289,14 @@ opening or updating a PR. All commands above assume ``uv sync
   (3) ``docs/sphinx/api.md`` if it adds a public function/class,
   (4) the relevant vignette in ``docs/vignettes/`` if it adds a
   user-visible capability. Missing any of these is a review blocker.
+- **Fixture counts must be consistent.** When adding or removing
+  fixtures, update the count in ALL of these locations:
+  (1) ``README.md`` (appears in the feature bullet AND the
+  "What's validated" paragraph AND the Validation vignette link),
+  (2) ``docs/sphinx/index.md``,
+  (3) ``docs/sphinx/vignettes.md``.
+  Grep for the old count number across the repo before committing
+  to ensure no stale references remain.
 - Before opening or updating a PR, run the local gates documented
   in §"Development environment setup" above. If ``pre-commit`` is
   installed, ``uv run pre-commit run --all-files`` covers everything
