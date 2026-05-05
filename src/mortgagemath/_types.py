@@ -347,10 +347,11 @@ class LoanParams:
             raise ValueError(
                 f"interest_only_months must be non-negative, got {self.interest_only_months}"
             )
-        if self.interest_only_months > self.term_months:
+        if self.interest_only_months >= self.term_months:
             raise ValueError(
                 f"interest_only_months ({self.interest_only_months}) "
-                f"cannot exceed term_months ({self.term_months})"
+                f"must be less than term_months ({self.term_months}). "
+                f"A fully IO loan with no amortization period is not supported."
             )
         if (self.interest_only_months * ppy) % 12 != 0:
             raise ValueError(

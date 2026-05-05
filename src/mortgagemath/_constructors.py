@@ -145,7 +145,6 @@ def canada_accelerated_biweekly(
     annual_rate: Decimal | int | str,
     *,
     amortization_years: int = 25,
-    term_years: int | None = None,
     payment_rounding: PaymentRounding = PaymentRounding.ROUND_HALF_UP,
     interest_rounding: PaymentRounding = PaymentRounding.ROUND_HALF_UP,
     balance_tracking: BalanceTracking = BalanceTracking.ROUND_EACH,
@@ -163,7 +162,6 @@ def canada_accelerated_biweekly(
         principal,
         annual_rate,
         amortization_years=amortization_years,
-        term_years=term_years,
         payment_frequency=PaymentFrequency.MONTHLY,
         payment_rounding=payment_rounding,
         interest_rounding=interest_rounding,
@@ -174,12 +172,11 @@ def canada_accelerated_biweekly(
     m_pmt = periodic_payment(base_loan)
     acc_pmt = (m_pmt / Decimal("2")).quantize(Decimal("0.01"), rounding=decimal.ROUND_HALF_UP)
 
-    # 3. Return the bi-weekly loan with the override.
+    # 3. Return the bi-weekly loan with the full amortization term + override.
     return LoanParams(
         principal=base_loan.principal,
         annual_rate=base_loan.annual_rate,
         term_months=base_loan.term_months,
-        amortization_period_months=base_loan.amortization_period_months,
         payment_rounding=payment_rounding,
         interest_rounding=interest_rounding,
         balance_tracking=balance_tracking,
