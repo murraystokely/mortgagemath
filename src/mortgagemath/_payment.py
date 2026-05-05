@@ -103,17 +103,9 @@ def periodic_payment(loan: LoanParams) -> Decimal:
     # express in the dataclass.
     if loan.principal <= 0:
         raise ValueError(f"principal must be positive, got {loan.principal}")
-    if loan.annual_rate <= 0:
-        raise ValueError(
-            f"annual_rate must be positive, got {loan.annual_rate}. "
-            f"For zero-interest loans, the closed-form annuity formula "
-            f"is undefined; compute principal/term_months yourself."
-        )
-    # When the user has pinned the payment, return it directly.  The
-    # historical "given-payment, find-term" convention (FHLBB Federal
-    # Home Loan Bank Review, March 1935) chose a round payment as the
-    # input and derived the term + final-row trueup; the closed-form
-    # value is not the published anchor for these schedules.
+    if loan.annual_rate < 0:
+        raise ValueError(f"annual_rate must be non-negative, got {loan.annual_rate}")
+    # When the user has pinned the payment, return it directly.
     if loan.payment_override is not None:
         return loan.payment_override
     if loan.day_count not in (DayCount.THIRTY_360, DayCount.ACTUAL_360):  # pragma: no cover
@@ -122,12 +114,23 @@ def periodic_payment(loan: LoanParams) -> Decimal:
     rounding = _ROUNDING_MAP[loan.payment_rounding]
     r = _periodic_rate(loan)
     n = loan._amort_payments
+    unit = loan.currency_unit
+
+    if loan.interest_only_months > 0:
+        # Initial payment is interest-only.
+        return (loan.principal * r).quantize(unit, rounding=rounding)
+
+    if r == 0:
+        # For zero-interest loans, the annuity formula is undefined.
+        # Simple division: principal / total payments.
+        return (loan.principal / n).quantize(unit, rounding=rounding)
+
     with localcontext() as ctx:
         ctx.prec = 50
         factor = (_ONE + r) ** n
         payment = loan.principal * r * factor / (factor - _ONE)
 
-    return payment.quantize(loan.currency_unit, rounding=rounding)
+    return payment.quantize(unit, rounding=rounding)
 
 
 # Permanent alias preserved from v0.2.x. ``monthly_payment`` is exactly

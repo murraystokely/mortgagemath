@@ -59,6 +59,7 @@ def _loan_from_toml(toml_data: dict) -> LoanParams:
         currency_unit=Decimal(currency_unit_str)
         if currency_unit_str is not None
         else Decimal("0.01"),
+        interest_only_months=loan.get("interest_only_months", 0),
     )
 
 

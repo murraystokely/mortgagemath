@@ -144,20 +144,17 @@ class TestMonthlyPayment:
                 )
             )
 
-    def test_zero_rate_raises(self):
-        """Closed-form annuity is undefined at r=0; reject explicitly
-        rather than letting Decimal raise InvalidOperation."""
-        with pytest.raises(ValueError, match="annual_rate must be positive"):
-            monthly_payment(
-                LoanParams(
-                    principal=Decimal("12000"),
-                    annual_rate=Decimal("0"),
-                    term_months=12,
-                )
-            )
+    def test_zero_rate_works(self):
+        """Zero interest loans are supported; payment is principal / n."""
+        loan = LoanParams(
+            principal=Decimal("12000"),
+            annual_rate=Decimal("0"),
+            term_months=12,
+        )
+        assert monthly_payment(loan) == Decimal("1000.00")
 
     def test_negative_rate_raises(self):
-        with pytest.raises(ValueError, match="annual_rate must be positive"):
+        with pytest.raises(ValueError, match="annual_rate must be non-negative"):
             monthly_payment(
                 LoanParams(
                     principal=Decimal("12000"),

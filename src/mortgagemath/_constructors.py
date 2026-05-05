@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import decimal
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
+from mortgagemath._payment import periodic_payment
 from mortgagemath._types import (
     BalanceTracking,
     Compounding,
@@ -135,6 +137,55 @@ def canada_fixed_j2(
         balance_tracking=balance_tracking,
         compounding=Compounding.SEMI_ANNUAL,
         payment_frequency=payment_frequency,
+    )
+
+
+def canada_accelerated_biweekly(
+    principal: Decimal | int | str,
+    annual_rate: Decimal | int | str,
+    *,
+    amortization_years: int = 25,
+    term_years: int | None = None,
+    payment_rounding: PaymentRounding = PaymentRounding.ROUND_HALF_UP,
+    interest_rounding: PaymentRounding = PaymentRounding.ROUND_HALF_UP,
+    balance_tracking: BalanceTracking = BalanceTracking.ROUND_EACH,
+) -> LoanParams:
+    """Return ``LoanParams`` for a Canadian Accelerated Bi-Weekly mortgage.
+
+    Calculated by taking the standard monthly ``j_2`` payment, dividing
+    it by two, and applying that amount every two weeks (26 times per
+    year). This results in approximately one extra monthly payment per
+    year, paying the loan off significantly faster than a 25-year
+    monthly schedule.
+    """
+    # 1. Construct the base monthly loan to find the standard payment.
+    base_loan = canada_fixed_j2(
+        principal,
+        annual_rate,
+        amortization_years=amortization_years,
+        term_years=term_years,
+        payment_frequency=PaymentFrequency.MONTHLY,
+        payment_rounding=payment_rounding,
+        interest_rounding=interest_rounding,
+        balance_tracking=balance_tracking,
+    )
+
+    # 2. Derive the accelerated payment: monthly / 2.
+    m_pmt = periodic_payment(base_loan)
+    acc_pmt = (m_pmt / Decimal("2")).quantize(Decimal("0.01"), rounding=decimal.ROUND_HALF_UP)
+
+    # 3. Return the bi-weekly loan with the override.
+    return LoanParams(
+        principal=base_loan.principal,
+        annual_rate=base_loan.annual_rate,
+        term_months=base_loan.term_months,
+        amortization_period_months=base_loan.amortization_period_months,
+        payment_rounding=payment_rounding,
+        interest_rounding=interest_rounding,
+        balance_tracking=balance_tracking,
+        compounding=Compounding.SEMI_ANNUAL,
+        payment_frequency=PaymentFrequency.BIWEEKLY,
+        payment_override=acc_pmt,
     )
 
 

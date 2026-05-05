@@ -8,6 +8,7 @@ from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _version
 
 from mortgagemath._constructors import (
+    canada_accelerated_biweekly,
     canada_fixed_j2,
     fixed_payment_mortgage,
     fixed_rate_mortgage,
@@ -47,6 +48,7 @@ __all__ = [
     "RateChange",
     "__version__",
     "amortization_schedule",
+    "canada_accelerated_biweekly",
     "canada_fixed_j2",
     "fixed_payment_mortgage",
     "fixed_rate_mortgage",
