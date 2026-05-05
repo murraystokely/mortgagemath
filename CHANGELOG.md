@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Currency unit precision.** New ``LoanParams.currency_unit`` field
+  (default ``Decimal("0.01")``) controls the quantization unit for all
+  monetary amounts. Set to ``Decimal("1")`` for zero-decimal currencies
+  like JPY or KRW. All existing behavior is unchanged.
+- **``ROUND_DOWN`` rounding mode.** ``PaymentRounding.ROUND_DOWN``
+  (truncation / floor) is the convention used by Japanese banks
+  (切り捨て) and the Korean FSS (절사).
+- **2 new international fixtures.** MoneyVox France (first French
+  fixture: €10,000 / 5% / 12 months, full 12-row schedule matching
+  cell-for-cell) and JHF Flat 35 Japan (first Japanese fixture:
+  ¥20,000,000 / 1.5% / 30 years, single-anchor payment). Total
+  fixture count is now 38.
 - **Pandas and Data Visualization vignette.** A new documentation vignette
   (`docs/vignettes/pandas.qmd`) demonstrating how to convert amortization
   schedules into `pandas.DataFrame` objects for vectorized analysis and

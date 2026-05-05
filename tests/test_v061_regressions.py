@@ -157,7 +157,7 @@ def test_payment_override_must_be_positive() -> None:
 
 
 def test_payment_override_must_be_cent_denominated() -> None:
-    with pytest.raises(ValueError, match="whole cents"):
+    with pytest.raises(ValueError, match="whole currency units"):
         LoanParams(
             principal=Decimal("1000"),
             annual_rate=Decimal("5"),

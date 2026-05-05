@@ -11,7 +11,6 @@ from mortgagemath._types import (
     PaymentRounding,
 )
 
-_PENNY = Decimal("0.01")
 _ONE = Decimal("1")
 _TWO = Decimal("2")
 _HUNDRED = Decimal("100")
@@ -21,6 +20,7 @@ _ROUNDING_MAP = {
     PaymentRounding.ROUND_UP: decimal.ROUND_UP,
     PaymentRounding.ROUND_HALF_UP: decimal.ROUND_HALF_UP,
     PaymentRounding.ROUND_HALF_EVEN: decimal.ROUND_HALF_EVEN,
+    PaymentRounding.ROUND_DOWN: decimal.ROUND_DOWN,
 }
 
 
@@ -92,7 +92,7 @@ def periodic_payment(loan: LoanParams) -> Decimal:
         loan: Loan parameters.
 
     Returns:
-        Periodic P&I payment rounded to the nearest cent.
+        Periodic P&I payment rounded to the loan's currency unit.
 
     Raises:
         ValueError: If principal, term_months, or annual_rate is not
@@ -128,7 +128,7 @@ def periodic_payment(loan: LoanParams) -> Decimal:
         factor = (_ONE + r) ** n
         payment = loan.principal * r * factor / (factor - _ONE)
 
-    return payment.quantize(_PENNY, rounding=rounding)
+    return payment.quantize(loan.currency_unit, rounding=rounding)
 
 
 # Permanent alias preserved from v0.2.x. ``monthly_payment`` is exactly
