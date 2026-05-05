@@ -218,6 +218,15 @@ def _add_loan_args(parser: argparse.ArgumentParser) -> None:
     )
     parser.add_argument("--start-date", type=_parse_date, default=None)
     parser.add_argument("--amortization-period-months", type=int, default=None)
+    parser.add_argument("--interest-only-months", type=int, default=0)
+    parser.add_argument(
+        "--currency-unit",
+        type=Decimal,
+        default=Decimal("0.01"),
+        metavar="UNIT",
+        help="Smallest monetary unit for quantization. Defaults to 0.01; "
+        "use 1 for zero-decimal currencies such as JPY.",
+    )
     parser.add_argument(
         "--balance-tracking",
         choices=[e.value for e in BalanceTracking],
@@ -252,6 +261,16 @@ def _add_loan_args(parser: argparse.ArgumentParser) -> None:
         "the residual. Reproduces the FHLBB 1935 'given-payment, find-term' "
         "convention. Currently incompatible with --rate-change.",
     )
+    parser.add_argument(
+        "--fee-per-period",
+        type=Decimal,
+        default=Decimal("0"),
+        metavar="AMOUNT",
+        help="Flat amount added to each Installment.payment on top of the "
+        "closed-form interest+principal value. Models the modern French "
+        "*assurance emprunteur* loading and the 1852 Credit Foncier "
+        "*annuité* shape. Default 0 (no loading).",
+    )
 
 
 def _params_from_args(args: argparse.Namespace) -> LoanParams:
@@ -269,6 +288,9 @@ def _params_from_args(args: argparse.Namespace) -> LoanParams:
         payment_frequency=PaymentFrequency(args.payment_frequency),
         rate_schedule=tuple(args.rate_change),
         payment_override=args.payment_override,
+        currency_unit=args.currency_unit,
+        interest_only_months=args.interest_only_months,
+        fee_per_period=args.fee_per_period,
     )
 
 
@@ -277,13 +299,21 @@ def _params_from_args(args: argparse.Namespace) -> LoanParams:
 # ---------------------------------------------------------------------------
 
 
-_SCHEDULE_COLUMNS = ("number", "payment", "interest", "principal", "total_interest", "balance")
+_SCHEDULE_COLUMNS = (
+    "number",
+    "payment",
+    "interest",
+    "principal",
+    "fee",
+    "total_interest",
+    "balance",
+)
 
 
 def _emit_schedule_table(loan: LoanParams, out: IO[str]) -> None:
     sched = amortization_schedule(loan)
-    headers = ("#", "Payment", "Interest", "Principal", "Total Int", "Balance")
-    widths = (5, 14, 14, 14, 16, 16)
+    headers = ("#", "Payment", "Interest", "Principal", "Fee", "Total Int", "Balance")
+    widths = (5, 14, 14, 14, 12, 16, 16)
     out.write("  ".join(h.rjust(w) for h, w in zip(headers, widths, strict=True)) + "\n")
     for inst in sched:
         # Data column widths match the header widths above so right-edges align.
@@ -292,6 +322,7 @@ def _emit_schedule_table(loan: LoanParams, out: IO[str]) -> None:
             f"{inst.payment:>14,.2f}  "
             f"{inst.interest:>14,.2f}  "
             f"{inst.principal:>14,.2f}  "
+            f"{inst.fee:>12,.2f}  "
             f"{inst.total_interest:>16,.2f}  "
             f"{inst.balance:>16,.2f}\n"
         )
@@ -308,6 +339,7 @@ def _emit_schedule_csv(loan: LoanParams, out: IO[str]) -> None:
                 str(inst.payment),
                 str(inst.interest),
                 str(inst.principal),
+                str(inst.fee),
                 str(inst.total_interest),
                 str(inst.balance),
             ]
@@ -322,6 +354,7 @@ def _emit_schedule_json(loan: LoanParams, out: IO[str]) -> None:
             "payment": str(inst.payment),
             "interest": str(inst.interest),
             "principal": str(inst.principal),
+            "fee": str(inst.fee),
             "total_interest": str(inst.total_interest),
             "balance": str(inst.balance),
         }

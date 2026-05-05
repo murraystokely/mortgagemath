@@ -91,11 +91,6 @@ These features have been investigated but not shipped, either because
 no verifiable published source was found or because the feature is
 blocked on source retrieval.
 
-- **`fee_per_period`** — flat per-period loading for Crédit Foncier
-  and modern French *assurance emprunteur* schedules. Complete
-  implementation exists on the ``fee-per-period-wip`` branch. Blocked
-  on finding a row-level published source; see CLAUDE.md for trigger
-  sources to watch. (Investigated in v0.6.0 cycle.)
 - **Variable / declining-balance fees** — insurance computed on
   remaining balance ("assurance sur le capital restant dû"), stepped
   insurance schedules, or frais de garantie at a different cadence.
@@ -229,11 +224,8 @@ independent search snippets.
   amorti €817.80, CRD €8,367.80; month 3: interest €34.87, CRD
   €7,546.60). Interest for months 4–7 also confirmed (€31.44,
   €28.00, €24.53, €21.04).
-- The assurance column (€2.92/mo on initial capital) is exactly
-  the ``fee_per_period`` pattern. If the full 12-row table can be
-  confirmed, this could be a trigger source for the
-  ``fee-per-period-wip`` branch — though it is a commercial site,
-  not a regulator or textbook.
+- The full table has since been verified and promoted to the
+  fixture suite as the trigger source for ``fee_per_period``.
 
 **France — Wikipedia fr "Amortissement (finance)" (CC-BY-SA)**
 
@@ -330,12 +322,10 @@ rounding mode may be needed in the library.
    (finance)" page has a full 12-month table.
 3. **expertfiscal.fr** — all 4 rows already confirmed in search
    snippets; visit page to transcribe exact values.
-4. **MoneyVox** — if full 12-row table + assurance column confirmed,
-   potential ``fee_per_period`` trigger source.
-5. **University of Cagliari PDF** — download and verify 6-row table;
+4. **University of Cagliari PDF** — download and verify 6-row table;
    resolve the 1-cent ambiguity.
-6. **Vestergaard Danish PDF** — download and verify 6-row table.
-7. **JHF Flat 35 page** — check whether row-level schedule data
+5. **Vestergaard Danish PDF** — download and verify 6-row table.
+6. **JHF Flat 35 page** — check whether row-level schedule data
    exists (would be first Japanese fixture).
 
 ### Other sections
