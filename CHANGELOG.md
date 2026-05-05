@@ -13,9 +13,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (default ``Decimal("0.01")``) controls the quantization unit for all
   monetary amounts. Set to ``Decimal("1")`` for zero-decimal currencies
   like JPY or KRW. All existing behavior is unchanged.
-- **``ROUND_DOWN`` rounding mode.** ``PaymentRounding.ROUND_DOWN``
-  (truncation / floor) is the convention used by Japanese banks
-  (切り捨て) and the Korean FSS (절사).
 - **2 new international fixtures.** MoneyVox France (first French
   fixture: €10,000 / 5% / 12 months, full 12-row schedule matching
   cell-for-cell) and JHF Flat 35 Japan (first Japanese fixture:

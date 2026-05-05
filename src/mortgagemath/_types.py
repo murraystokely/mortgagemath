@@ -46,14 +46,12 @@ class PaymentRounding(Enum):
     monthly payment amount.  ROUND_HALF_UP (standard rounding) is used
     for monthly interest calculations.  ROUND_HALF_EVEN (banker's rounding)
     is included so fixtures from lenders or worked examples that use it
-    can be modeled.  ROUND_DOWN (truncation / floor) is the convention
-    used by Japanese banks (切り捨て) and the Korean FSS (절사).
+    can be modeled.
     """
 
     ROUND_UP = "ROUND_UP"
     ROUND_HALF_UP = "ROUND_HALF_UP"
     ROUND_HALF_EVEN = "ROUND_HALF_EVEN"
-    ROUND_DOWN = "ROUND_DOWN"
 
 
 class Compounding(Enum):

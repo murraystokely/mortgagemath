@@ -66,7 +66,7 @@ independently verified.
 | `principal`, `annual_rate` | string (Decimal) | Always quote — not a float |
 | `term_months` | integer | |
 | `day_count` | `"30/360"` or `"actual/360"` | |
-| `payment_rounding`, `interest_rounding` | `"ROUND_UP"`, `"ROUND_HALF_UP"`, `"ROUND_HALF_EVEN"`, `"ROUND_DOWN"` | `ROUND_DOWN` is truncation/floor, the convention used by Japanese (切り捨て) and Korean (절사) banks. |
+| `payment_rounding`, `interest_rounding` | `"ROUND_UP"`, `"ROUND_HALF_UP"`, `"ROUND_HALF_EVEN"` | |
 | `start_date` | `"YYYY-MM-DD"` | Required for `actual/360` (issue date / first interest-accrual period); ignored otherwise |
 | `amortization_period_months` | integer | Optional. Set when `>= term_months` for balloon loans (the amortization basis the closed-form payment uses, with a balloon at term). |
 | `balance_tracking` | `"round_each"` (default) or `"carry_precision"` | Round-each-balance is the US-residential-lender convention; carry-precision is Excel-default and used by graduate CRE finance textbooks. Ignored for `actual/360` (always carry-precision). |
