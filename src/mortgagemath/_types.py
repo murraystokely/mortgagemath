@@ -265,6 +265,9 @@ class LoanParams:
             $3,000 / 6% / $30 monthly / 138 full payments + 139th of
             $29.27).  Defaults to ``None`` (use the closed-form value).
             Currently incompatible with non-empty ``rate_schedule``.
+        interest_only_months: Number of months at the start of the loan
+            where only interest is paid. After this period, the loan
+            recasts and amortizes over the remaining term. Defaults to 0.
         currency_unit: The smallest monetary unit for quantization.
             Defaults to ``Decimal("0.01")`` (cents for USD, EUR, GBP,
             etc.).  Set to ``Decimal("1")`` for zero-decimal currencies
@@ -286,6 +289,7 @@ class LoanParams:
     rate_schedule: tuple[RateChange, ...] = ()
     payment_override: Decimal | None = None
     currency_unit: Decimal = _PENNY
+    interest_only_months: int = 0
 
     def __post_init__(self) -> None:
         """Validate cross-field invariants."""
@@ -337,6 +341,23 @@ class LoanParams:
                     f"amortization_period_months={self.amortization_period_months} "
                     f"* payments_per_year={ppy} is not divisible by 12."
                 )
+
+        # interest_only_months validation.
+        if self.interest_only_months < 0:
+            raise ValueError(
+                f"interest_only_months must be non-negative, got {self.interest_only_months}"
+            )
+        if self.interest_only_months >= self.term_months:
+            raise ValueError(
+                f"interest_only_months ({self.interest_only_months}) "
+                f"must be less than term_months ({self.term_months}). "
+                f"A fully IO loan with no amortization period is not supported."
+            )
+        if (self.interest_only_months * ppy) % 12 != 0:
+            raise ValueError(
+                f"interest_only_months={self.interest_only_months} "
+                f"* payments_per_year={ppy} is not divisible by 12."
+            )
 
         # Rate-schedule validation. v0.4.0 ships Tier 1 ARMs (explicit
         # rate-change list) for THIRTY_360 fully-amortizing loans only;

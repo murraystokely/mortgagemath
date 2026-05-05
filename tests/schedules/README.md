@@ -74,6 +74,7 @@ independently verified.
 | `payment_frequency` | `"monthly"` (default), `"semi_monthly"`, `"biweekly"`, `"weekly"`, `"quarterly"`, `"annual"` | Cadence of payments. `term_months * payments_per_year` must be divisible by 12. |
 | `rate_schedule` | array of tables (optional) | ARM rate-change schedule; see below. |
 | `payment_override` | string (Decimal, optional) | Pin the periodic payment to this value; the schedule's final row absorbs the residual. Reproduces the historical "given-payment, find-term" convention (FHLBB 1935 *Review*). Currently incompatible with `rate_schedule`. |
+| `interest_only_months` | integer (optional) | Number of months at the start of the loan where only interest is paid. After this period the loan recasts and amortizes over the remaining term. Default 0. Must be less than `term_months`. |
 | `currency_unit` | string (Decimal, optional) | Smallest monetary unit for quantization. Default `"0.01"` (cents). Set to `"1"` for zero-decimal currencies like JPY or KRW. Must be a positive power of 10 at most 1. |
 
 #### `[[loan.rate_schedule]]` (ARMs)

@@ -1,0 +1,17 @@
+[loan]
+principal = "999"
+annual_rate = "0"
+term_months = 24
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[expected]
+periodic_payment = "41.63"
+
+[source]
+kind = "synthetic"
+short_label = "0% Promo"
+bib_key = "ZeroInterest"
+bib_title = "Zero-Interest Promotional Financing"
+citation = "Synthetic fixture modeling 0% APR promotional financing (e.g. consumer electronics or furniture loans)."
+notes = "Models a $999 loan over 24 months at 0% interest. Monthly payment is 999/24 = 41.625, rounded to 41.63 under ROUND_HALF_UP."

@@ -42,6 +42,10 @@ def _recast_payment_pair(
     and the explicit remaining horizon.
     """
     rounding = _ROUNDING_MAP[payment_rounding]
+    if periodic_rate == 0:
+        raw = balance / remaining_payments
+        return raw, raw.quantize(unit, rounding=rounding)
+
     with localcontext() as ctx:
         ctx.prec = 50
         factor = (_ONE + periodic_rate) ** remaining_payments
@@ -151,6 +155,8 @@ def _schedule_thirty_360_round_each(loan: LoanParams) -> list[Installment]:
     )
     rate_schedule_idx = 0
     unit = loan.currency_unit
+    ppy = loan.payment_frequency.payments_per_year
+    io_payments = (loan.interest_only_months * ppy) // 12
 
     schedule: list[Installment] = [
         Installment(
@@ -183,27 +189,29 @@ def _schedule_thirty_360_round_each(loan: LoanParams) -> list[Installment]:
                 else:
                     pmt = pmt_uncapped
             rate_schedule_idx += 1
+        elif io_payments > 0 and i == io_payments + 1:
+            # End of interest-only period: recast the level payment.
+            remaining = total_payments - io_payments
+            _, pmt = _recast_payment_pair(
+                balance, periodic_rate, remaining, loan.payment_rounding, unit
+            )
 
         interest = (balance * periodic_rate).quantize(unit, rounding=interest_rounding)
 
-        is_scheduled_final = i == total_payments and fully_amortizing
-        # Round-each-balance accounting can pay off a tiny loan early.
-        # Example: $20 / 4.4% / 30yr.  The closed-form payment is $0.10018,
-        # ROUND_UP rounds it to $0.11.  That extra $0.0098/month
-        # accumulates over the schedule; balance crosses zero at month 301
-        # instead of 360.  Without the guard below the schedule kept
-        # generating $0.11 payments against a now-negative balance.  When
-        # the standard payment would amortize the remaining balance in
-        # this row, we treat it as an early payoff: pay exactly the
-        # remaining balance + interest, land balance at $0, truncate.
-        will_pay_off_early = (not is_scheduled_final) and (pmt - interest >= balance)
-
-        if is_scheduled_final or will_pay_off_early:
-            principal_pmt = balance
-            actual_pmt = principal_pmt + interest
+        if i <= io_payments:
+            # Interest-only period.
+            actual_pmt = interest
+            principal_pmt = _ZERO
         else:
-            actual_pmt = pmt
-            principal_pmt = actual_pmt - interest
+            is_scheduled_final = i == total_payments and fully_amortizing
+            will_pay_off_early = (not is_scheduled_final) and (pmt - interest >= balance)
+
+            if is_scheduled_final or will_pay_off_early:
+                principal_pmt = balance
+                actual_pmt = principal_pmt + interest
+            else:
+                actual_pmt = pmt
+                principal_pmt = actual_pmt - interest
 
         balance -= principal_pmt
         total_interest += interest
@@ -219,7 +227,7 @@ def _schedule_thirty_360_round_each(loan: LoanParams) -> list[Installment]:
             )
         )
 
-        if will_pay_off_early:
+        if i > io_payments and will_pay_off_early:
             warnings.warn(
                 f"Loan paid off at period {i} of total_payments={total_payments}; "
                 f"schedule truncated. The {loan.payment_rounding.value} periodic "
@@ -257,6 +265,7 @@ def _schedule_thirty_360_carry_precision(loan: LoanParams) -> list[Installment]:
 
     # Validate via periodic_payment (enforces guards) and reuse rounded display.
     pmt_disp = periodic_payment(loan)
+    pmt_raw = pmt_disp  # Initial value, will be updated if recasting after IO
 
     if loan.payment_override is not None:
         # Override: skip the closed-form derivation entirely and use the
@@ -265,10 +274,12 @@ def _schedule_thirty_360_carry_precision(loan: LoanParams) -> list[Installment]:
     else:
         # Unrounded closed-form payment, carried internally.
         n = loan._amort_payments
-        with localcontext() as ctx:
-            ctx.prec = 50
-            factor = (_ONE + periodic_rate) ** n
-            pmt_raw = (loan.principal * periodic_rate * factor) / (factor - _ONE)
+        r = periodic_rate
+        if r != 0:
+            with localcontext() as ctx:
+                ctx.prec = 50
+                factor = (_ONE + r) ** n
+                pmt_raw = (loan.principal * r * factor) / (factor - _ONE)
 
     fully_amortizing = loan.amortization_period_months is None or (
         loan.amortization_period_months == loan.term_months
@@ -278,6 +289,8 @@ def _schedule_thirty_360_carry_precision(loan: LoanParams) -> list[Installment]:
     total_interest_disp = _ZERO
     rate_schedule_idx = 0
     payment_rounding = _ROUNDING_MAP[loan.payment_rounding]
+    ppy = loan.payment_frequency.payments_per_year
+    io_payments = (loan.interest_only_months * ppy) // 12
 
     schedule: list[Installment] = [
         Installment(
@@ -307,9 +320,6 @@ def _schedule_thirty_360_carry_precision(loan: LoanParams) -> list[Installment]:
                         unit, rounding=payment_rounding
                     )
                     if cap < pmt_uncapped_disp:
-                        # Cap binds: use the cap as both raw and displayed
-                        # payment.  The cap is at cents granularity, so
-                        # subsequent neg-am math uses the cap value exactly.
                         pmt_disp = cap
                         pmt_raw = cap
                     else:
@@ -319,46 +329,43 @@ def _schedule_thirty_360_carry_precision(loan: LoanParams) -> list[Installment]:
                     pmt_disp = pmt_uncapped_disp
                     pmt_raw = pmt_uncapped_raw
             rate_schedule_idx += 1
+        elif io_payments > 0 and i == io_payments + 1:
+            # End of interest-only period: recast the level payment.
+            remaining = total_payments - io_payments
+            pmt_raw, pmt_disp = _recast_payment_pair(
+                balance, periodic_rate, remaining, loan.payment_rounding, unit
+            )
 
         interest_raw = balance * periodic_rate
         interest_disp = interest_raw.quantize(unit, rounding=interest_rounding)
 
-        is_scheduled_final = i == total_payments and fully_amortizing
-
-        # Early-payoff guard for the carry-precision path. Symmetrical
-        # to the round-each guard above: when the level payment (raw)
-        # would amortize the entire remaining balance in this row, we
-        # treat it as an early payoff. Triggered most commonly by an
-        # over-large payment_override but the invariant is general —
-        # any over-payment that would otherwise drive the balance
-        # negative is caught here. Without this guard a $1000 / 5% /
-        # 12mo loan with payment_override=$500 silently produced
-        # negative balances and a negative final-row payment.
-        will_pay_off_early = (
-            (not is_scheduled_final) and fully_amortizing and (pmt_raw - interest_raw >= balance)
-        )
-
-        if is_scheduled_final or will_pay_off_early:
-            # Final payment of a fully amortizing loan: zero balance exactly.
-            if loan.payment_override is not None or will_pay_off_early:
-                # Round-the-total trueup: round the full-precision
-                # (balance + interest) sum once to cents, then derive
-                # principal. Matches FHLBB 1935's published
-                # round-the-total convention and avoids the
-                # round-components-independently drift.
-                actual_pmt_raw = balance + interest_raw
-                actual_pmt = actual_pmt_raw.quantize(unit, rounding=payment_rounding)
-                principal_disp = actual_pmt - interest_disp
-            else:
-                principal_disp = balance.quantize(unit, rounding=interest_rounding)
-                actual_pmt = principal_disp + interest_disp
-            balance = _ZERO
-            balance_disp = _ZERO
+        if i <= io_payments:
+            # Interest-only period.
+            actual_pmt = interest_disp
+            principal_disp = _ZERO
         else:
-            actual_pmt = pmt_disp
-            principal_disp = pmt_disp - interest_disp
-            balance -= pmt_raw - interest_raw  # carry full precision
-            balance_disp = balance.quantize(unit, rounding=interest_rounding)
+            is_scheduled_final = i == total_payments and fully_amortizing
+            will_pay_off_early = (
+                (not is_scheduled_final)
+                and fully_amortizing
+                and (pmt_raw - interest_raw >= balance)
+            )
+
+            if is_scheduled_final or will_pay_off_early:
+                if loan.payment_override is not None or will_pay_off_early:
+                    actual_pmt_raw = balance + interest_raw
+                    actual_pmt = actual_pmt_raw.quantize(unit, rounding=payment_rounding)
+                    principal_disp = actual_pmt - interest_disp
+                else:
+                    principal_disp = balance.quantize(unit, rounding=interest_rounding)
+                    actual_pmt = principal_disp + interest_disp
+                balance = _ZERO
+                balance_disp = _ZERO
+            else:
+                actual_pmt = pmt_disp
+                principal_disp = pmt_disp - interest_disp
+                balance -= pmt_raw - interest_raw  # carry full precision
+                balance_disp = balance.quantize(unit, rounding=interest_rounding)
 
         total_interest_disp += interest_disp
 
@@ -369,11 +376,11 @@ def _schedule_thirty_360_carry_precision(loan: LoanParams) -> list[Installment]:
                 interest=interest_disp,
                 principal=principal_disp,
                 total_interest=total_interest_disp,
-                balance=balance_disp,
+                balance=balance if i <= io_payments else balance_disp,
             )
         )
 
-        if will_pay_off_early:
+        if i > io_payments and will_pay_off_early:
             warnings.warn(
                 f"Loan paid off at period {i} of total_payments={total_payments}; "
                 f"schedule truncated. The level payment {pmt_disp} (or "
@@ -421,6 +428,8 @@ def _schedule_actual_360(loan: LoanParams) -> list[Installment]:
 
     balance = loan.principal  # full-precision Decimal
     total_interest_disp = _ZERO
+    ppy = loan.payment_frequency.payments_per_year
+    io_payments = (loan.interest_only_months * ppy) // 12
 
     schedule: list[Installment] = [
         Installment(
@@ -443,10 +452,23 @@ def _schedule_actual_360(loan: LoanParams) -> list[Installment]:
         period_month = (sd.month - 1 + i - 1) % 12 + 1
         days = calendar.monthrange(period_year, period_month)[1]
 
+        if io_payments > 0 and i == io_payments + 1:
+            # End of interest-only period: recast the level payment.
+            remaining_n = n - io_payments
+            if r == 0:
+                pmt_raw = balance / Decimal(remaining_n)
+            else:
+                factor = (_ONE + r) ** remaining_n
+                pmt_raw = (balance * r * factor) / (factor - _ONE)
+            pmt_disp = pmt_raw.quantize(unit, rounding=_ROUNDING_MAP[loan.payment_rounding])
+
         interest_raw = balance * annual_rate * Decimal(days) / Decimal(360)
         interest_disp = interest_raw.quantize(unit, rounding=interest_rounding)
 
-        if i == loan.term_months and fully_amortizing:
+        if i <= io_payments:
+            actual_pmt = interest_disp
+            principal_disp = _ZERO
+        elif i == loan.term_months and fully_amortizing:
             # Final payment of a fully amortizing loan: zero balance exactly.
             principal_disp = balance.quantize(unit, rounding=interest_rounding)
             actual_pmt = principal_disp + interest_disp
@@ -467,7 +489,7 @@ def _schedule_actual_360(loan: LoanParams) -> list[Installment]:
                 interest=interest_disp,
                 principal=principal_disp,
                 total_interest=total_interest_disp,
-                balance=balance_disp,
+                balance=balance if i <= io_payments else balance_disp,
             )
         )
 

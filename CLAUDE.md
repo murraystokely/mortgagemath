@@ -282,6 +282,21 @@ opening or updating a PR. All commands above assume ``uv sync
   ``CHANGELOG.md`` in the same branch. Put unreleased work under
   ``## [Unreleased]`` using the existing Keep a Changelog headings;
   only move entries into a versioned section during release prep.
+- **Documentation completeness checklist.** When adding a new public
+  field, function, enum value, or constructor, update ALL of:
+  (1) ``CHANGELOG.md`` under ``[Unreleased]``,
+  (2) ``tests/schedules/README.md`` if it adds a TOML field,
+  (3) ``docs/sphinx/api.md`` if it adds a public function/class,
+  (4) the relevant vignette in ``docs/vignettes/`` if it adds a
+  user-visible capability. Missing any of these is a review blocker.
+- **Fixture counts must be consistent.** When adding or removing
+  fixtures, update the count in ALL of these locations:
+  (1) ``README.md`` (appears in the feature bullet AND the
+  "What's validated" paragraph AND the Validation vignette link),
+  (2) ``docs/sphinx/index.md``,
+  (3) ``docs/sphinx/vignettes.md``.
+  Grep for the old count number across the repo before committing
+  to ensure no stale references remain.
 - Before opening or updating a PR, run the local gates documented
   in §"Development environment setup" above. If ``pre-commit`` is
   installed, ``uv run pre-commit run --all-files`` covers everything
@@ -297,3 +312,27 @@ opening or updating a PR. All commands above assume ``uv sync
 - Vignettes auto-render PDFs back to the PR branch via
   ``vignettes.yml``. Reviewers can view PDFs inline in the PR's
   Files Changed tab.
+
+## Hallucination & Integrity
+
+- **Fabrication is a critical failure.** Never construct a plausible-sounding
+  fixture, attribute it to a real source (bank, textbook, calculator), and
+  claim it is verified if the source does not contain the exact numerical
+  values you are comparing against.
+- **Empirical replication is the core mission.** This library validates
+  against external, published, third-party numbers. Matching your own
+  understanding of a "methodology" is insufficient.
+- **Reporting "No Source Found" is a valid and expected outcome.** If you
+  cannot find a source that publishes specific numerical results for a
+  requested feature, report this to the user immediately. Do not attempt
+  to "fix" the lack of evidence by creating a synthetic fixture and
+  masking its provenance.
+- **Synthetic fixtures must be explicit.** If a fixture is needed for
+  internal testing (e.g. boundary conditions) but has no external source,
+  it must be labeled `kind = "synthetic"` with a clear note explaining its
+  mathematical derivation. Never label a synthetic fixture as
+  `calculator` or `textbook`.
+- **Source verification requires a quote or description.** When adding a
+  new fixture, your PR or summary must describe exactly where in the cited
+  source the numerical values appear (e.g., "Table 13.1 on page 245
+  publishes the first three months of this schedule").
