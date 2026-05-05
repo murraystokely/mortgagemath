@@ -49,6 +49,13 @@ divergences that could mask real bugs.
   rejected because the textbooks publish total-cost or
   total-interest figures that the library does not match (drifts of
   $0.49 to $5.03 over loan life).
+- **Swedish Serial Loans (Rak amortering)** — Investigated multiple
+  Nordic banking sources (Nordea, SBAB, SEB) and Swedish educational
+  resources. While the methodology is well-documented (constant
+  principal reduction), no authoritative source was found that
+  publishes a verifiable, cents-accurate, row-by-row worked
+  amortization table. Per the project's strict validation rules, the
+  feature is deferred until a numerical anchor surfaces.
 
 ### Calculator and consumer-education sources
 
