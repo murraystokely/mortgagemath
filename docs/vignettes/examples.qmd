@@ -532,26 +532,47 @@ wrong.
 
 # France
 
-The 1852 Crédit Foncier de France structure embeds an
-administrative loading (frais d'administration + fonds de
-réserve + impôt = 0.50 fr. per 100 fr. principal per year on a
-5.50-fr. interest+amortization base) into the published *annuité*
-of 6.00 fr. per 100 fr. — a structure the library's pure
-interest+principal model cannot, at present, reproduce.
-Modern French *tableaux d'amortissement* by contrast separate
-*capital amorti*, *intérêts*, and *assurance emprunteur* into
-distinct columns; the *capital + intérêts* slice is matchable
-under the library's existing closed-form at standard nominal
-rates with no extension.
+## MoneyVox tableau d'amortissement (12-month monthly)
 
-A planned `fee_per_period` field on `LoanParams` (see
-*History* §10) would let the library reproduce CF-style combined
-*annuités* and any modern French published table that shows only
-a *total échéance* with insurance loaded in. Shipping the
-feature is conditional on first retrieving one verifiable
-row-level CF or modern-French source the library can match
-cell-for-cell. No France fixture currently ships in
-`mortgagemath`.
+**Scenario.** A worked example from MoneyVox, one of France's
+largest personal finance sites. €10,000 at 5% over 12 monthly
+payments. The source publishes a full *tableau d'amortissement*
+with separate columns for *capital amorti*, *intérêts*, and
+*assurance emprunteur* (0.35% on initial capital = €2.92/month).
+This fixture validates the pure P+I schedule (hors assurance);
+all 12 rows match the library cell-for-cell.
+
+```{python}
+fr_loan = LoanParams(
+    principal=Decimal("10000"),
+    annual_rate=Decimal("5"),
+    term_months=12,
+    payment_rounding=PaymentRounding.ROUND_HALF_UP,
+    interest_rounding=PaymentRounding.ROUND_HALF_UP,
+)
+sched = amortization_schedule(fr_loan)
+print(f"Mensualité hors assurance: €{sched[1].payment}")
+print(f"  Month 1: intérêts €{sched[1].interest}, "
+      f"capital amorti €{sched[1].principal}, "
+      f"CRD €{sched[1].balance}")
+print(f"  Month 12: intérêts €{sched[12].interest}, "
+      f"capital amorti €{sched[12].principal}, "
+      f"CRD €{sched[12].balance}")
+```
+
+The source also publishes an *assurance* column (€2.92/month)
+and a *total mensualité* column (€858.99 for months 1–11,
+€859.04 for month 12). Reproducing the total column would
+require the planned `fee_per_period` feature on the WIP branch.
+
+**Source.** [MoneyVox *Tableau d'amortissement*](https://www.moneyvox.fr/credit/tableau-amortissement.php).
+Fixture: `moneyvox_fr_10k_5pct_12mo.{toml,csv}`.
+
+The 1852 Crédit Foncier de France structure embeds an
+administrative loading into the published *annuité* — a
+structure the library's pure interest+principal model cannot
+reproduce without `fee_per_period`. See *History* §10 and the
+`fee-per-period-wip` branch for details.
 
 # United Kingdom
 
@@ -563,6 +584,37 @@ converge with the U.S. convention; a U.K. fixture is
 mechanically a duplicate of an existing U.S. example. This
 section reserves the slot until a specific U.K. published table
 surfaces.
+
+# Japan
+
+## JHF Flat 35 (30-year fixed-rate, yen precision)
+
+**Scenario.** The Japan Housing Finance Agency (住宅金融支援機構)
+publishes a comparison of repayment methods for its Flat 35
+program. ¥20,000,000 at 1.5% fixed over 30 years using
+*ganri kinto hensai* (元利均等返済, equal total payment / standard
+annuity). The monthly payment is ¥69,024.
+
+This fixture demonstrates the library's `currency_unit` feature:
+Japanese yen has no subunit, so all amounts are rounded to whole
+yen. Setting `currency_unit=Decimal("1")` instructs the library
+to quantize all monetary values to the nearest yen instead of
+the default cent.
+
+```{python}
+jp_loan = LoanParams(
+    principal=Decimal("20000000"),
+    annual_rate=Decimal("1.5"),
+    term_months=360,
+    payment_rounding=PaymentRounding.ROUND_HALF_UP,
+    interest_rounding=PaymentRounding.ROUND_HALF_UP,
+    currency_unit=Decimal("1"),
+)
+print(f"Monthly payment: ¥{periodic_payment(jp_loan):,}")
+```
+
+**Source.** [JHF Flat 35 repayment comparison](https://www.flat35.com/hajimete/atoz/04.html).
+Fixture: `jhf_flat35_20m_150_360mo.{toml,csv}`.
 
 # Australia
 

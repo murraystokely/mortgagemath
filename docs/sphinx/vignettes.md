@@ -24,7 +24,7 @@ list.
 
 ### Validation against published sources
 
-The full **36-fixture × 8-parameter table** showing the exact
+The full **38-fixture × 8-parameter table** showing the exact
 `LoanParams` settings required to match each published source, plus
 a bibliography keyed by source.  Generated dynamically from the test
 fixture TOML files so it stays current as fixtures land.
@@ -42,7 +42,8 @@ Sections: United States (CFPB H-25(B), OpenStax, Fannie Mae §1103,
 Reg Z H-14 ARM, ProEducate payment cap with negative amortization,
 Geltner CRE, half-cent synthetic boundary, Skinner 1913 effective-
 annual, Arcones SOA FM annual, FHLBB 1935 given-payment), Canada
-(Olivier Chans monthly *j_2*, eCampus quarterly *j_2*), France, UK,
+(Olivier Chans monthly *j_2*, eCampus quarterly *j_2*), France
+(MoneyVox tableau d'amortissement), UK, Japan (JHF Flat 35),
 Australia.  First-page table of contents.
 
 - HTML: <https://murraystokely.github.io/mortgagemath/examples.html>

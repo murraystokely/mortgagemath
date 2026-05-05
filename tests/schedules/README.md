@@ -66,7 +66,7 @@ independently verified.
 | `principal`, `annual_rate` | string (Decimal) | Always quote — not a float |
 | `term_months` | integer | |
 | `day_count` | `"30/360"` or `"actual/360"` | |
-| `payment_rounding`, `interest_rounding` | `"ROUND_UP"`, `"ROUND_HALF_UP"`, `"ROUND_HALF_EVEN"` | |
+| `payment_rounding`, `interest_rounding` | `"ROUND_UP"`, `"ROUND_HALF_UP"`, `"ROUND_HALF_EVEN"`, `"ROUND_DOWN"` | `ROUND_DOWN` is truncation/floor, the convention used by Japanese (切り捨て) and Korean (절사) banks. |
 | `start_date` | `"YYYY-MM-DD"` | Required for `actual/360` (issue date / first interest-accrual period); ignored otherwise |
 | `amortization_period_months` | integer | Optional. Set when `>= term_months` for balloon loans (the amortization basis the closed-form payment uses, with a balloon at term). |
 | `balance_tracking` | `"round_each"` (default) or `"carry_precision"` | Round-each-balance is the US-residential-lender convention; carry-precision is Excel-default and used by graduate CRE finance textbooks. Ignored for `actual/360` (always carry-precision). |
@@ -74,6 +74,7 @@ independently verified.
 | `payment_frequency` | `"monthly"` (default), `"semi_monthly"`, `"biweekly"`, `"weekly"`, `"quarterly"`, `"annual"` | Cadence of payments. `term_months * payments_per_year` must be divisible by 12. |
 | `rate_schedule` | array of tables (optional) | ARM rate-change schedule; see below. |
 | `payment_override` | string (Decimal, optional) | Pin the periodic payment to this value; the schedule's final row absorbs the residual. Reproduces the historical "given-payment, find-term" convention (FHLBB 1935 *Review*). Currently incompatible with `rate_schedule`. |
+| `currency_unit` | string (Decimal, optional) | Smallest monetary unit for quantization. Default `"0.01"` (cents). Set to `"1"` for zero-decimal currencies like JPY or KRW. Must be a positive power of 10 at most 1. |
 
 #### `[[loan.rate_schedule]]` (ARMs)
 
