@@ -41,6 +41,8 @@ conventions actual lenders use:
   Act* §6 (`j_2`), effective-annual, weekly through annual
 - **Adjustable-rate mortgages** with rate schedules, optional
   payment caps, and capitalized negative amortization
+- **Flat per-period fees** via `fee_per_period`, validated against
+  French *assurance emprunteur* payment columns
 - **Convenience constructors** for common US fixed-rate, Canadian
   `j_2`, Actual/360 commercial, and fixed-payment loans
 - **Exact zero ending balance** — the final row trues up so

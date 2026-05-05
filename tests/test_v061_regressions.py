@@ -166,6 +166,23 @@ def test_payment_override_must_be_cent_denominated() -> None:
         )
 
 
+def test_fee_per_period_validation() -> None:
+    with pytest.raises(ValueError, match="fee_per_period must be non-negative"):
+        LoanParams(
+            principal=Decimal("1000"),
+            annual_rate=Decimal("5"),
+            term_months=12,
+            fee_per_period=Decimal("-1"),
+        )
+    with pytest.raises(ValueError, match="whole currency units"):
+        LoanParams(
+            principal=Decimal("1000"),
+            annual_rate=Decimal("5"),
+            term_months=12,
+            fee_per_period=Decimal("2.999"),
+        )
+
+
 def test_payment_override_rejects_balloon_basis() -> None:
     with pytest.raises(ValueError, match="fully-amortizing"):
         LoanParams(

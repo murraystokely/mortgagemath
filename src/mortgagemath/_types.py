@@ -273,6 +273,19 @@ class LoanParams:
             etc.).  Set to ``Decimal("1")`` for zero-decimal currencies
             like JPY or KRW where the base unit is the smallest
             denomination.  Must be a positive power of 10, at most 1.
+        fee_per_period: Flat amount added to each installment's
+            ``payment`` on top of the closed-form
+            interest+principal value.  Models the structure of the
+            1852 Crédit Foncier de France *annuité* (which embedded
+            frais d'administration + fonds de réserve + impôt as a
+            constant loading on top of the actuarial
+            interest+amortissement) and the modern French *tableau
+            d'amortissement* convention of pricing *assurance
+            emprunteur* as ``taux_d_assurance * original_principal``
+            paid as a flat amount per period.  Closed-form payment
+            derivation, balance accounting, and rate-schedule recasts
+            are all unaffected: the fee rides on top.  Defaults to
+            ``Decimal("0")`` (no loading; behavior identical to v0.6.0).
     """
 
     principal: Decimal
@@ -290,6 +303,7 @@ class LoanParams:
     payment_override: Decimal | None = None
     currency_unit: Decimal = _PENNY
     interest_only_months: int = 0
+    fee_per_period: Decimal = Decimal("0")
 
     def __post_init__(self) -> None:
         """Validate cross-field invariants."""
@@ -449,6 +463,18 @@ class LoanParams:
                     "== term_months when using payment_override."
                 )
 
+        # fee_per_period must be non-negative. Variable-fee structures
+        # (declining-balance "intérêts aux porteurs", stepped age-bucket
+        # insurance, separate-cadence garantie) require a richer
+        # FeeSchedule type that is out of scope for this release.
+        if self.fee_per_period < 0:
+            raise ValueError(f"fee_per_period must be non-negative, got {self.fee_per_period}")
+        if self.fee_per_period != self.fee_per_period.quantize(self.currency_unit):
+            raise ValueError(
+                f"fee_per_period must be denominated in whole "
+                f"currency units ({self.currency_unit}), got {self.fee_per_period}"
+            )
+
     @property
     def _total_payments(self) -> int:
         """Total number of payments in the schedule."""
@@ -480,7 +506,19 @@ class LoanParams:
 class Installment:
     """A single payment in an amortization schedule.
 
-    Invariant: ``principal + interest == payment`` for every installment.
+    Invariant: ``principal + interest + fee == payment`` for every
+    installment.  When ``LoanParams.fee_per_period`` is the default
+    ``Decimal("0")``, ``fee`` is also ``Decimal("0.00")`` and the
+    invariant collapses to the historical ``principal + interest ==
+    payment`` form.
+
+    The ``fee`` field models the structure of fee-loaded annuités
+    (Crédit Foncier de France 1852+; modern French *tableau
+    d'amortissement* with *assurance emprunteur* loaded into the
+    *total échéance*).  Consumers that need the actuarially-pure
+    interest+principal value can recover it as ``payment - fee``;
+    consumers that need the gross figure the borrower wrote on the
+    check use ``payment`` directly.
     """
 
     number: int
@@ -489,3 +527,4 @@ class Installment:
     principal: Decimal
     total_interest: Decimal
     balance: Decimal
+    fee: Decimal = Decimal("0.00")

@@ -13,7 +13,7 @@ configuration knob unless it unlocks matching a specific, verifiable,
 public-domain or open-licensed published example cell-for-cell.**
 
 This rule is non-negotiable. It is the reason this library has a
-defensible 36-fixture test suite that audits cleanly against external
+defensible 41-fixture test suite that audits cleanly against external
 sources, rather than a sprawling option matrix that produces internally
 consistent but arbitrary outputs.
 
@@ -137,27 +137,15 @@ matched a published example that did not exist.
 
 ## Active WIP branches
 
-### `fee-per-period-wip`
+None.
 
-A complete implementation of ``LoanParams.fee_per_period`` and
-``Installment.fee`` that adds a flat per-period loading on top of
-the closed-form interest+principal payment. Models the modern French
-*assurance emprunteur* convention and the 1852 Crédit Foncier
-*annuité* loading shape.
+## Historical fee-loaded source leads
 
-**Status:** unversioned WIP. Implementation is complete and the unit
-tests pass; documentation is updated end-to-end. The blocker is the
-absence of a row-level published source that would let us validate
-the feature against a real fee-loaded schedule cell-for-cell.
-
-**To resume:** check out ``fee-per-period-wip``, rebase on ``main``,
-delete the synthetic fixture
-(``tests/schedules/synthetic_fee_loaded_240k_400_60mo_assur80.{toml,csv}``),
-add a real fixture against whichever of the trigger sources below
-becomes accessible, and rename the branch to ``v0.6.1-fee-per-period``
-(or whatever the next version is) before opening a PR.
-
-**Trigger sources to watch for:**
+``LoanParams.fee_per_period`` and ``Installment.fee`` are now
+fixture-backed by the MoneyVox France schedule. The historical
+Crédit Foncier line of research remains useful for adding
+19th-century fixtures, but it is no longer a blocker for the
+flat-fee API.
 
 1. **Bellet, *Le guide de l'emprunteur* (1854).** Gallica:
    <https://gallica.bnf.fr/ark:/12148/bpt6k65540535>. JS-walled to
@@ -182,15 +170,17 @@ becomes accessible, and rename the branch to ``v0.6.1-fee-per-period``
 The clear next step for this library is **finding more real worked
 amortization examples**, not adding more library features.
 
-The current 36-fixture suite has strong U.S. coverage (CFPB regs,
+The current 41-fixture suite has strong U.S. coverage (CFPB regs,
 GSE servicing guides, Reg Z H-14 ARM, ProEducate payment caps,
 FHLBB 1935 given-payment, Geltner CRE, multiple OpenStax problems,
 Skinner 1913 piano), strong Canadian coverage (Olivier, eCampus
-quarterly + monthly), and one SOA actuarial fixture (Arcones).
+quarterly + monthly), one SOA actuarial fixture (Arcones), and
+French/Japanese single-country coverage from MoneyVox and JHF.
 The clear gaps are:
 
-- **France:** zero fixtures. Needed: a row-level published table.
-  Trigger sources listed under ``fee-per-period-wip`` above.
+- **France:** modern MoneyVox coverage exists. Needed next:
+  historical Crédit Foncier row-level schedules from the source
+  leads above.
 - **United Kingdom:** zero fixtures. UK building-society
   direct-reduction loans converge with the U.S. convention from the
   1990s onward, so a U.K. fixture would mostly be mechanically a
@@ -198,8 +188,8 @@ The clear gaps are:
   pre-convergence pre-1990s building-society schedule surfaces.
 - **Australia:** zero fixtures. Victoria's 1896 Credit Foncier Act
   established a state mortgage bank; a state-bank schedule from the
-  1900s-1950s would land here, contingent on the
-  ``fee_per_period`` work shipping.
+  1900s-1950s would land here if a verifiable row-level source
+  surfaces.
 - **Germany / *Pfandbrief* tradition:** zero fixtures. Conceptually
   important (the *Hypothekenbanken* model influenced both the CF
   *obligations foncières* and U.S. mortgage-backed securities), but

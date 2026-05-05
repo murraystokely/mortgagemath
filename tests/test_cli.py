@@ -168,6 +168,7 @@ def test_schedule_csv_format(capsys):
         "payment",
         "interest",
         "principal",
+        "fee",
         "total_interest",
         "balance",
     ]
@@ -186,6 +187,7 @@ def test_schedule_json_format(capsys):
     # Decimal values are serialized as strings to preserve cents.
     first_payment = payload[1]
     assert first_payment["payment"] == "645.68"
+    assert first_payment["fee"] == "0.00"
     assert isinstance(first_payment["interest"], str)
 
 
@@ -225,6 +227,34 @@ def test_schedule_with_arm(capsys):
     assert payload[60]["payment"] == "1160.80"  # last row at initial rate
     # Row 61 is the first row after the rate change; payment recasts.
     assert payload[61]["payment"] != "1160.80"
+
+
+def test_schedule_with_fee_per_period(capsys):
+    """CLI fee flag adds a flat fee to schedule payments and exposes it in output."""
+    rc = cli.main(
+        [
+            "schedule",
+            "--principal",
+            "10000",
+            "--rate",
+            "5",
+            "--term-months",
+            "12",
+            "--payment-rounding",
+            "ROUND_HALF_UP",
+            "--interest-rounding",
+            "ROUND_HALF_UP",
+            "--fee-per-period",
+            "2.92",
+            "--format",
+            "json",
+        ]
+    )
+    assert rc == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload[1]["payment"] == "858.99"
+    assert payload[1]["fee"] == "2.92"
+    assert payload[1]["principal"] == "814.40"
 
 
 # ---------------------------------------------------------------------------

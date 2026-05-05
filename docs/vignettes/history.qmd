@@ -131,8 +131,8 @@ libéré. »* — "the interest payable to the creditor being at
 4 1/2, the property-owning borrower would pay 6 per 100 for
 thirty-nine years to be entirely discharged."
 
-This decomposition explains why `mortgagemath` cannot, at
-present, reproduce a Crédit Foncier worked schedule. Every
+This decomposition explains why `mortgagemath` originally could
+not reproduce a Crédit Foncier worked schedule. Every
 schedule the CF (and its imitators) published was the *gross*
 annuity — the figure the borrower actually wrote on his
 quarterly draft — not the actuarially-pure interest-plus-
@@ -149,9 +149,9 @@ foncier*, nor in the U.S. Senate Document 214 of 1913
 testimony but only bond-side schedules) — currently passes
 validation. The structural pattern recurs: when an institution's
 contract embeds servicing fees or taxes into the *annuité*
-itself, a pure interest+principal model cannot reproduce it.
-A planned extension to the library — a per-period fee field on
-``LoanParams`` — would close this gap; see §10 below.
+itself, a pure interest+principal model cannot reproduce it. The
+library now exposes that structure through ``fee_per_period``;
+see §10 below.
 
 ## 4. American building & loan associations (1831–1934)
 
@@ -368,10 +368,22 @@ $297,500 first term and renewal).
 **France — direct CF descendants.** The Crédit Foncier de
 France itself was wound down in 2013, but the institutional model
 — a long-term, fixed-rate, fee-loaded *annuité* — persists in
-French residential mortgage practice. Modern French published
-schedules retain the *taux effectif global* (TEG) loading and so,
-as in 1852, are not directly reproducible by a pure
-interest+principal model.
+French residential mortgage practice. Modern French residential
+*tableaux d'amortissement* in actual *offres de prêt* (the
+borrower-facing PDF that lenders are statutorily required to
+provide) are row-level cents-precision documents that the
+library reproduces directly; v0.6.1's `fee_per_period` field
+covers the *assurance emprunteur* loading that is the dominant
+fee component of a modern French *échéance*. The MoneyVox
+fixture validates that modern shape against a full row-level
+published table. Public bank
+educational webpages (Crédit Agricole, Meilleurtaux, ANIL,
+service-public.fr) typically show only year-aggregate totals
+without a per-month table, and the rounding convention behind
+those aggregates is not documented; several different row-level
+conventions can produce identical year sums, so those pages are
+not fixture-grade sources. Historical Crédit Foncier validation
+still awaits retrieval of a row-level CF table.
 
 **Australia and the Australasian colonial period.** **Carl
 Pinschof's** 1892 paper "The Credit Foncier System," delivered
@@ -432,12 +444,7 @@ Three classes of historically-important contracts are deliberately
    the share account as a parallel ledger would require an
    entirely separate data structure that has no application to
    any post-1934 loan.
-2. **Loaded-annuity contracts** like the Crédit Foncier (1852+)
-   and modern French residential mortgages with embedded TEG.
-   The library's `interest + principal = payment` invariant
-   cannot reproduce a published *annuité* that includes
-   commission, reserve, and tax components. This is the gap
-   that §10 below proposes to close.
+
 An earlier-flagged exclusion has since been closed:
 
 - **Given-payment, find-term contracts** like the FHLBB *Review*
@@ -446,32 +453,39 @@ An earlier-flagged exclusion has since been closed:
   ``LoanParams.payment_override`` field reproduces this
   cell-for-cell against the FHLBB Plan A fixture (\$3,000 / 6%
   / \$30 monthly; 138 full payments + 139th of \$29.27).
+- **Loaded-annuity contracts** where a fixed fee rides on top of
+  principal and interest. The ``LoanParams.fee_per_period`` field
+  reproduces the modern French MoneyVox schedule including
+  *assurance emprunteur*. Historical Crédit Foncier tables still
+  need a retrievable row-level source before they can become
+  fixtures.
 
-These exclusions narrow the library's scope to the post-1934
-American direct-reduction convention plus the Skinner 1913 piano
-single-anchor pre-New-Deal exception, the FHLBB 1935 given-payment
-convention (via ``payment_override``), the Canadian *Interest
-Act* §6 semi-annual convention, and the SOA Exam FM annual
-schedules. Within that window the library reproduces 36
+The shipped scope now covers the post-1934 American
+direct-reduction convention plus the Skinner 1913 piano
+single-anchor pre-New-Deal exception, the FHLBB 1935
+given-payment convention (via ``payment_override``), the French
+flat-fee convention (via ``fee_per_period``), the Canadian
+*Interest Act* §6 semi-annual convention, and the SOA Exam FM
+annual schedules. Within that window the library reproduces 41
 published worked-example schedules cell-for-cell; on the small
 number of historical sources that themselves carry an internal
 arithmetic typo (notably two rows of the Geltner CRE Ch 20
 schedule), the divergent rows are documented in the fixture
 ``notes`` field rather than forced into the corpus.
 
-## 10. A planned extension: the per-period fee
+## 10. Flat per-period fees
 
-The Crédit Foncier exclusion from §3 is the most consequential
-gap in the library's coverage of 19th-century European mortgage
-practice. The structural problem is straightforward: CF rows
+The Crédit Foncier source gap from §3 remains consequential for
+19th-century European mortgage practice. The structural problem
+is straightforward: CF rows
 publish `annuité = interest + amortissement + frais + réserve +
 impôt`, with the last three components rolled into a single
 flat-amount loading on top of the actuarially-pure
 interest-plus-principal value.
 
-A minimal extension would add an optional `fee_per_period`
-parameter to ``LoanParams`` and a corresponding `fee` field on
-the `Installment` record:
+The library now models the fixed-loading case with optional
+`fee_per_period` on ``LoanParams`` and a corresponding `fee`
+field on the `Installment` record:
 
 ```python
 @dataclass(frozen=True)
@@ -507,6 +521,10 @@ Semantics:
   per year) require a one-line preprocessing step:
   ``fee_per_period = original_principal * fee_pct / payments_per_year``.
 
+The trigger source for shipping the feature is the MoneyVox
+French schedule: €10,000 at 5% over 12 months with a published
+€2.92 monthly *assurance emprunteur* column and gross mensualité
+of €858.99 for rows 1-11 and €859.04 on the final trueup row.
 For Wolowski's 1852 4½% / 39-year canonical example the math
 works out cleanly: the closed-form payment at 4.50% annual over
 39 years on 100 fr. of principal is 5.485 fr. ≈ 5.50 fr., and a
@@ -518,24 +536,11 @@ itself — and the row-level CF tables in Bellet's 1854 *Guide*
 and Josseau's 1872 *Traité* are currently behind JavaScript walls
 on Gallica and Trove that have resisted automated retrieval.
 
-The library's working rule is to add new parameters only when
-they unlock matching a specific verifiable published source. The
-order of operations is therefore:
-
-1. Manually retrieve the row-level CF tables from Bellet, Josseau,
-   or *The Argus*'s 1892 Pinschof paper (which advocated a
-   Victorian state mortgage bank on CF lines and may include a
-   sample schedule).
-2. Validate, by hand or with a small script, that the closed-form
-   P+I plus a fixed fee reproduces every printed cell.
-3. *Then* add the `fee_per_period` field and ship the CF fixture
-   along with the feature.
-
-The same extension would also accept a class of contemporary
-French TEG-loaded amortization tables and several
-non-French-mortgage examples (e.g. early-twentieth-century
-Australian *credit foncier*–style state-bank schedules) where a
-fixed periodic loading rides on top of the closed-form payment.
+The same field also accepts several non-French-mortgage examples
+(e.g. early-twentieth-century Australian *credit foncier*–style
+state-bank schedules) where a fixed periodic loading rides on top
+of the closed-form payment, once a verifiable row-level source
+surfaces.
 Variable-fee structures (commission-de-gestion proportional to
 outstanding balance, or stepped-fee schedules) are left for a
 later extension if any specific verifiable source motivates them.
