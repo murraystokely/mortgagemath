@@ -41,11 +41,12 @@ def _loan_from_toml(toml_data: dict) -> LoanParams:
         for rc in loan.get("rate_schedule", ())
     )
     payment_override = loan.get("payment_override")
+    currency_unit_str = loan.get("currency_unit")
     return LoanParams(
         principal=Decimal(loan["principal"]),
         annual_rate=Decimal(loan["annual_rate"]),
         term_months=loan["term_months"],
-        day_count=DayCount(loan["day_count"]),
+        day_count=DayCount(loan.get("day_count", "30/360")),
         payment_rounding=PaymentRounding(loan["payment_rounding"]),
         interest_rounding=PaymentRounding(loan["interest_rounding"]),
         start_date=start_date,
@@ -55,6 +56,9 @@ def _loan_from_toml(toml_data: dict) -> LoanParams:
         payment_frequency=PaymentFrequency(payment_frequency_str),
         rate_schedule=rate_schedule,
         payment_override=Decimal(payment_override) if payment_override is not None else None,
+        currency_unit=Decimal(currency_unit_str)
+        if currency_unit_str is not None
+        else Decimal("0.01"),
     )
 
 

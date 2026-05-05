@@ -1,0 +1,20 @@
+[loan]
+principal = "20000000"
+annual_rate = "1.5"
+term_months = 360
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+currency_unit = "1"
+
+[expected]
+periodic_payment = "69024"
+
+[source]
+kind = "calculator"
+short_label = "JHF Flat 35"
+bib_key = "JHF"
+bib_title = "JHF Flat 35"
+citation = "Japan Housing Finance Agency (住宅金融支援機構) Flat 35 mortgage repayment comparison page. ¥20,000,000 at 1.5% fixed over 30 years, ganri kinto hensai (元利均等返済, equal total payment / standard annuity). <https://www.flat35.com/hajimete/atoz/04.html>"
+country = "JP"
+license = "all rights reserved (worked numerical values are uncopyrightable facts)"
+notes = "First Japanese fixture. Single-anchor (payment only); the source page publishes year-level snapshot rows (years 1, 5, 10) labeled as approximate (概算). The payment of ¥69,024 is confirmed across multiple independent sources. Uses currency_unit=1 for yen-precision rounding."

@@ -16,8 +16,7 @@ from mortgagemath._types import (
     RateChange,
 )
 
-_PENNY = Decimal("0.01")
-_ZERO = Decimal("0.00")
+_ZERO = Decimal("0")
 _ONE = Decimal("1")
 
 _ROUNDING_MAP = {
@@ -32,6 +31,7 @@ def _recast_payment_pair(
     periodic_rate: Decimal,
     remaining_payments: int,
     payment_rounding: PaymentRounding,
+    unit: Decimal = Decimal("0.01"),
 ) -> tuple[Decimal, Decimal]:
     """Recompute the level payment for a rate change. Returns (raw, rounded).
 
@@ -46,7 +46,7 @@ def _recast_payment_pair(
         ctx.prec = 50
         factor = (_ONE + periodic_rate) ** remaining_payments
         raw = balance * periodic_rate * factor / (factor - _ONE)
-    return raw, raw.quantize(_PENNY, rounding=rounding)
+    return raw, raw.quantize(unit, rounding=rounding)
 
 
 def _next_rate_change(
@@ -150,6 +150,7 @@ def _schedule_thirty_360_round_each(loan: LoanParams) -> list[Installment]:
         loan.amortization_period_months == loan.term_months
     )
     rate_schedule_idx = 0
+    unit = loan.currency_unit
 
     schedule: list[Installment] = [
         Installment(
@@ -174,16 +175,16 @@ def _schedule_thirty_360_round_each(loan: LoanParams) -> list[Installment]:
             if rc.recast:
                 remaining = total_payments - (i - 1)
                 _, pmt_uncapped = _recast_payment_pair(
-                    balance, periodic_rate, remaining, loan.payment_rounding
+                    balance, periodic_rate, remaining, loan.payment_rounding, unit
                 )
                 if rc.payment_cap_factor is not None:
-                    cap = (pmt * rc.payment_cap_factor).quantize(_PENNY, rounding=payment_rounding)
+                    cap = (pmt * rc.payment_cap_factor).quantize(unit, rounding=payment_rounding)
                     pmt = min(pmt_uncapped, cap)
                 else:
                     pmt = pmt_uncapped
             rate_schedule_idx += 1
 
-        interest = (balance * periodic_rate).quantize(_PENNY, rounding=interest_rounding)
+        interest = (balance * periodic_rate).quantize(unit, rounding=interest_rounding)
 
         is_scheduled_final = i == total_payments and fully_amortizing
         # Round-each-balance accounting can pay off a tiny loan early.
@@ -252,6 +253,7 @@ def _schedule_thirty_360_carry_precision(loan: LoanParams) -> list[Installment]:
     interest_rounding = _ROUNDING_MAP[loan.interest_rounding]
     periodic_rate = _periodic_rate(loan)
     total_payments = loan._total_payments
+    unit = loan.currency_unit
 
     # Validate via periodic_payment (enforces guards) and reuse rounded display.
     pmt_disp = periodic_payment(loan)
@@ -298,11 +300,11 @@ def _schedule_thirty_360_carry_precision(loan: LoanParams) -> list[Installment]:
             if rc.recast:
                 remaining = total_payments - (i - 1)
                 pmt_uncapped_raw, pmt_uncapped_disp = _recast_payment_pair(
-                    balance, periodic_rate, remaining, loan.payment_rounding
+                    balance, periodic_rate, remaining, loan.payment_rounding, unit
                 )
                 if rc.payment_cap_factor is not None:
                     cap = (pmt_disp * rc.payment_cap_factor).quantize(
-                        _PENNY, rounding=payment_rounding
+                        unit, rounding=payment_rounding
                     )
                     if cap < pmt_uncapped_disp:
                         # Cap binds: use the cap as both raw and displayed
@@ -319,7 +321,7 @@ def _schedule_thirty_360_carry_precision(loan: LoanParams) -> list[Installment]:
             rate_schedule_idx += 1
 
         interest_raw = balance * periodic_rate
-        interest_disp = interest_raw.quantize(_PENNY, rounding=interest_rounding)
+        interest_disp = interest_raw.quantize(unit, rounding=interest_rounding)
 
         is_scheduled_final = i == total_payments and fully_amortizing
 
@@ -345,10 +347,10 @@ def _schedule_thirty_360_carry_precision(loan: LoanParams) -> list[Installment]:
                 # round-the-total convention and avoids the
                 # round-components-independently drift.
                 actual_pmt_raw = balance + interest_raw
-                actual_pmt = actual_pmt_raw.quantize(_PENNY, rounding=payment_rounding)
+                actual_pmt = actual_pmt_raw.quantize(unit, rounding=payment_rounding)
                 principal_disp = actual_pmt - interest_disp
             else:
-                principal_disp = balance.quantize(_PENNY, rounding=interest_rounding)
+                principal_disp = balance.quantize(unit, rounding=interest_rounding)
                 actual_pmt = principal_disp + interest_disp
             balance = _ZERO
             balance_disp = _ZERO
@@ -356,7 +358,7 @@ def _schedule_thirty_360_carry_precision(loan: LoanParams) -> list[Installment]:
             actual_pmt = pmt_disp
             principal_disp = pmt_disp - interest_disp
             balance -= pmt_raw - interest_raw  # carry full precision
-            balance_disp = balance.quantize(_PENNY, rounding=interest_rounding)
+            balance_disp = balance.quantize(unit, rounding=interest_rounding)
 
         total_interest_disp += interest_disp
 
@@ -399,6 +401,7 @@ def _schedule_actual_360(loan: LoanParams) -> list[Installment]:
     """
     interest_rounding = _ROUNDING_MAP[loan.interest_rounding]
     annual_rate = loan.annual_rate / Decimal("100")  # percent → fraction
+    unit = loan.currency_unit
 
     # Validate via periodic_payment (which enforces rate/term/amort guards)
     # and reuse its rounded display value.
@@ -441,11 +444,11 @@ def _schedule_actual_360(loan: LoanParams) -> list[Installment]:
         days = calendar.monthrange(period_year, period_month)[1]
 
         interest_raw = balance * annual_rate * Decimal(days) / Decimal(360)
-        interest_disp = interest_raw.quantize(_PENNY, rounding=interest_rounding)
+        interest_disp = interest_raw.quantize(unit, rounding=interest_rounding)
 
         if i == loan.term_months and fully_amortizing:
             # Final payment of a fully amortizing loan: zero balance exactly.
-            principal_disp = balance.quantize(_PENNY, rounding=interest_rounding)
+            principal_disp = balance.quantize(unit, rounding=interest_rounding)
             actual_pmt = principal_disp + interest_disp
             balance = _ZERO
             balance_disp = _ZERO
@@ -453,7 +456,7 @@ def _schedule_actual_360(loan: LoanParams) -> list[Installment]:
             actual_pmt = pmt_disp
             principal_disp = pmt_disp - interest_disp
             balance -= pmt_raw - interest_raw  # carry full precision
-            balance_disp = balance.quantize(_PENNY, rounding=interest_rounding)
+            balance_disp = balance.quantize(unit, rounding=interest_rounding)
 
         total_interest_disp += interest_disp
 

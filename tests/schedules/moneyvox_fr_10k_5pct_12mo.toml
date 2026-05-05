@@ -1,0 +1,19 @@
+[loan]
+principal = "10000"
+annual_rate = "5"
+term_months = 12
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[expected]
+periodic_payment = "856.07"
+
+[source]
+kind = "calculator"
+short_label = "MoneyVox FR"
+bib_key = "MoneyVox"
+bib_title = "MoneyVox Tableau d'amortissement"
+citation = "MoneyVox worked example of a tableau d'amortissement (French amortization schedule). €10,000 at 5% over 12 monthly payments with 0.35% assurance emprunteur. The fixture validates only the P&I columns (hors assurance). <https://www.moneyvox.fr/credit/tableau-amortissement.php>"
+country = "FR"
+license = "all rights reserved (worked numerical values are uncopyrightable facts)"
+notes = "First French fixture in the library. The source also publishes an assurance column (€2.92/month on initial capital) and a total mensualité column (€858.99 for months 1-11, €859.04 for month 12). This fixture validates only the pure P&I schedule; the assurance column would require the fee_per_period feature on the WIP branch."

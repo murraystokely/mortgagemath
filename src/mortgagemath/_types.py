@@ -42,7 +42,7 @@ class DayCount(Enum):
 class PaymentRounding(Enum):
     """Rounding convention for monetary amounts.
 
-    ROUND_UP (ceiling to nearest cent) is used by most US lenders for the
+    ROUND_UP (ceiling to nearest unit) is used by most US lenders for the
     monthly payment amount.  ROUND_HALF_UP (standard rounding) is used
     for monthly interest calculations.  ROUND_HALF_EVEN (banker's rounding)
     is included so fixtures from lenders or worked examples that use it
@@ -265,6 +265,11 @@ class LoanParams:
             $3,000 / 6% / $30 monthly / 138 full payments + 139th of
             $29.27).  Defaults to ``None`` (use the closed-form value).
             Currently incompatible with non-empty ``rate_schedule``.
+        currency_unit: The smallest monetary unit for quantization.
+            Defaults to ``Decimal("0.01")`` (cents for USD, EUR, GBP,
+            etc.).  Set to ``Decimal("1")`` for zero-decimal currencies
+            like JPY or KRW where the base unit is the smallest
+            denomination.  Must be a positive power of 10, at most 1.
     """
 
     principal: Decimal
@@ -280,6 +285,7 @@ class LoanParams:
     payment_frequency: PaymentFrequency = PaymentFrequency.MONTHLY
     rate_schedule: tuple[RateChange, ...] = ()
     payment_override: Decimal | None = None
+    currency_unit: Decimal = _PENNY
 
     def __post_init__(self) -> None:
         """Validate cross-field invariants."""
@@ -365,6 +371,26 @@ class LoanParams:
                     )
                 prev = rc.effective_payment_number
 
+        # currency_unit validation.  Must be a positive power of 10
+        # that is at most 1 (e.g. 0.001, 0.01, 0.1, 1).  Values > 1
+        # like Decimal("10") are rejected because Decimal.quantize
+        # with quantum Decimal("10") preserves the units digit —
+        # tens-rounding requires Decimal("1E+1"), an exponent form
+        # that would be surprising in TOML fixtures.  No known
+        # currency needs a unit larger than 1.
+        if self.currency_unit <= 0:
+            raise ValueError(f"currency_unit must be positive, got {self.currency_unit}")
+        if self.currency_unit > 1:
+            raise ValueError(
+                f"currency_unit must be at most 1 (e.g. 0.01, 0.1, 1), got {self.currency_unit}"
+            )
+        log10 = self.currency_unit.log10()
+        if log10 != int(log10):
+            raise ValueError(
+                f"currency_unit must be a power of 10 "
+                f"(e.g. 0.001, 0.01, 0.1, 1), got {self.currency_unit}"
+            )
+
         # payment_override constraints. v0.6.0 supports the override
         # for fully-amortizing fixed-rate loans only; combining it with
         # rate_schedule semantics is deferred until a published source
@@ -374,13 +400,12 @@ class LoanParams:
                 raise ValueError(
                     f"payment_override must be positive when set, got {self.payment_override}"
                 )
-            # Reject non-cent overrides: a Decimal("99.999") would let
-            # public Installment rows carry sub-cent payment amounts,
-            # which violates the cents-precision contract.
-            if self.payment_override != self.payment_override.quantize(_PENNY):
+            # Reject overrides finer than the currency unit.
+            if self.payment_override != self.payment_override.quantize(self.currency_unit):
                 raise ValueError(
-                    f"payment_override must be denominated in whole cents "
-                    f"(two-decimal Decimal), got {self.payment_override}"
+                    f"payment_override must be denominated in whole "
+                    f"currency units ({self.currency_unit}), "
+                    f"got {self.payment_override}"
                 )
             if self.rate_schedule:
                 raise ValueError(
