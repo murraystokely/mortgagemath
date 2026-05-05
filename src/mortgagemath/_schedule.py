@@ -126,15 +126,39 @@ def amortization_schedule(loan: LoanParams) -> list[Installment]:
     with localcontext() as ctx:
         ctx.prec = 50
         if loan.day_count == DayCount.THIRTY_360:
-            return _schedule_thirty_360(loan)
-        if loan.day_count == DayCount.ACTUAL_360:
+            sched = _schedule_thirty_360(loan)
+        elif loan.day_count == DayCount.ACTUAL_360:
             if loan.start_date is None:
                 raise ValueError(
                     "ACTUAL_360 schedule requires loan.start_date "
                     "(the issue date / first interest-accrual period)"
                 )
-            return _schedule_actual_360(loan)
-    raise ValueError(f"unsupported day_count: {loan.day_count}")  # pragma: no cover
+            sched = _schedule_actual_360(loan)
+        else:  # pragma: no cover
+            raise ValueError(f"unsupported day_count: {loan.day_count}")
+
+    # Apply the optional per-period fee to every payment row.  The fee
+    # rides on top of the P+I schedule without affecting balance accounting.
+    fee = loan.fee_per_period
+    if fee:
+        unit = loan.currency_unit
+        fee_q = fee.quantize(unit)
+        sched = [
+            sched[0],
+            *(
+                Installment(
+                    number=inst.number,
+                    payment=inst.payment + fee_q,
+                    interest=inst.interest,
+                    principal=inst.principal,
+                    total_interest=inst.total_interest,
+                    balance=inst.balance,
+                    fee=fee_q,
+                )
+                for inst in sched[1:]
+            ),
+        ]
+    return sched
 
 
 def _schedule_thirty_360(loan: LoanParams) -> list[Installment]:

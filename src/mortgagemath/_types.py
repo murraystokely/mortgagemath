@@ -268,6 +268,14 @@ class LoanParams:
         interest_only_months: Number of months at the start of the loan
             where only interest is paid. After this period, the loan
             recasts and amortizes over the remaining term. Defaults to 0.
+        fee_per_period: Flat amount added to each installment's
+            ``payment`` on top of the closed-form interest+principal
+            value.  Models the modern French *assurance emprunteur*
+            convention (``taux_assurance * principal_initial / 12``)
+            and the 1852 Crédit Foncier *annuité* structure.  The fee
+            does not affect closed-form payment derivation, balance
+            accounting, or rate-schedule recasts.  Defaults to
+            ``Decimal("0")`` (no loading).
         currency_unit: The smallest monetary unit for quantization.
             Defaults to ``Decimal("0.01")`` (cents for USD, EUR, GBP,
             etc.).  Set to ``Decimal("1")`` for zero-decimal currencies
@@ -290,6 +298,7 @@ class LoanParams:
     payment_override: Decimal | None = None
     currency_unit: Decimal = _PENNY
     interest_only_months: int = 0
+    fee_per_period: Decimal = Decimal("0")
 
     def __post_init__(self) -> None:
         """Validate cross-field invariants."""
@@ -358,6 +367,10 @@ class LoanParams:
                 f"interest_only_months={self.interest_only_months} "
                 f"* payments_per_year={ppy} is not divisible by 12."
             )
+
+        # fee_per_period validation.
+        if self.fee_per_period < 0:
+            raise ValueError(f"fee_per_period must be non-negative, got {self.fee_per_period}")
 
         # Rate-schedule validation. v0.4.0 ships Tier 1 ARMs (explicit
         # rate-change list) for THIRTY_360 fully-amortizing loans only;
@@ -480,7 +493,9 @@ class LoanParams:
 class Installment:
     """A single payment in an amortization schedule.
 
-    Invariant: ``principal + interest == payment`` for every installment.
+    Invariant: ``principal + interest + fee == payment`` for every
+    installment.  When ``fee`` is zero (the default), this collapses
+    to the historical ``principal + interest == payment``.
     """
 
     number: int
@@ -489,3 +504,4 @@ class Installment:
     principal: Decimal
     total_interest: Decimal
     balance: Decimal
+    fee: Decimal = Decimal("0.00")

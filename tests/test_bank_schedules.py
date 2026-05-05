@@ -60,6 +60,9 @@ def _loan_from_toml(toml_data: dict) -> LoanParams:
         if currency_unit_str is not None
         else Decimal("0.01"),
         interest_only_months=loan.get("interest_only_months", 0),
+        fee_per_period=Decimal(loan["fee_per_period"])
+        if "fee_per_period" in loan
+        else Decimal("0"),
     )
 
 
@@ -112,6 +115,10 @@ class TestBankSchedules:
             assert inst.balance == expected_balance, (
                 f"Payment #{n}: balance {inst.balance} != {expected_balance}"
             )
+
+            if "fee" in row:
+                expected_fee = Decimal(row["fee"])
+                assert inst.fee == expected_fee, f"Payment #{n}: fee {inst.fee} != {expected_fee}"
 
     def test_balloon_at_term_matches(self, bank_schedule):
         """Validate the published balloon at term, if any.

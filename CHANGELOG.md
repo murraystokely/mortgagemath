@@ -24,7 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Canadian Accelerated Bi-Weekly.** New convenience constructor
   ``canada_accelerated_biweekly(...)`` that derives the accelerated
   bi-weekly payment (monthly / 2) used by major Canadian banks.
-- **5 new fixtures (41 total).** MoneyVox France (€10,000 / 5% /
+- **Fee per period.** New ``LoanParams.fee_per_period`` field and
+  ``Installment.fee`` attribute. A flat amount added to each payment
+  on top of interest+principal, modeling French *assurance emprunteur*
+  and the 1852 Crédit Foncier *annuité* structure. Validated against
+  the MoneyVox *tableau d'amortissement* with assurance loading.
+- **6 new fixtures (42 total).** MoneyVox France (€10,000 / 5% /
   12mo, full schedule), JHF Flat 35 Japan (¥20M / 1.5% / 30yr,
   single-anchor), CFPB IO Sample ($211K / 4% / 5yr IO,
   single-anchor), RBC Accelerated Bi-Weekly ($350K / 5% / 25yr,
