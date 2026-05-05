@@ -13,22 +13,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (default ``Decimal("0.01")``) controls the quantization unit for all
   monetary amounts. Set to ``Decimal("1")`` for zero-decimal currencies
   like JPY or KRW. All existing behavior is unchanged.
-- **Zero-Interest Loan Support.** Support for loans with `annual_rate=0`.
-  Returns `principal / total_payments` rounded appropriately.
-- **Interest-Only (IO) Periods.** Support for a period of interest-only
-  payments before amortization begins. Configurable via
-  `interest_only_months` in `LoanParams`. The loan recasts and amortizes
-  over the remaining term after the IO period ends.
-- **Canadian Accelerated Bi-Weekly.** A new convenience constructor
-  `canada_accelerated_biweekly(...)` that derives the accelerated
+- **Interest-Only (IO) Periods.** New ``LoanParams.interest_only_months``
+  field. For the specified number of months the borrower pays only
+  accrued interest; after the IO period the loan recasts and fully
+  amortizes over the remaining term. Validated against the CFPB sample
+  Loan Estimate for an Interest-Only loan ($211,000 / 4% / 5-yr IO).
+- **Zero-Interest Loan Support.** ``annual_rate=0`` is now accepted
+  (previously raised ``ValueError``). Payment is ``principal / n``
+  rounded to the currency unit.
+- **Canadian Accelerated Bi-Weekly.** New convenience constructor
+  ``canada_accelerated_biweekly(...)`` that derives the accelerated
   bi-weekly payment (monthly / 2) used by major Canadian banks.
-- **5 new international fixtures.** MoneyVox France (first French
-  fixture: €10,000 / 5% / 12 months, full 12-row schedule matching
-  cell-for-cell); JHF Flat 35 Japan (first Japanese fixture:
-  ¥20,000,000 / 1.5% / 30 years, single-anchor payment); RBC Canadian
-  Accelerated Bi-Weekly (single-anchor); CFPB Interest-Only regulatory
-  example; and Zero-Interest promotional financing (synthetic). Total
-  fixture count is now 41.
+- **5 new fixtures (41 total).** MoneyVox France (€10,000 / 5% /
+  12mo, full schedule), JHF Flat 35 Japan (¥20M / 1.5% / 30yr,
+  single-anchor), CFPB IO Sample ($211K / 4% / 5yr IO,
+  single-anchor), RBC Accelerated Bi-Weekly ($350K / 5% / 25yr,
+  single-anchor), Zero-Interest Promo ($999 / 0% / 24mo, synthetic).
 - **Pandas and Data Visualization vignette.** A new documentation vignette
   (`docs/vignettes/pandas.qmd`) demonstrating how to convert amortization
   schedules into `pandas.DataFrame` objects for vectorized analysis and

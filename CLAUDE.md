@@ -282,6 +282,13 @@ opening or updating a PR. All commands above assume ``uv sync
   ``CHANGELOG.md`` in the same branch. Put unreleased work under
   ``## [Unreleased]`` using the existing Keep a Changelog headings;
   only move entries into a versioned section during release prep.
+- **Documentation completeness checklist.** When adding a new public
+  field, function, enum value, or constructor, update ALL of:
+  (1) ``CHANGELOG.md`` under ``[Unreleased]``,
+  (2) ``tests/schedules/README.md`` if it adds a TOML field,
+  (3) ``docs/sphinx/api.md`` if it adds a public function/class,
+  (4) the relevant vignette in ``docs/vignettes/`` if it adds a
+  user-visible capability. Missing any of these is a review blocker.
 - Before opening or updating a PR, run the local gates documented
   in §"Development environment setup" above. If ``pre-commit`` is
   installed, ``uv run pre-commit run --all-files`` covers everything

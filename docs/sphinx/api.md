@@ -20,6 +20,7 @@ when you need every parameter explicitly.
 .. autofunction:: mortgagemath.us_30_year_fixed
 .. autofunction:: mortgagemath.us_15_year_fixed
 .. autofunction:: mortgagemath.canada_fixed_j2
+.. autofunction:: mortgagemath.canada_accelerated_biweekly
 .. autofunction:: mortgagemath.us_actual_360_commercial
 .. autofunction:: mortgagemath.fixed_payment_mortgage
 ```
