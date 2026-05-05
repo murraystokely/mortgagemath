@@ -128,9 +128,11 @@ To add a new verified loan:
 1. Create a `.toml` file with the loan parameters. See existing files for
    the format. **Do not include property addresses, lender names, or other
    PII.** Use opaque labels.
-2. Create a matching `.csv` file with at least the payments you have verified
-   against the source. Partial schedules are fine — only include rows you can
-   confirm.
+2. Create a matching `.csv` file with the source-backed values. If the source
+   publishes only a payment amount or aggregate balance/interest anchors, a
+   header-only CSV is acceptable and the TOML expected values carry the test.
+   If the source publishes row-level schedule data, include every published
+   row/value for the chosen example; do not ship partial row-level schedules.
 3. Include the `[source]` section with `kind`, country/state, and (for
    non-statement sources) a `url`. For statement sources include
    `verified_by` and `verified_date`.

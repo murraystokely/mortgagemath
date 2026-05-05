@@ -70,7 +70,10 @@ Standing rules from `CLAUDE.md` apply:
   and balance each row, final payment adjusted to clear balance.
 - Caveats: strong arithmetic source but weaker institutional authority
   because it is a generic private calculator, not a lender, regulator, or
-  textbook. Same integer-yen quantization issue as the JHF candidate.
+  textbook. Integer-yen quantization is now supported with
+  `currency_unit = "1"`, but a quick local check still differs by one yen
+  from the published payment/final adjustment, so this likely needs an
+  explicit floor/`ROUND_DOWN` convention before becoming fixture-ready.
 
 ## South Korea
 
@@ -360,8 +363,10 @@ constant-principal/serial-loan examples outside the current package surface.
 - Caveats: quick local annuity check for `€200,000 / 2% / 240 months`
   gives a standard monthly P&I near `€1,011.77`, not `€1,011.23`, so this
   is not fixture-ready without reconciling the source's convention. The
-  insurance column is computed on declining balance, which is outside the
-  deferred flat `fee_per_period` design.
+  insurance column is computed on declining balance, while the current
+  `fee_per_period` feature models a flat per-period fee; this source would
+  need either a variable-fee schedule mode or a different interpretation of
+  the published insurance values.
 
 ### French near misses
 
