@@ -34,6 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   single-anchor), CFPB IO Sample ($211K / 4% / 5yr IO,
   single-anchor), RBC Accelerated Bi-Weekly ($350K / 5% / 25yr,
   single-anchor), Zero-Interest Promo ($999 / 0% / 24mo, synthetic).
+- **Texas Instruments BA II PLUS fixture (42 total).** Adds the
+  official guidebook's $120,000 / 6.125% / 30-year amortization
+  worksheet example, including aggregate principal, interest, and
+  balance anchors for the first three calendar years.
 - **Pandas and Data Visualization vignette.** A new documentation vignette
   (`docs/vignettes/pandas.qmd`) demonstrating how to convert amortization
   schedules into `pandas.DataFrame` objects for vectorized analysis and

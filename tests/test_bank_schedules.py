@@ -147,3 +147,42 @@ class TestBankSchedules:
         assert sched[final_index].balance == Decimal(balloon), (
             f"Balloon at term: {sched[final_index].balance} != {balloon}"
         )
+
+    def test_amortization_ranges_match(self, bank_schedule):
+        """Validate published amortization worksheet ranges, if any.
+
+        Some sources publish calculator-style ranges rather than individual
+        rows: a beginning payment number, ending payment number, ending
+        balance, cumulative principal, and cumulative interest. These ranges
+        are source-backed aggregate anchors and are stricter than validating
+        the payment alone.
+        """
+        toml_data, _ = bank_schedule
+        ranges = toml_data.get("expected", {}).get("amortization_ranges", ())
+        if not ranges:
+            return
+        loan = _loan_from_toml(toml_data)
+        sched = amortization_schedule(loan)
+
+        for range_data in ranges:
+            start = int(range_data["start_payment"])
+            end = int(range_data["end_payment"])
+            rows = sched[start : end + 1]
+
+            expected_balance = Decimal(range_data["balance"])
+            expected_principal = Decimal(range_data["principal"])
+            expected_interest = Decimal(range_data["interest"])
+
+            assert sched[end].balance == expected_balance, (
+                f"Payments {start}-{end}: balance {sched[end].balance} != "
+                f"{expected_balance}"
+            )
+            principal = sum(inst.principal for inst in rows)
+            assert principal == expected_principal, (
+                f"Payments {start}-{end}: principal {principal} != "
+                f"{expected_principal}"
+            )
+            interest = sum(inst.interest for inst in rows)
+            assert interest == expected_interest, (
+                f"Payments {start}-{end}: interest {interest} != {expected_interest}"
+            )
