@@ -18,7 +18,7 @@ def test_fully_amortizing_summary():
     assert s.periodic_payment == Decimal("1896.21")
     assert s.num_payments == 360
     assert s.balloon_balance == Decimal("0.00")
-    assert s.payoff_at_term == s.total_paid
+    assert s.total_cost == s.total_paid
     assert s.total_interest == Decimal("382628.90")
     assert s.total_fees == Decimal("0.00")
     assert s.total_principal == Decimal("300000.00")
@@ -41,8 +41,8 @@ def test_balloon_loan_summary():
     assert s.num_payments == 120
     assert s.balloon_balance == Decimal("20885505.83")
     assert s.balloon_balance > Decimal("0")
-    assert s.payoff_at_term == s.total_paid + s.balloon_balance
-    assert s.payoff_at_term > s.total_paid
+    assert s.total_cost == s.total_paid + s.balloon_balance
+    assert s.total_cost > s.total_paid
 
 
 def test_fee_loaded_summary():

@@ -428,7 +428,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Total paid:        {s.total_paid}")
         if s.balloon_balance:
             print(f"Balloon balance:   {s.balloon_balance}")
-            print(f"Payoff at term:    {s.payoff_at_term}")
+            print(f"Total cost:        {s.total_cost}")
         return 0
 
     if args.cmd == "schedule":

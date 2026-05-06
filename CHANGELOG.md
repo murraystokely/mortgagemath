@@ -17,8 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **``loan_summary()`` convenience function.** Returns a
   ``LoanSummary`` with ``periodic_payment``, ``total_interest``,
   ``total_paid``, ``total_fees``, ``balloon_balance``,
-  ``payoff_at_term``, and ``num_payments``. For balloon loans,
-  ``payoff_at_term`` gives the total cash needed to extinguish
+  ``total_cost``, and ``num_payments``. For balloon loans,
+  ``total_cost`` gives the total cash needed to extinguish
   the debt (scheduled payments plus balloon balance).
 - **CLI ``summary`` subcommand.** ``mortgagemath summary
   --principal ... --rate ... --term-months ...`` prints the

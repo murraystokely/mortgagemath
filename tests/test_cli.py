@@ -326,7 +326,7 @@ def test_summary_balloon_loan(capsys):
     assert "141947.25" in out
     assert "Balloon balance" in out
     assert "20885505.83" in out
-    assert "Payoff at term" in out
+    assert "Total cost" in out
 
 
 # ---------------------------------------------------------------------------

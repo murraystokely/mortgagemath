@@ -24,7 +24,7 @@ class LoanSummary:
     total_paid: Decimal
     """Sum of all scheduled payments over the life of the loan
     (includes fees). For balloon loans this does NOT include the
-    balloon balance — see ``payoff_at_term``."""
+    balloon balance — see ``total_cost``."""
 
     total_interest: Decimal
     """Cumulative interest paid over the life of the loan."""
@@ -42,7 +42,7 @@ class LoanSummary:
     """Remaining balance at the end of the term. Zero for fully
     amortizing loans; the balloon amount for balloon loans."""
 
-    payoff_at_term: Decimal
+    total_cost: Decimal
     """Total cash required to extinguish the debt at term:
     ``total_paid + balloon_balance``. For fully amortizing loans
     this equals ``total_paid``."""
@@ -87,7 +87,7 @@ def loan_summary(loan: LoanParams) -> LoanSummary:
         Decimal('1896.21')
         >>> s.total_interest
         Decimal('382628.90')
-        >>> s.payoff_at_term
+        >>> s.total_cost
         Decimal('682628.90')
     """
     pmt = periodic_payment(loan)
@@ -101,7 +101,7 @@ def loan_summary(loan: LoanParams) -> LoanSummary:
     total_fees = sum((row.fee for row in payment_rows), _ZERO)
     total_principal = sum((row.principal for row in payment_rows), _ZERO)
     balloon_balance = payment_rows[-1].balance if payment_rows else loan.principal
-    payoff_at_term = total_paid + balloon_balance
+    total_cost = total_paid + balloon_balance
     return LoanSummary(
         periodic_payment=pmt,
         total_paid=total_paid,
@@ -109,6 +109,6 @@ def loan_summary(loan: LoanParams) -> LoanSummary:
         total_fees=total_fees,
         total_principal=total_principal,
         balloon_balance=balloon_balance,
-        payoff_at_term=payoff_at_term,
+        total_cost=total_cost,
         num_payments=n,
     )
