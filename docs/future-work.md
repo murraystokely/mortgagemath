@@ -65,6 +65,31 @@ divergences that could mask real bugs.
   small natural residue, while the library adjusts the final payment
   to zero out the balance.
 
+### International sources investigated but not matching
+
+- **University of Cagliari** *Ripasso di Matematica Finanziaria*
+  (€100,000 / 5% / 6 annual payments / rata €19,701.75). The PDF
+  publishes a complete 6-row table. Row 2 quota capitale is
+  15,436.83 published vs 15,436.84 computed (interest 4264.9125
+  rounds to 4264.91; 19701.75 − 4264.91 = 15436.84). The library
+  is mathematically correct; the textbook has a 1-cent error.
+  Rows 1, 3–6 match exactly under ``CARRY_PRECISION``. Per the
+  no-partial-fixtures rule, this source is not committed. URL:
+  <https://web.unica.it/static/resources/cms/documents/2Ripassodimatematicafinanziaria_1.pdf>
+- **Dutch Wikipedia "Annuïteitenlening"** (€100,000 / 4% / 10yr
+  annual / annuity €12,329.09). CC-BY-SA licensed, complete 10-row
+  table, but schedule values are published in **whole euros only**
+  (no cents), despite the payment being stated at cent precision.
+  The library computes to cent precision and cannot match
+  whole-euro values cell-for-cell. Not suitable as a fixture.
+  URL: <https://nl.wikipedia.org/wiki/Annu%C3%AFteitenlening>
+- **Vestergaard "Annuitetsregning"** (25,000 kr / 20% / 6yr
+  annual / ydelse 7,518 kr). Danish teacher notes PDF. Under
+  ``CARRY_PRECISION``, row 4 afdrag is 4,351 computed vs 4,350
+  published — a 1-kr divergence. Pedagogical example (20% rate)
+  with whole-kr rounding. Per no-partial-fixtures, not committed.
+  URL: <https://www.matematikfysik.dk/mat/noter_tillaeg/tillaeg_annuitetsregning.pdf>
+
 ### Sources requiring algorithms the library does not implement
 
 - **Kerry's Toyota Rav4** chose a non-actuarial whole-dollar
@@ -91,6 +116,13 @@ These features have been investigated but not shipped, either because
 no verifiable published source was found or because the feature is
 blocked on source retrieval.
 
+- **Constant principal / serial loans** — common in Nordic countries
+  (Swedish "rak amortering", Norwegian/Danish "serielån"). The
+  borrower pays a fixed amount of principal each month plus accrued
+  interest, so total payment decreases over time. Requires a new
+  schedule path distinct from the closed-form annuity formula.
+  Blocked on finding a verified row-level source (SBAB, Nordea,
+  and Vestergaard all investigated; none matched cell-for-cell).
 - **Variable / declining-balance fees** — insurance computed on
   remaining balance ("assurance sur le capital restant dû"), stepped
   insurance schedules, or frais de garantie at a different cadence.
@@ -111,15 +143,20 @@ blocked on source retrieval.
 - **Graduated payment mortgages** — Reg Z Sample H-15 and FHA
   Section 245 Plan III. Bundles with payment-cap mechanics but no
   second published source found beyond the regulatory examples.
-- **Offset mortgages** — common in UK and Australia. Requires
-  allowing a variable principal balance input, which adds significant
-  complexity to the current pure-math approach.
+- **Offset mortgages** — common in UK and Australia. Borrower's
+  savings account balance is subtracted from principal before
+  interest is calculated. Requires variable principal balance input,
+  adding significant complexity to the current pure-math approach.
 - **Bausparvertrag / Bauspardarlehen** (Germany/Austria) — complex
   product with a savings-phase transition. The library could handle
   the loan phase, but no specific worked example identified.
 - **CLI ``summary`` subcommand** — output total interest, payoff
   date, APR. Low priority; the information is derivable from
   ``schedule`` output.
+- **Cadence/compounding validation** — review whether any
+  combinations (e.g. ``ANNUAL`` frequency with ``MONTHLY``
+  compounding) are financially invalid and should raise a
+  ``ValueError``. Currently all combinations are accepted.
 
 ### Unresolved regional gaps
 
@@ -147,16 +184,28 @@ fixtures, but have not yet been investigated in depth:
   interest rate (Effektivzinssatz) calculation examples for standard
   "Annuitätendarlehen."
 
+### Competitive landscape
+
+``mortgagemath`` is the most rigorous cent-accurate amortization
+library available in Python. Competitors:
+
+- ``numpy-financial`` (``np.pmt``): ubiquitous but float-only;
+  cannot match actual bank statements.
+- ``mortgage`` (PyPI): basic Decimals, US fixed-rate only; no ARMs,
+  no 30/360 vs Actual/360, no Canadian compounding.
+- ``amortization`` (PyPI): simple float-based tables.
+
 ## International fixture research (May 2026)
 
 A broad web search across six countries was conducted to find
 published worked amortization examples suitable as test fixtures.
-All agents were blocked from fetching page content directly, so
-findings come from search result snippets only. **Every source
-below requires manual browser verification before creating a
-fixture.** No numbers should be treated as verified until a human
-visits the URL and confirms the published values per CLAUDE.md
-Rule 4 (Source verification).
+Initial findings came from search result snippets only; sources
+marked **COMMITTED** have since been fetched, verified, and added
+to the fixture suite. Sources marked **REJECTED** were retrieved
+and found to diverge from the library's output (details in
+"Sources that did not match the library" above). Unmarked entries
+still require manual browser verification before creating a
+fixture per CLAUDE.md Rule 4 (Source verification).
 
 ### Tier 1: Complete or near-complete schedules (verify first)
 
@@ -175,57 +224,41 @@ independent search snippets.
 - Source type: commercial educational site. Annual periods, not
   monthly.
 
-**Netherlands — Dutch Wikipedia "Annuïteitenlening" (CC-BY-SA)**
+**Netherlands — Dutch Wikipedia "Annuïteitenlening" (CC-BY-SA)
+— REJECTED**
 
 - URL: <https://nl.wikipedia.org/wiki/Annu%C3%AFteitenlening>
 - Parameters: €100,000 / 4% / 10 years / annual payments
 - Annuity: €12,329.09
-- ~8 of 10 rows confirmed in search snippets (year 1: interest
-  €4,000.00, repayment €8,329.09, remaining €91,670.91; through
-  year 9: remaining €11,853.56).
-- CC-BY-SA 4.0 license — strongest licensing of any source found.
-  Annual periods, not monthly.
+- Table values published in **whole euros only** (no cents). The
+  library computes to cent precision and cannot match whole-euro
+  rounded schedule values cell-for-cell. See "International sources
+  investigated but not matching" above.
 
-**Denmark — Vestergaard teacher notes PDF (6-year annual annuity)**
+**Denmark — Vestergaard teacher notes PDF — REJECTED**
 
 - URL: <https://www.matematikfysik.dk/mat/noter_tillaeg/tillaeg_annuitetsregning.pdf>
-- Parameters: 25,000 kr / 20% / 6 years / annual payments
-- Payment (ydelse): 7,518 kr
-- All 6 rows confirmed across multiple search snippets (year 1:
-  interest 5,000, afdrag 2,518, restgaeld 22,482; through year 6:
-  restgaeld 0).
-- Freely downloadable PDF. Rounded to whole kr (no øre). The 20%
-  rate is pedagogical, not realistic.
+- Parameters: 25,000 kr / 20% / 6 years / annual / 7,518 kr
+- Row 4 diverges by 1 kr under carry-precision. See "International
+  sources investigated but not matching" above.
 
-**Italy — University of Cagliari PDF (6-year annual annuity)**
+**Italy — University of Cagliari PDF — REJECTED**
 
 - URL: <https://web.unica.it/static/resources/cms/documents/2Ripassodimatematicafinanziaria_1.pdf>
-- Parameters: €100,000 / 5% / 6 years / annual payments
-- Payment (rata): €19,701.75
-- ~5 of 6 rows confirmed in a search snippet (year 1: quota
-  interessi €5,000.00, quota capitale €14,701.75, debito residuo
-  €85,298.25; through year 6: debito residuo €0). Same example
-  appears in Sapienza University (Palestini) slides at
-  <https://memotef.web.uniroma1.it/sites/default/files/file%20lezioni/Slides%20MF%202017%20ammortamento.pdf>.
-- Potential 1-cent ambiguity in year 2 quota capitale (15,436.83
-  vs 15,436.84 across sources) — needs resolution by reading the
-  PDF.
+- Parameters: €100,000 / 5% / 6 years / annual / €19,701.75
+- Row 2 quota capitale diverges by 1 cent (15,436.83 published vs
+  15,436.84 computed). See "International sources investigated but
+  not matching" above.
 
 ### Tier 2: Monthly schedules (partial row confirmation)
 
-**France — MoneyVox (12-month monthly with assurance)**
+**France — MoneyVox (12-month monthly with assurance)
+— COMMITTED**
 
-- URL: <https://www.moneyvox.fr/credit/tableau-amortissement.php>
-- Parameters: €10,000 / 5% / 12 months / monthly; assurance
-  0.35% = €2.92/month
-- Mensualité hors assurance: €856.07
-- 3 full rows confirmed (month 1: interest €41.67, capital amorti
-  €814.40, CRD €9,185.60; month 2: interest €38.27, capital
-  amorti €817.80, CRD €8,367.80; month 3: interest €34.87, CRD
-  €7,546.60). Interest for months 4–7 also confirmed (€31.44,
-  €28.00, €24.53, €21.04).
-- The full table has since been verified and promoted to the
-  fixture suite as the trigger source for ``fee_per_period``.
+- Now in the fixture suite as ``moneyvox_fr_10k_5pct_12mo``.
+  Full 12-row schedule validated cell-for-cell including the
+  ``fee_per_period`` assurance column. Trigger source for
+  shipping the ``fee_per_period`` feature.
 
 **France — Wikipedia fr "Amortissement (finance)" (CC-BY-SA)**
 
@@ -317,17 +350,26 @@ still be verified before adding weaker blog-only payment anchors.
 
 ### Recommended manual verification priority
 
-1. **Dutch Wikipedia** — CC-BY-SA, likely complete 10-row table,
-   trivially verifiable in any browser.
+Sources already resolved (committed or rejected) are marked.
+Remaining candidates:
+
+1. ~~Dutch Wikipedia~~ — REJECTED (whole-euro only, no cents).
 2. **French Wikipedia** — CC-BY-SA, check if the "Amortissement
-   (finance)" page has a full 12-month table.
-3. **expertfiscal.fr** — all 4 rows already confirmed in search
-   snippets; visit page to transcribe exact values.
-4. **University of Cagliari PDF** — download and verify 6-row table;
-   resolve the 1-cent ambiguity.
-5. **Vestergaard Danish PDF** — download and verify 6-row table.
-6. **JHF Flat 35 page** — check whether row-level schedule data
-   exists (would be first Japanese fixture).
+   (finance)" page has a full 12-month table. Confirmed no table
+   on the page (WebFetch verified), but payment anchor €88.84
+   could be a single-anchor fixture.
+3. **expertfiscal.fr** — all 4 rows confirmed in search snippets;
+   page is JS-rendered and could not be fetched. Visit in a
+   browser to transcribe exact values.
+4. ~~University of Cagliari PDF~~ — REJECTED (1-cent error row 2).
+5. ~~Vestergaard Danish PDF~~ — REJECTED (1-kr error row 4).
+6. ~~JHF Flat 35~~ — COMMITTED as single-anchor fixture.
+7. ~~LoanKeisan Japan~~ — COMMITTED as full 360-row fixture.
+8. ~~MoneyVox France~~ — COMMITTED with fee_per_period.
+9. **Italian bank transparency PDFs** — Solution Bank, Banca CRS,
+   BCC Brescia, Banca Etica publish payment anchors for €200,000
+   loans at various rates. Standard 30/360 annuity. Require manual
+   PDF download to verify.
 
 ### Other sections
 
@@ -464,7 +506,7 @@ candidate conventions, both rejected:
 
   **Library reproduces both anchors exactly.** The
   `fanniemae_mf_1103_25m_550_360mo` fixture validates the implied
-  monthly P&I ($141,947.25), and a `[[expected.balance_anchor]]` entry
+  monthly P&I ($141,947.25), and ``expected.balloon_at_term``
   validates the implied balance after 120 payments ($20,885,505.83 =
   $25M − $4,114,494.17). The schedule itself is generated with
   `start_date = 2018-12-01`, full-precision balance tracking, and
