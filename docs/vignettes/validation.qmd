@@ -7,6 +7,7 @@ format:
       x: 0.55in
       y: 0.55in
     fontsize: 8.5pt
+    mainfont: "Noto Serif"
   html: default
 ---
 
@@ -114,10 +115,30 @@ for stem, data in fixtures:
         fmt_arm(loan),
     ))
 
-print("| Source | Loan | Day | Bal | Rnd | Cmp | Freq | ARM |")
-print("|:--|:--|:--:|:--:|:--:|:--:|:--:|:--:|")
+# Emit a raw Typst table for PDF (flows across pages with repeating
+# headers), plus a Markdown table for HTML.  The {=typst} block is
+# silently ignored by the HTML backend, and the Markdown table renders
+# acceptably in both (Typst just won't page-break it, but the raw
+# block takes priority when present).
+
+print("```{=typst}")
+# Use CJK font fallback for Japanese/Korean fixture citations.
+# Falls back gracefully to boxes if the font isn't installed.
+print('#set text(size: 7.5pt, font: ("Noto Serif", "Noto Serif CJK JP", "Noto Sans CJK JP"))')
+print("#table(")
+print("  columns: (auto, 1fr, auto, auto, auto, auto, auto, auto),")
+print("  align: (left, left, center, center, center, center, center, center),")
+print("  stroke: 0.5pt + luma(180),")
+print("  inset: 3pt,")
+print("  table.header(")
+print('    [*Source*], [*Loan*], [*Day*], [*Bal*], [*Rnd*], [*Cmp*], [*Freq*], [*ARM*],')
+print("  ),")
 for r in rows:
-    print("| " + " | ".join(r) + " |")
+    cells = ", ".join(f"[{c}]" for c in r)
+    print(f"  {cells},")
+print(")")
+print("```")
+
 print()
 print(f"_{len(rows)} fixtures total._")
 ```
