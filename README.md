@@ -66,6 +66,12 @@ python -m mortgagemath   # self-check against reference values
 A standard 30-year fixed-rate mortgage from the command line:
 
 ```sh
+mortgagemath summary --principal 300000 --rate 6.5 --term-months 360
+```
+
+Or generate the full payment-by-payment schedule:
+
+```sh
 mortgagemath schedule --principal 300000 --rate 6.5 --term-months 360
 ```
 

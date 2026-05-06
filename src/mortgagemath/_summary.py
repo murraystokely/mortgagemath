@@ -22,7 +22,9 @@ class LoanSummary:
     """Level payment per period (excludes fee_per_period)."""
 
     total_paid: Decimal
-    """Sum of all payments over the life of the loan (includes fees)."""
+    """Sum of all scheduled payments over the life of the loan
+    (includes fees). For balloon loans this does NOT include the
+    balloon balance — see ``total_cost``."""
 
     total_interest: Decimal
     """Cumulative interest paid over the life of the loan."""
@@ -31,8 +33,19 @@ class LoanSummary:
     """Cumulative fees paid over the life of the loan."""
 
     total_principal: Decimal
-    """Principal repaid (equals the original principal for fully
-    amortizing loans; equals principal minus balloon for balloon loans)."""
+    """Principal repaid through scheduled payments. For fully
+    amortizing loans this equals the original principal. For balloon
+    loans this is less than the original principal by the balloon
+    amount."""
+
+    balloon_balance: Decimal
+    """Remaining balance at the end of the term. Zero for fully
+    amortizing loans; the balloon amount for balloon loans."""
+
+    total_cost: Decimal
+    """Total cash required to extinguish the debt at term:
+    ``total_paid + balloon_balance``. For fully amortizing loans
+    this equals ``total_paid``."""
 
     num_payments: int
     """Number of payments in the schedule (excludes the initial
@@ -40,12 +53,15 @@ class LoanSummary:
 
     def __repr__(self) -> str:
         """Compact repr showing payment, total interest, and total paid."""
-        return (
+        parts = (
             f"LoanSummary(payment={self.periodic_payment:,}, "
             f"total_interest={self.total_interest:,}, "
-            f"total_paid={self.total_paid:,}, "
-            f"n={self.num_payments})"
+            f"total_paid={self.total_paid:,}"
         )
+        if self.balloon_balance:
+            parts += f", balloon={self.balloon_balance:,}"
+        parts += f", n={self.num_payments})"
+        return parts
 
 
 def loan_summary(loan: LoanParams) -> LoanSummary:
@@ -60,7 +76,8 @@ def loan_summary(loan: LoanParams) -> LoanSummary:
 
     Returns:
         A :class:`LoanSummary` with the periodic payment, total
-        interest, total paid, total fees, and number of payments.
+        interest, total paid, total fees, balloon balance, total
+        cost, and number of payments.
 
     Example::
 
@@ -70,6 +87,8 @@ def loan_summary(loan: LoanParams) -> LoanSummary:
         Decimal('1896.21')
         >>> s.total_interest
         Decimal('382628.90')
+        >>> s.total_cost
+        Decimal('682628.90')
     """
     pmt = periodic_payment(loan)
     sched = amortization_schedule(loan)
@@ -81,11 +100,15 @@ def loan_summary(loan: LoanParams) -> LoanSummary:
     total_interest = payment_rows[-1].total_interest if payment_rows else _ZERO
     total_fees = sum((row.fee for row in payment_rows), _ZERO)
     total_principal = sum((row.principal for row in payment_rows), _ZERO)
+    balloon_balance = payment_rows[-1].balance if payment_rows else loan.principal
+    total_cost = total_paid + balloon_balance
     return LoanSummary(
         periodic_payment=pmt,
         total_paid=total_paid,
         total_interest=total_interest,
         total_fees=total_fees,
         total_principal=total_principal,
+        balloon_balance=balloon_balance,
+        total_cost=total_cost,
         num_payments=n,
     )

@@ -116,6 +116,16 @@ These features have been investigated but not shipped, either because
 no verifiable published source was found or because the feature is
 blocked on source retrieval.
 
+- **Extra payments / prepayments** — the most common consumer
+  feature request: "what if I pay $200 extra per month?" Requires
+  a mechanism to specify additional principal payments (either a
+  flat monthly extra or a schedule of one-time payments) and recast
+  the remaining schedule accordingly. The library's current
+  ``payment_override`` field pins a fixed payment but does not model
+  mid-schedule extras with recast. Blocked on finding a published
+  source with a worked prepayment schedule to validate against —
+  most online calculators use float arithmetic and don't publish
+  row-level data suitable for cent-accurate fixtures.
 - **Constant principal / serial loans** — common in Nordic countries
   (Swedish "rak amortering", Norwegian/Danish "serielån"). The
   borrower pays a fixed amount of principal each month plus accrued
@@ -150,9 +160,6 @@ blocked on source retrieval.
 - **Bausparvertrag / Bauspardarlehen** (Germany/Austria) — complex
   product with a savings-phase transition. The library could handle
   the loan phase, but no specific worked example identified.
-- **CLI ``summary`` subcommand** — output total interest, payoff
-  date, APR. Low priority; the information is derivable from
-  ``schedule`` output.
 - **Cadence/compounding validation** — review whether any
   combinations (e.g. ``ANNUAL`` frequency with ``MONTHLY``
   compounding) are financially invalid and should raise a

@@ -281,6 +281,55 @@ def test_schedule_with_fee_per_period(capsys):
 
 
 # ---------------------------------------------------------------------------
+# summary subcommand
+# ---------------------------------------------------------------------------
+
+
+def test_summary_fully_amortizing(capsys):
+    """CLI summary prints payment, interest, and total for a standard loan."""
+    rc = cli.main(["summary", "-p", "300000", "-r", "6.5", "-t", "360"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "1896.21" in out
+    assert "382628.90" in out
+    assert "682628.90" in out
+    assert "360" in out
+    # Fully amortizing: no balloon line
+    assert "Balloon" not in out
+
+
+def test_summary_balloon_loan(capsys):
+    """CLI summary shows balloon balance and payoff for a balloon loan."""
+    rc = cli.main(
+        [
+            "summary",
+            "--principal",
+            "25000000",
+            "--rate",
+            "5.5",
+            "--term-months",
+            "120",
+            "--amortization-period-months",
+            "360",
+            "--day-count",
+            "actual/360",
+            "--payment-rounding",
+            "ROUND_HALF_UP",
+            "--interest-rounding",
+            "ROUND_HALF_UP",
+            "--start-date",
+            "2018-12-01",
+        ]
+    )
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "141947.25" in out
+    assert "Balloon balance" in out
+    assert "20885505.83" in out
+    assert "Total cost" in out
+
+
+# ---------------------------------------------------------------------------
 # Error handling
 # ---------------------------------------------------------------------------
 

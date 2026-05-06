@@ -192,7 +192,7 @@ def us_actual_360_commercial(
     *,
     term_years: int,
     amortization_years: int,
-    start_date: date,
+    start_date: date | str,
     payment_rounding: PaymentRounding = PaymentRounding.ROUND_HALF_UP,
     interest_rounding: PaymentRounding = PaymentRounding.ROUND_HALF_UP,
 ) -> LoanParams:
@@ -203,8 +203,11 @@ def us_actual_360_commercial(
     possible balloon when ``term_years`` is shorter than
     ``amortization_years``. ``start_date`` is required because
     Actual/360 schedules compute interest from the calendar days in
-    each accrual period.
+    each accrual period.  Accepts either a ``datetime.date`` or an
+    ISO-format string (``"YYYY-MM-DD"``).
     """
+    if isinstance(start_date, str):
+        start_date = date.fromisoformat(start_date)
     term_months = _years_to_months(term_years, "term_years")
     amortization_months = _years_to_months(amortization_years, "amortization_years")
     return LoanParams(
