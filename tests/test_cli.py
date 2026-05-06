@@ -92,6 +92,29 @@ def test_payment_with_rounding_flag(capsys):
     assert capsys.readouterr().out.strip() == "761.78"
 
 
+def test_payment_with_round_down_and_currency_unit(capsys):
+    """ROUND_DOWN is available through the CLI for integer-currency schedules."""
+    rc = cli.main(
+        [
+            "payment",
+            "--principal",
+            "30000000",
+            "--rate",
+            "1",
+            "--term-months",
+            "360",
+            "--payment-rounding",
+            "ROUND_DOWN",
+            "--interest-rounding",
+            "ROUND_DOWN",
+            "--currency-unit",
+            "1",
+        ]
+    )
+    assert rc == 0
+    assert capsys.readouterr().out.strip() == "96491"
+
+
 def test_payment_canadian_semi_annual(capsys):
     """Canadian j_2=4.9% mortgage Olivier §13.4 Chans first term."""
     rc = cli.main(

@@ -310,9 +310,10 @@ These are freely downloadable but could not be fetched by agents.
 | France / Italy / Netherlands | Standard rounding to cent (likely ROUND_HALF_UP) | Various |
 | Denmark | Varies; some sources round to whole kr, others to øre | Vestergaard (whole kr), mfgy.dk (øre) |
 
-Japan and South Korea both use truncation, not ROUND_HALF_UP. If
-these countries become fixture targets, a ``ROUND_DOWN`` / floor
-rounding mode may be needed in the library.
+Japan and South Korea both use truncation, not ROUND_HALF_UP.
+``PaymentRounding.ROUND_DOWN`` is now implemented and validated by the
+LoanKeisan Japan full-schedule fixture. More South Korean sources should
+still be verified before adding weaker blog-only payment anchors.
 
 ### Recommended manual verification priority
 

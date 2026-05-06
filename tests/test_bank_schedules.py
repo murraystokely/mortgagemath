@@ -174,13 +174,11 @@ class TestBankSchedules:
             expected_interest = Decimal(range_data["interest"])
 
             assert sched[end].balance == expected_balance, (
-                f"Payments {start}-{end}: balance {sched[end].balance} != "
-                f"{expected_balance}"
+                f"Payments {start}-{end}: balance {sched[end].balance} != {expected_balance}"
             )
             principal = sum(inst.principal for inst in rows)
             assert principal == expected_principal, (
-                f"Payments {start}-{end}: principal {principal} != "
-                f"{expected_principal}"
+                f"Payments {start}-{end}: principal {principal} != {expected_principal}"
             )
             interest = sum(inst.interest for inst in rows)
             assert interest == expected_interest, (

@@ -31,7 +31,8 @@ conventions actual lenders use:
 
 - **Decimal arithmetic** end-to-end (no float drift)
 - **Configurable rounding** for the periodic payment and per-row
-  interest (`ROUND_UP`, `ROUND_HALF_UP`, `ROUND_HALF_EVEN`)
+  interest (`ROUND_UP`, `ROUND_DOWN`, `ROUND_HALF_UP`,
+  `ROUND_HALF_EVEN`)
 - **Two balance-tracking modes** — `ROUND_EACH` (US lender
   statements) and `CARRY_PRECISION` (Excel / graduate CRE
   textbooks)
@@ -47,7 +48,7 @@ conventions actual lenders use:
   `j_2`, Actual/360 commercial, and fixed-payment loans
 - **Exact zero ending balance** — the final row trues up so
   the schedule lands at $0.00
-- **42 validated fixtures** (including 15+ full-schedule cell-for-cell
+- **43 validated fixtures** (including 15+ full-schedule cell-for-cell
   matches) auto-discovered by `pytest`
 
 ## Installation
@@ -153,7 +154,7 @@ See the **[Pandas and Data Visualization](docs/vignettes/rendered/pandas.pdf)** 
 
 ## What's validated
 
-42 fully published amortization tables from government regulatory
+43 fully published amortization tables from government regulatory
 documents, GSE servicing guides, and academic textbooks, exercised
 by a test suite of more than 300 tests that runs on every push and
 every release. Every committed fixture cell reproduces its source
@@ -181,7 +182,7 @@ than forced into the corpus. The sources span:
 
 See the **[Validation
 vignette](docs/vignettes/rendered/validation.pdf)** for the full
-42-fixture × 8-parameter matrix and bibliography, generated
+43-fixture × 8-parameter matrix and bibliography, generated
 directly from the fixture `[source]` blocks.
 
 ## Documentation

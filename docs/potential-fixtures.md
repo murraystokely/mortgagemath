@@ -46,7 +46,7 @@ Standing rules from `CLAUDE.md` apply:
   constant-principal (`元金均等返済`) table, which is outside the current
   `mortgagemath` surface.
 
-### LoanKeisan full 360-row calculator schedule
+### LoanKeisan full 360-row calculator schedule — committed
 
 - Source: ローン計算ドットコム, "3,000万円借入のローン計算、金利1.000％、借入期間30年"
 - URL: <https://www.loankeisan.com/bin/calc?a=3000&b=0&i=1&p=30&t=r>
@@ -68,12 +68,10 @@ Standing rules from `CLAUDE.md` apply:
 
 - Likely model: fixed monthly level-payment annuity, yen-rounded interest
   and balance each row, final payment adjusted to clear balance.
-- Caveats: strong arithmetic source but weaker institutional authority
-  because it is a generic private calculator, not a lender, regulator, or
-  textbook. Integer-yen quantization is now supported with
-  `currency_unit = "1"`, but a quick local check still differs by one yen
-  from the published payment/final adjustment, so this likely needs an
-  explicit floor/`ROUND_DOWN` convention before becoming fixture-ready.
+- Status: committed as
+  `tests/schedules/loankeisan_jp_30m_100_360mo_rounddown.{toml,csv}`.
+  The fixture uses `currency_unit = "1"` plus `ROUND_DOWN` for both
+  payment and interest rounding and reproduces all 360 published rows.
 
 ## South Korea
 

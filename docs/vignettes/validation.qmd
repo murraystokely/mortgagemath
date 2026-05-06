@@ -41,7 +41,12 @@ FIXTURES_DIR = Path("..") / ".." / "tests" / "schedules"
 
 DAY_SHORT = {"30/360": "30/360", "actual/360": "A/360"}
 BAL_SHORT = {"round_each": "RE", "carry_precision": "CP"}
-RND_SHORT = {"ROUND_UP": "UP", "ROUND_HALF_UP": "HU", "ROUND_HALF_EVEN": "HE"}
+RND_SHORT = {
+    "ROUND_UP": "UP",
+    "ROUND_DOWN": "DN",
+    "ROUND_HALF_UP": "HU",
+    "ROUND_HALF_EVEN": "HE",
+}
 COMP_SHORT = {"monthly": "M", "semi_annual": "j₂", "annual": "A"}
 FREQ_SHORT = {
     "monthly": "M", "semi_monthly": "SM", "biweekly": "BW",
@@ -119,7 +124,7 @@ print(f"_{len(rows)} fixtures total._")
 
 **Column codes.** Day: `30/360` US residential, `A/360` Actual/360
 US commercial. Bal: `RE` round-each-balance, `CP` carry-precision.
-Rnd: `UP` `ROUND_UP`, `HU` `ROUND_HALF_UP`, `HE` `ROUND_HALF_EVEN`.
+Rnd: `UP` `ROUND_UP`, `DN` `ROUND_DOWN`, `HU` `ROUND_HALF_UP`, `HE` `ROUND_HALF_EVEN`.
 Cmp: `M` monthly, `j₂` semi-annual (Canadian *Interest Act* §6),
 `A` annual. Freq: `M` `SM` `BW` `W` `Q` `A` (monthly to annual).
 ARM: count of `RateChange` entries; `cap` indicates at least one
