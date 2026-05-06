@@ -292,6 +292,10 @@ opening or updating a PR. All commands above assume ``uv sync
   in §"Development environment setup" above. If ``pre-commit`` is
   installed, ``uv run pre-commit run --all-files`` covers everything
   in one command.
+- **CLI before Python in examples.** When documentation shows
+  both a command-line invocation and a Python code block for the
+  same operation, the CLI example comes first. This applies to
+  README, quickstart, vignettes, and any other user-facing docs.
 - CHANGELOG dates use the user's local timezone (typically
   US/Pacific). Don't anchor to nearby entries; read today's date
   from the system reminder.
