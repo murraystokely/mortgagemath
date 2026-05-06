@@ -42,6 +42,22 @@ print(s.periodic_payment)     # Decimal("1896.21")
 print(s.total_interest)       # Decimal("382628.90")
 print(s.total_paid)           # Decimal("682628.90")
 print(s.num_payments)         # 360
+print(s.balloon_balance)      # Decimal("0.00") — fully amortizing
+print(s.payoff_at_term)       # Decimal("682628.90") — same as total_paid
+```
+
+For balloon loans, ``total_paid`` is the sum of scheduled payments
+only; ``payoff_at_term`` adds the balloon balance — the total cash
+required to extinguish the debt at maturity:
+
+```python
+from mortgagemath import us_actual_360_commercial, loan_summary
+
+# 10-year term on a 30-year amortization basis — balloon at term.
+loan = us_actual_360_commercial("25000000", "5.5", term_years=10, start_date="2018-12-01")
+s = loan_summary(loan)
+print(s.balloon_balance)      # Decimal("20885505.83")
+print(s.payoff_at_term)       # total_paid + balloon
 ```
 
 ## Pandas integration
