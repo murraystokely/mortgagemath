@@ -12,44 +12,42 @@
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/mortgagemath?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/mortgagemath)
 [![Documentation](https://img.shields.io/readthedocs/mortgagemath?label=docs)](https://mortgagemath.readthedocs.io/)
 
-**Cent-accurate mortgage amortization for Python.** Validated
-against CFPB regulatory disclosures, Fannie Mae GSE servicing
-guides, the Reg Z Sample H-14 ARM, the FHLBB *Federal Home Loan
-Bank Review* of March 1935, and 30+ open-licensed and modern
-copyrighted textbook worked examples — every committed fixture
-cell reproduces its source value to the cent. Decimal end-to-end;
-no runtime dependencies beyond the Python standard library.
+**Cent-accurate mortgage amortization for Python.** Every payment,
+interest charge, and balance is computed with `Decimal` arithmetic
+and validated against 46 published worked examples from government
+regulators, bank servicing guides, and academic textbooks across
+six countries. Zero runtime dependencies.
 
 ## Why mortgagemath?
 
-Most mortgage libraries get the closed-form payment right but
-diverge from real lender statements by 1–4 cents per row. The
-discrepancy compounds over the schedule, breaks reconciliation
-against an actual bank statement, and makes audit work painful.
-`mortgagemath` is built around the rounding and accounting
-conventions actual lenders use:
+Most mortgage libraries get the monthly payment right but diverge
+from real lender statements by 1–4 cents per row. That drift
+compounds over the schedule, breaks reconciliation against actual
+bank statements, and makes audit work painful. `mortgagemath` is
+built around the rounding and accounting conventions that actual
+lenders use:
 
 - **Decimal arithmetic** end-to-end (no float drift)
-- **Configurable rounding** for the periodic payment and per-row
-  interest (`ROUND_UP`, `ROUND_DOWN`, `ROUND_HALF_UP`,
-  `ROUND_HALF_EVEN`)
+- **Configurable rounding** — `ROUND_UP`, `ROUND_DOWN`,
+  `ROUND_HALF_UP`, `ROUND_HALF_EVEN`
 - **Two balance-tracking modes** — `ROUND_EACH` (US lender
-  statements) and `CARRY_PRECISION` (Excel / graduate CRE
-  textbooks)
-- **Both day-count conventions** — 30/360 (residential) and
-  Actual/360 (commercial)
-- **Non-monthly compounding and cadence** — Canadian *Interest
-  Act* §6 (`j_2`), effective-annual, weekly through annual
-- **Adjustable-rate mortgages** with rate schedules, optional
-  payment caps, and capitalized negative amortization
-- **Flat per-period fees** via `fee_per_period`, validated against
-  French *assurance emprunteur* payment columns
-- **Convenience constructors** for common US fixed-rate, Canadian
-  `j_2`, Actual/360 commercial, and fixed-payment loans
+  statements) and `CARRY_PRECISION` (Excel / CRE textbooks)
+- **Both day-count conventions** — 30/360 and Actual/360
+- **International compounding** — monthly (US), semi-annual
+  (Canadian *Interest Act* j₂), and effective-annual
+- **Flexible payment frequency** — monthly, bi-weekly, weekly,
+  quarterly, semi-monthly, or annual
+- **Adjustable-rate mortgages** with rate schedules, payment
+  caps, and negative amortization
+- **Interest-only periods** with automatic recast
+- **Flat per-period fees** for French *assurance emprunteur*
+  and similar insurance loadings
+- **Currency unit precision** — `Decimal("0.01")` for cents
+  or `Decimal("1")` for yen/won
 - **Exact zero ending balance** — the final row trues up so
-  the schedule lands at $0.00
-- **46 validated fixtures** (including 15+ full-schedule cell-for-cell
-  matches) auto-discovered by `pytest`
+  the schedule lands at exactly zero
+- **46 validated fixtures** from the US, Canada, France, Japan,
+  Italy, and South Korea
 
 ## Installation
 
@@ -59,66 +57,63 @@ pip install mortgagemath
 
 Requires Python 3.11+. Zero runtime dependencies.
 
-To verify a fresh install reproduces the same reference values
-the test suite validates:
-
 ```sh
-python -m mortgagemath
+python -m mortgagemath   # self-check against reference values
 ```
-
-This recomputes a CFPB sample Closing Disclosure, the Goldstein
-§10.3 Example 1 carry-precision schedule, and the Fannie Mae
-§1103 Tier 2 SARM monthly payment plus balloon-at-term. Exits 0
-if every value matches the published source exactly.
 
 ## Quick example
 
-The CFPB's Closing Disclosure Sample H-25(B) — $162,000 at
-3.875% for 30 years — from the command line:
-
-```sh
-mortgagemath schedule --principal 162000 --rate 3.875 --term-months 360 \
-    --payment-rounding ROUND_HALF_UP --interest-rounding ROUND_HALF_UP \
-    --format csv
-```
-
-The same loan from Python:
+A standard 30-year fixed-rate mortgage:
 
 ```python
-from mortgagemath import (
-    PaymentRounding, us_30_year_fixed,
-    periodic_payment, amortization_schedule,
-)
+from mortgagemath import us_30_year_fixed, periodic_payment, amortization_schedule
 
-loan = us_30_year_fixed(
-    "162000.00",
-    "3.875",
-    payment_rounding=PaymentRounding.ROUND_HALF_UP,
-)
+loan = us_30_year_fixed("300000", "6.5")
 
-print(periodic_payment(loan))      # Decimal("761.78")
+print(periodic_payment(loan))       # Decimal("1896.21")
 sched = amortization_schedule(loan)
-print(sched[1].interest)            # Decimal("523.13")
-print(sched[1].principal)           # Decimal("238.65")
-print(sched[-1].balance)            # Decimal("0.00")  exact closure
+print(sched[1].interest)            # Decimal("1625.00")
+print(sched[1].principal)           # Decimal("271.21")
+print(sched[-1].balance)            # Decimal("0.00")
 ```
 
-The lower-level `LoanParams` dataclass remains available when you
-need every knob explicitly. For the common cases, constructors such
-as `us_30_year_fixed`, `us_15_year_fixed`, `canada_fixed_j2`,
-`us_actual_360_commercial`, and `fixed_payment_mortgage` return
-ordinary validated `LoanParams` objects.
+From the command line:
 
-For Canadian *j_2* mortgages, US ARMs (with rate caps and
-payment caps), commercial Actual/360 with balloon, and the FHLBB
-1935 given-payment convention, see the **[Worked
-examples](docs/vignettes/rendered/examples.pdf)** vignette.
+```sh
+mortgagemath schedule --principal 300000 --rate 6.5 --term-months 360
+```
 
-## Pandas and Matplotlib Integration
+Convenience constructors like `us_30_year_fixed`, `us_15_year_fixed`,
+`canada_fixed_j2`, `canada_accelerated_biweekly`, and
+`us_actual_360_commercial` handle common cases. The full
+`LoanParams` dataclass is available when you need every parameter
+explicitly:
 
-Because `mortgagemath` returns pure Python dataclasses mapping directly to numerical values, it integrates seamlessly into the data science ecosystem.
+```python
+from decimal import Decimal
+from mortgagemath import LoanParams, PaymentRounding, amortization_schedule
 
-You can easily convert an amortization schedule into a `pandas.DataFrame` to do vectorized analysis, date math, or plot the results with `matplotlib`.
+loan = LoanParams(
+    principal=Decimal("162000"),
+    annual_rate=Decimal("3.875"),
+    term_months=360,
+    payment_rounding=PaymentRounding.ROUND_HALF_UP,
+    interest_rounding=PaymentRounding.ROUND_HALF_UP,
+)
+sched = amortization_schedule(loan)
+print(sched[1].payment)             # Decimal("761.78")
+```
+
+For Canadian j₂ mortgages, ARMs with rate and payment caps,
+commercial Actual/360 with balloon, interest-only periods,
+fee-loaded French schedules, and Japanese yen-precision loans,
+see the **[Worked examples](docs/vignettes/rendered/examples.pdf)**
+vignette.
+
+## Pandas and Matplotlib integration
+
+`mortgagemath` returns pure Python dataclasses, so converting to a
+`pandas.DataFrame` for analysis or plotting is one line:
 
 <p align="center">
   <img src="pandas_plot.png" alt="Pandas Plot" width="600">
@@ -126,64 +121,42 @@ You can easily convert an amortization schedule into a `pandas.DataFrame` to do 
 
 ```python
 import pandas as pd
-import matplotlib.pyplot as plt
 from mortgagemath import us_30_year_fixed, amortization_schedule
 
-# 1. Create a schedule
 loan = us_30_year_fixed("300000", "6.5")
-schedule = amortization_schedule(loan)
-
-# 2. Convert to DataFrame
-df = pd.DataFrame(schedule)
-
-# 3. Quick plot of Principal vs Interest over time
-df_plot = df[df["number"] > 0]
-fig, ax = plt.subplots(figsize=(8, 5))
-ax.stackplot(
-    df_plot["number"],
-    df_plot["principal"].astype(float),
-    df_plot["interest"].astype(float),
-    labels=['Principal', 'Interest']
-)
-ax.set_title("Amortization Schedule")
-ax.legend(loc='upper right')
-plt.show()
+df = pd.DataFrame(amortization_schedule(loan))
 ```
 
-See the **[Pandas and Data Visualization](docs/vignettes/rendered/pandas.pdf)** vignette for more examples, including date offsets and scenario analysis.
+See the **[Pandas and Data Visualization](docs/vignettes/rendered/pandas.pdf)** vignette for plotting examples and scenario analysis.
 
 ## What's validated
 
-46 fully published amortization tables from government regulatory
-documents, GSE servicing guides, and academic textbooks, exercised
-by a test suite of more than 300 tests that runs on every push and
-every release. Every committed fixture cell reproduces its source
-value to the cent; on the small number of historical sources that
-themselves contain an internal arithmetic typo (e.g., two rows of
-the Geltner CRE example), the divergent rows are documented rather
-than forced into the corpus. The sources span:
+46 published amortization tables exercised by a test suite of more
+than 400 tests that runs on every push and release. Every committed
+fixture cell reproduces its source value to the cent (or yen). The
+sources span six countries and a wide range of loan structures:
 
-- **Regulatory disclosures** — CFPB Sample H-25(B); 12 CFR
-  Part 1026 Appendix H Sample H-14 (the 1982–1996 1/1 ARM with
-  periodic and lifetime caps, traced through the actual CMT
-  history)
-- **GSE servicing guides** — Fannie Mae Multifamily §1103 Tier 2
-  SARM ($25 M / 5.5% / 10-year term on 30-year amortization,
-  Actual/360)
-- **Federal authorities** — FHLBB *Federal Home Loan Bank
-  Review*, March 1935 — Direct-Reduction Plan A
-- **Textbooks** — OpenStax *Contemporary Mathematics*, Geltner
-  et al. *CRE Analysis*, Skinner *Mathematical Theory of
-  Investment* (1913), Arcones SOA Exam FM Manual, Goldstein
-  *Finite Mathematics*, eCampus Ontario *Mathematics of
-  Finance*, Olivier *Business Math*, Las Positas *Math for
-  Liberal Arts*, Mississippi State Extension Service
-- **Synthetic boundary cases** for half-cent rounding modes
+- **US regulatory** — CFPB sample disclosures, Reg Z Appendix H
+  ARM with 15 years of historical rate adjustments, FHLBB 1935
+  direct-reduction plan
+- **US commercial** — Fannie Mae Multifamily Actual/360 with
+  balloon, Geltner CRE carry-precision
+- **US textbooks** — OpenStax, Goldstein, Skinner (1913), Arcones
+  SOA Exam FM, Las Positas, Mississippi State Extension
+- **Canada** — Olivier and eCampus Ontario semi-annual j₂
+  mortgages (monthly and quarterly), RBC accelerated bi-weekly
+- **France** — MoneyVox *tableau d'amortissement* with *assurance
+  emprunteur* fee loading
+- **Japan** — JHF Flat 35 and LoanKeisan full 360-row schedule
+  with yen-precision truncation rounding
+- **Italy** — Solution Bank and BCC Brescia regulatory
+  transparency documents
+- **South Korea** — Tistory worked mortgage with won-precision
+- **Synthetic** — half-cent rounding boundaries, zero-interest
+  edge case, TI BA II Plus guidebook
 
-See the **[Validation
-vignette](docs/vignettes/rendered/validation.pdf)** for the full
-46-fixture × 8-parameter matrix and bibliography, generated
-directly from the fixture `[source]` blocks.
+See the **[Validation vignette](docs/vignettes/rendered/validation.pdf)**
+for the full 46-fixture parameter matrix and bibliography.
 
 ## Documentation
 
@@ -194,7 +167,7 @@ directly from the fixture `[source]` blocks.
 | **[Validation](docs/vignettes/rendered/validation.pdf)** | Audit / risk review — full fixture matrix + bibliography |
 | **[Worked examples](docs/vignettes/rendered/examples.pdf)** | Picking the right configuration by country and loan type |
 | **[History](docs/vignettes/rendered/history.pdf)** | Academic context — institutional and mathematical history of the level-payment mortgage |
-| **[Pandas & Viz](docs/vignettes/rendered/pandas.pdf)** | How to use Pandas DataFrames and plot schedules with Matplotlib |
+| **[Pandas & Viz](docs/vignettes/rendered/pandas.pdf)** | DataFrames, plotting, and scenario analysis |
 | **[HTML site](https://murraystokely.github.io/mortgagemath/)** | Vignettes with navigation and search |
 
 ## Reporting a discrepancy
