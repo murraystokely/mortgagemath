@@ -74,6 +74,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Validation vignette fixture smoke test.** Added pytest coverage
+  for the Python chunks in `docs/vignettes/validation.qmd` so missing
+  display-map entries for new enum values fail during normal tests.
 - **Corrected the Canadian `j_2` quickstart payment.** The
   25-year, monthly-payment example now shows `Decimal("1744.81")`,
   matching the semi-annual-compounding calculation and the new
