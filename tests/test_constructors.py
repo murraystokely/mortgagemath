@@ -110,6 +110,31 @@ def test_us_actual_360_commercial_matches_fannie_mae_fixture():
     assert amortization_schedule(loan)[120].balance == Decimal("20885505.83")
 
 
+def test_us_actual_360_commercial_accepts_string_date():
+    """ISO-format string is converted to date automatically."""
+    loan = us_actual_360_commercial(
+        "25000000",
+        "5.5",
+        term_years=10,
+        amortization_years=30,
+        start_date="2018-12-01",
+    )
+    assert loan.start_date == date(2018, 12, 1)
+    assert periodic_payment(loan) == Decimal("141947.25")
+
+
+def test_us_actual_360_commercial_rejects_invalid_string_date():
+    """A non-ISO string raises ValueError."""
+    with pytest.raises(ValueError):
+        us_actual_360_commercial(
+            "25000000",
+            "5.5",
+            term_years=10,
+            amortization_years=30,
+            start_date="not-a-date",
+        )
+
+
 def test_fixed_payment_mortgage_matches_fhlbb_fixture():
     loan = fixed_payment_mortgage(
         "3000.00",
