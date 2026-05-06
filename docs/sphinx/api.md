@@ -31,9 +31,16 @@ when you need every parameter explicitly.
 .. autofunction:: mortgagemath.periodic_payment
 .. autofunction:: mortgagemath.monthly_payment
 .. autofunction:: mortgagemath.amortization_schedule
+.. autofunction:: mortgagemath.loan_summary
 ```
 
 ## Dataclasses
+
+```{eval-rst}
+.. autoclass:: mortgagemath.LoanSummary
+   :members:
+   :show-inheritance:
+```
 
 ```{eval-rst}
 .. autoclass:: mortgagemath.LoanParams

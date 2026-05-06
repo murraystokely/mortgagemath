@@ -18,6 +18,7 @@ from mortgagemath._constructors import (
 )
 from mortgagemath._payment import monthly_payment, periodic_payment
 from mortgagemath._schedule import amortization_schedule
+from mortgagemath._summary import LoanSummary, loan_summary
 from mortgagemath._types import (
     BalanceTracking,
     Compounding,
@@ -43,6 +44,7 @@ __all__ = [
     "EarlyPayoffWarning",
     "Installment",
     "LoanParams",
+    "LoanSummary",
     "PaymentFrequency",
     "PaymentRounding",
     "RateChange",
@@ -52,6 +54,7 @@ __all__ = [
     "canada_fixed_j2",
     "fixed_payment_mortgage",
     "fixed_rate_mortgage",
+    "loan_summary",
     "monthly_payment",
     "periodic_payment",
     "us_15_year_fixed",

@@ -478,6 +478,36 @@ class LoanParams:
                 f"currency units ({self.currency_unit}), got {self.fee_per_period}"
             )
 
+    def __repr__(self) -> str:
+        """Compact repr showing principal, rate, term, and non-default settings."""
+        parts = [
+            f"{self.principal:,}",
+            f"{self.annual_rate}%",
+            f"{self.term_months}mo",
+        ]
+        extras = []
+        if self.interest_only_months:
+            extras.append(f"IO={self.interest_only_months}mo")
+        if self.fee_per_period:
+            extras.append(f"fee={self.fee_per_period}/period")
+        if self.payment_override is not None:
+            extras.append(f"override={self.payment_override}")
+        if self.compounding != Compounding.MONTHLY:
+            extras.append(self.compounding.value)
+        if self.payment_frequency != PaymentFrequency.MONTHLY:
+            extras.append(self.payment_frequency.value)
+        if self.day_count != DayCount.THIRTY_360:
+            extras.append(self.day_count.value)
+        if self.payment_rounding == PaymentRounding.ROUND_DOWN:
+            extras.append("ROUND_DOWN")
+        if self.currency_unit != _PENNY:
+            extras.append(f"unit={self.currency_unit}")
+        if self.rate_schedule:
+            extras.append(f"{len(self.rate_schedule)} rate changes")
+        if extras:
+            return f"LoanParams({' / '.join(parts)}, {', '.join(extras)})"
+        return f"LoanParams({' / '.join(parts)})"
+
     @property
     def _total_payments(self) -> int:
         """Total number of payments in the schedule."""
@@ -531,3 +561,14 @@ class Installment:
     total_interest: Decimal
     balance: Decimal
     fee: Decimal = Decimal("0.00")
+
+    def __repr__(self) -> str:
+        """Compact repr showing payment number, amounts, and balance."""
+        if self.number == 0:
+            return f"Installment(#0: balance={self.balance:,})"
+        fee_part = f" + {self.fee} fee" if self.fee else ""
+        return (
+            f"Installment(#{self.number}: payment={self.payment:,} "
+            f"= {self.principal:,} principal + {self.interest:,} interest"
+            f"{fee_part}, balance={self.balance:,})"
+        )

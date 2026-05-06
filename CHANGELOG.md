@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Korean Tistory fixture (46 total).** First Korean fixture:
   ₩300,000,000 / 4% / 30yr with 3 published row-level cells,
   validated with ``currency_unit=1`` and ``ROUND_HALF_UP``.
+- **``loan_summary()`` convenience function.** Returns a
+  ``LoanSummary`` with ``periodic_payment``, ``total_interest``,
+  ``total_paid``, ``total_fees``, and ``num_payments`` — the
+  values most users need first without iterating the schedule.
+- **Compact ``__repr__``** for ``LoanParams`` and ``Installment``.
+  Interactive use now shows readable summaries instead of the
+  verbose dataclass default.
 
 ## [0.7.0] - 2026-05-05
 

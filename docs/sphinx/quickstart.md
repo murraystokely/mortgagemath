@@ -30,6 +30,20 @@ Use `LoanParams` directly when you need an uncommon configuration,
 or pass optional rounding overrides when a published source requires
 them.
 
+## Quick loan summary
+
+For the headline numbers without iterating the schedule:
+
+```python
+from mortgagemath import us_30_year_fixed, loan_summary
+
+s = loan_summary(us_30_year_fixed("300000", "6.5"))
+print(s.periodic_payment)     # Decimal("1896.21")
+print(s.total_interest)       # Decimal("382628.90")
+print(s.total_paid)           # Decimal("682628.90")
+print(s.num_payments)         # 360
+```
+
 ## Pandas integration
 
 ```python

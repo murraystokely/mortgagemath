@@ -86,8 +86,19 @@ print(sched[-1].total_interest)       # Decimal("382628.90") — lifetime intere
 
 The schedule is a plain `list` — `sched[0]` is the initial balance
 (no payment), `sched[1]` through `sched[360]` are the monthly
-payments. `sched[-1].total_interest` gives the cumulative interest
-over the life of the loan.
+payments.
+
+For a quick summary without iterating the schedule:
+
+```python
+from mortgagemath import us_30_year_fixed, loan_summary
+
+s = loan_summary(us_30_year_fixed("300000", "6.5"))
+print(s.periodic_payment)             # Decimal("1896.21")
+print(s.total_interest)               # Decimal("382628.90")
+print(s.total_paid)                   # Decimal("682628.90")
+print(s.num_payments)                 # 360
+```
 
 Convenience constructors like `us_30_year_fixed`, `us_15_year_fixed`,
 `canada_fixed_j2`, `canada_accelerated_biweekly`, and
