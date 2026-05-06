@@ -51,6 +51,9 @@ jobs:
         with:
           python-version: "3.13"
 
+      - name: Install CJK fonts for Japanese/Korean fixture citations
+        run: sudo apt-get install -y --no-install-recommends fonts-noto-cjk
+
       - name: Install Python deps for Quarto
         run: |
           python -m pip install --upgrade pip
