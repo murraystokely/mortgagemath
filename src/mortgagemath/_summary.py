@@ -76,8 +76,8 @@ def loan_summary(loan: LoanParams) -> LoanSummary:
 
     Returns:
         A :class:`LoanSummary` with the periodic payment, total
-        interest, total paid, total fees, balloon balance, payoff
-        at term, and number of payments.
+        interest, total paid, total fees, balloon balance, total
+        cost, and number of payments.
 
     Example::
 
