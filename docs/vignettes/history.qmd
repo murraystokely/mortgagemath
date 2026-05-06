@@ -372,7 +372,7 @@ French residential mortgage practice. Modern French residential
 *tableaux d'amortissement* in actual *offres de prêt* (the
 borrower-facing PDF that lenders are statutorily required to
 provide) are row-level cents-precision documents that the
-library reproduces directly; v0.6.1's `fee_per_period` field
+library reproduces directly; v0.7.0's `fee_per_period` field
 covers the *assurance emprunteur* loading that is the dominant
 fee component of a modern French *échéance*. The MoneyVox
 fixture validates that modern shape against a full row-level
