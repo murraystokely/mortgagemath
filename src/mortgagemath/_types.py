@@ -43,13 +43,16 @@ class PaymentRounding(Enum):
     """Rounding convention for monetary amounts.
 
     ROUND_UP (ceiling to nearest unit) is used by most US lenders for the
-    monthly payment amount.  ROUND_HALF_UP (standard rounding) is used
-    for monthly interest calculations.  ROUND_HALF_EVEN (banker's rounding)
-    is included so fixtures from lenders or worked examples that use it
-    can be modeled.
+    monthly payment amount. ROUND_DOWN (truncate toward zero) matches
+    published yen/won calculator schedules that floor monetary values to
+    the currency unit. ROUND_HALF_UP (standard rounding) is used for
+    monthly interest calculations. ROUND_HALF_EVEN (banker's rounding) is
+    included so fixtures from lenders or worked examples that use it can
+    be modeled.
     """
 
     ROUND_UP = "ROUND_UP"
+    ROUND_DOWN = "ROUND_DOWN"
     ROUND_HALF_UP = "ROUND_HALF_UP"
     ROUND_HALF_EVEN = "ROUND_HALF_EVEN"
 

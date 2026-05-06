@@ -38,6 +38,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   official guidebook's $120,000 / 6.125% / 30-year amortization
   worksheet example, including aggregate principal, interest, and
   balance anchors for the first three calendar years.
+- **ROUND_DOWN rounding mode and LoanKeisan Japan fixture (43 total).**
+  `PaymentRounding.ROUND_DOWN` truncates monetary values to the configured
+  currency unit, matching yen/won-style floor conventions. The new
+  LoanKeisan fixture reproduces every published row in a ¥30,000,000 /
+  1.000% / 30-year Japanese schedule.
 - **Pandas and Data Visualization vignette.** A new documentation vignette
   (`docs/vignettes/pandas.qmd`) demonstrating how to convert amortization
   schedules into `pandas.DataFrame` objects for vectorized analysis and

@@ -1,0 +1,33 @@
+# LoanKeisan.com worked Japanese loan schedule.
+#
+# Worked example: ¥30,000,000 loan, 1.000% annual interest, 30-year
+# term, 360 monthly payments. The source publishes a complete 360-row
+# monthly amortization schedule in integer yen.
+#
+# The library reproduces every published row under ROUND_DOWN for both
+# the level payment and per-row interest, with currency_unit="1". This
+# validates the yen/won truncation convention as a first-class rounding
+# mode rather than a synthetic boundary case.
+
+[loan]
+principal = "30000000"
+annual_rate = "1"
+term_months = 360
+day_count = "30/360"
+payment_rounding = "ROUND_DOWN"
+interest_rounding = "ROUND_DOWN"
+currency_unit = "1"
+
+[source]
+kind = "calculator"
+country = "JP"
+license = "all rights reserved (worked numerical values are uncopyrightable facts)"
+short_label = "LoanKeisan JP"
+bib_key = "loankeisan_jp"
+bib_title = "LoanKeisan Japan"
+citation = "LoanKeisan.com. \"3,000万円借入のローン計算、金利1.000％、借入期間30年.\" Complete 360-row monthly amortization schedule. <https://www.loankeisan.com/bin/calc?a=3000&b=0&i=1&p=30&t=r>"
+url = "https://www.loankeisan.com/bin/calc?a=3000&b=0&i=1&p=30&t=r"
+notes = "Japanese integer-yen calculator schedule. Validates PaymentRounding.ROUND_DOWN for both periodic payment and interest rounding; every published row in the 360-row schedule is reproduced."
+
+[expected]
+periodic_payment = "96491"

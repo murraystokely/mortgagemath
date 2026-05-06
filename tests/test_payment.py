@@ -65,6 +65,17 @@ class TestMonthlyPayment:
         # Unrounded is 645.671...; both HALF_UP and HALF_EVEN round to 645.67.
         assert monthly_payment(loan) == Decimal("645.67")
 
+    def test_round_down_truncates_to_currency_unit(self):
+        """ROUND_DOWN truncates the closed-form payment to the currency unit."""
+        loan = LoanParams(
+            principal=Decimal("30000000"),
+            annual_rate=Decimal("1"),
+            term_months=360,
+            payment_rounding=PaymentRounding.ROUND_DOWN,
+            currency_unit=Decimal("1"),
+        )
+        assert monthly_payment(loan) == Decimal("96491")
+
     def test_result_has_two_decimal_places(self):
         loan = LoanParams(
             principal=Decimal("100000"),
