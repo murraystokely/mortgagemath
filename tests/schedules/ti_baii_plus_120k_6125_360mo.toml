@@ -1,0 +1,55 @@
+# Texas Instruments BA II PLUS guidebook, "Example: Computing
+# Payments and Generating an Amortization Schedule."
+#
+# Worked example: $120,000 loan, 6.125% APR, 30-year term, monthly
+# payments. The guidebook computes monthly payment $729.13 and then
+# uses the Amortization worksheet to publish aggregate balance,
+# principal, and interest anchors for the first three calendar years:
+# payments 1-9, 10-21, and 22-33.
+#
+# The library reproduces the payment and all published aggregate
+# amortization worksheet values exactly under standard US 30/360
+# monthly compounding and ROUND_HALF_UP payment/interest rounding.
+
+[loan]
+principal = "120000.00"
+annual_rate = "6.125"
+term_months = 360
+day_count = "30/360"
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[source]
+kind = "calculator"
+country = "US"
+license = "all rights reserved (worked numerical values are uncopyrightable facts)"
+short_label = "TI BA II Plus"
+bib_key = "ti_baii_plus_guidebook"
+bib_title = "TI BA II Plus Guidebook"
+citation = "Texas Instruments. *BA II PLUS Professional Calculator Guidebook*, \"Example: Computing Payments and Generating an Amortization Schedule.\" <https://education.ti.com/download/en/ed-tech/6D4382031E7640378E9B05B81AECBCF7/AB7F572CFF0447198598040876C89144/BAIIPlusProfessional_Guidebook_EN.pdf>"
+url = "https://education.ti.com/download/en/ed-tech/6D4382031E7640378E9B05B81AECBCF7/AB7F572CFF0447198598040876C89144/BAIIPlusProfessional_Guidebook_EN.pdf"
+notes = "Official Texas Instruments BA II PLUS guidebook amortization worksheet example. Validates periodic payment and three aggregate worksheet ranges: payments 1-9, 10-21, and 22-33."
+
+[expected]
+periodic_payment = "729.13"
+
+[[expected.amortization_ranges]]
+start_payment = 1
+end_payment = 9
+balance = "118928.63"
+principal = "1071.37"
+interest = "5490.80"
+
+[[expected.amortization_ranges]]
+start_payment = 10
+end_payment = 21
+balance = "117421.60"
+principal = "1507.03"
+interest = "7242.53"
+
+[[expected.amortization_ranges]]
+start_payment = 22
+end_payment = 33
+balance = "115819.62"
+principal = "1601.98"
+interest = "7147.58"

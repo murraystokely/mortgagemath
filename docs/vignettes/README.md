@@ -9,7 +9,7 @@ of the level-payment mortgage.
 
 - `index.qmd` — landing page (HTML only)
 - `at-a-glance.qmd` — 1-page overview
-- `validation.qmd` — 41-fixture parameter matrix + bibliography
+- `validation.qmd` — 42-fixture parameter matrix + bibliography
 - `examples.qmd` — country-organized worked examples (US, Canada,
   France, UK, Australia)
 - `history.qmd` — institutional and mathematical history with

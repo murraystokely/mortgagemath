@@ -497,6 +497,17 @@ candidate conventions, both rejected:
 - Native balloon loans via `LoanParams.amortization_period_months`
   (validated: §1103 implied balloon of $20,885,505.83 at term 120).
 
+### Texas Instruments BA II PLUS balloon example
+
+The BA II PLUS guidebook also publishes an $82,000 / 7% / 30-year
+amortization example with a five-year balloon. The worksheet display
+shows monthly payment `$545.55`, balance `$77,187.72`, and five-year
+interest `$27,920.72`, all of which match the current library. The
+prose summary on the same page, however, states five-year interest as
+`$27,790.72`. Because the source is internally inconsistent, this
+example should remain out of the fixture suite unless a corrected
+Texas Instruments source is found.
+
 **Possible follow-ups** (not blocking; here for the record):
 - Per-row Actual/360 schedule fixture validating each of the first
   several months' interest, principal, and balance against a published

@@ -10,8 +10,9 @@ Each loan has two files with matching names:
 
 - **`<name>.toml`** — loan parameters and metadata (principal, rate, term,
   rounding conventions, provenance)
-- **`<name>.csv`** — full or partial amortization schedule with columns:
-  `payment,payment_amount,principal,interest,balance`
+- **`<name>.csv`** — row-level amortization schedule values with columns:
+  `payment,payment_amount,principal,interest,balance`; header-only CSVs are
+  used when the source publishes only payment values or aggregate anchors.
 
 ## `[source]` provenance
 
@@ -109,6 +110,13 @@ have ``effective_payment_number >= 2``, strictly increasing, and
 [expected]
 periodic_payment = "141947.25"   # required (alias: monthly_payment for v0.2.x fixtures)
 balloon_at_term = "20885505.83"  # optional — balance at end of loan's term
+
+[[expected.amortization_ranges]]  # optional aggregate worksheet anchor
+start_payment = 1
+end_payment = 9
+balance = "118928.63"
+principal = "1071.37"
+interest = "5490.80"
 ```
 
 `periodic_payment` is the closed-form annuity payment value the library
@@ -120,6 +128,12 @@ Optional `balloon_at_term` validates the unpaid principal at the end
 of the loan's term — used for sources (e.g. Fannie Mae §1103, Canadian
 fixed-term mortgages on longer amortizations) that publish a balloon
 or end-of-term balance rather than per-row schedule data.
+
+Optional `amortization_ranges` validate sources that publish aggregate
+amortization worksheet output over a payment range instead of individual
+rows. Each range must include the inclusive `start_payment` and
+`end_payment`, the ending `balance`, and cumulative `principal` and
+`interest` for that range.
 
 ## Contributing
 
