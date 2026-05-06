@@ -1,6 +1,6 @@
 """Command-line interface for ``mortgagemath``.
 
-Three subcommands:
+Four subcommands:
 
 * ``mortgagemath selfcheck`` — post-install reference checks.  The
   default when no subcommand is given (preserves the v0.2.x
@@ -10,6 +10,10 @@ Three subcommands:
   1 otherwise.
 
 * ``mortgagemath payment`` — print the periodic P&I for a loan.
+
+* ``mortgagemath summary`` — print a high-level loan summary
+  (periodic payment, total interest, total paid, number of payments,
+  balloon balance if applicable).
 
 * ``mortgagemath schedule`` — print the full amortization schedule
   in ``--format table`` (default), ``csv``, or ``json``.
@@ -42,6 +46,7 @@ from mortgagemath import (
     RateChange,
     __version__,
     amortization_schedule,
+    loan_summary,
     monthly_payment,
     periodic_payment,
 )
@@ -390,6 +395,9 @@ def _build_parser() -> argparse.ArgumentParser:
     p_payment = sub.add_parser("payment", help="Print the periodic P&I for a loan")
     _add_loan_args(p_payment)
 
+    p_summary = sub.add_parser("summary", help="Print a high-level loan summary")
+    _add_loan_args(p_summary)
+
     p_schedule = sub.add_parser("schedule", help="Print the full amortization schedule")
     _add_loan_args(p_schedule)
     p_schedule.add_argument("--format", choices=tuple(_FORMATTERS), default="table")
@@ -409,6 +417,18 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "payment":
         print(periodic_payment(params))
+        return 0
+
+    if args.cmd == "summary":
+        s = loan_summary(params)
+        print(f"Periodic payment:  {s.periodic_payment}")
+        print(f"Number of payments: {s.num_payments}")
+        print(f"Total interest:    {s.total_interest}")
+        print(f"Total fees:        {s.total_fees}")
+        print(f"Total paid:        {s.total_paid}")
+        if s.balloon_balance:
+            print(f"Balloon balance:   {s.balloon_balance}")
+            print(f"Payoff at term:    {s.payoff_at_term}")
         return 0
 
     if args.cmd == "schedule":

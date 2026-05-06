@@ -14,8 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   validated with ``currency_unit=1`` and ``ROUND_HALF_UP``.
 - **``loan_summary()`` convenience function.** Returns a
   ``LoanSummary`` with ``periodic_payment``, ``total_interest``,
-  ``total_paid``, ``total_fees``, and ``num_payments`` — the
-  values most users need first without iterating the schedule.
+  ``total_paid``, ``total_fees``, ``balloon_balance``,
+  ``payoff_at_term``, and ``num_payments``. For balloon loans,
+  ``payoff_at_term`` gives the total cash needed to extinguish
+  the debt (scheduled payments plus balloon balance).
+- **CLI ``summary`` subcommand.** ``mortgagemath summary
+  --principal ... --rate ... --term-months ...`` prints the
+  loan summary without generating a full schedule.
 - **Compact ``__repr__``** for ``LoanParams`` and ``Installment``.
   Interactive use now shows readable summaries instead of the
   verbose dataclass default.
