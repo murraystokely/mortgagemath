@@ -199,12 +199,13 @@ library available in Python. Competitors:
 
 A broad web search across six countries was conducted to find
 published worked amortization examples suitable as test fixtures.
-All agents were blocked from fetching page content directly, so
-findings come from search result snippets only. **Every source
-below requires manual browser verification before creating a
-fixture.** No numbers should be treated as verified until a human
-visits the URL and confirms the published values per CLAUDE.md
-Rule 4 (Source verification).
+Initial findings came from search result snippets only; sources
+marked **COMMITTED** have since been fetched, verified, and added
+to the fixture suite. Sources marked **REJECTED** were retrieved
+and found to diverge from the library's output (details in
+"Sources that did not match the library" above). Unmarked entries
+still require manual browser verification before creating a
+fixture per CLAUDE.md Rule 4 (Source verification).
 
 ### Tier 1: Complete or near-complete schedules (verify first)
 
@@ -505,7 +506,7 @@ candidate conventions, both rejected:
 
   **Library reproduces both anchors exactly.** The
   `fanniemae_mf_1103_25m_550_360mo` fixture validates the implied
-  monthly P&I ($141,947.25), and a `[[expected.balance_anchor]]` entry
+  monthly P&I ($141,947.25), and ``expected.balloon_at_term``
   validates the implied balance after 120 payments ($20,885,505.83 =
   $25M − $4,114,494.17). The schedule itself is generated with
   `start_date = 2018-12-01`, full-precision balance tracking, and
