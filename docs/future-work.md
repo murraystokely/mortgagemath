@@ -78,16 +78,16 @@ divergences that could mask real bugs.
   <https://web.unica.it/static/resources/cms/documents/2Ripassodimatematicafinanziaria_1.pdf>
 - **Dutch Wikipedia "Annuïteitenlening"** (€100,000 / 4% / 10yr
   annual / annuity €12,329.09). CC-BY-SA licensed, complete 10-row
-  table, but schedule values are published in **whole euros only**
-  (no cents), despite the payment being stated at cent precision.
-  The library computes to cent precision and cannot match
-  whole-euro values cell-for-cell. Not suitable as a fixture.
+  table in whole euros. Retested with ``currency_unit=1``: 9 of 10
+  rows match across all rounding/tracking combinations, but row 8
+  principal diverges by 1 (10960 computed vs 10961 published). No
+  combination resolves it. Per no-partial-fixtures, not committed.
   URL: <https://nl.wikipedia.org/wiki/Annu%C3%AFteitenlening>
 - **Vestergaard "Annuitetsregning"** (25,000 kr / 20% / 6yr
-  annual / ydelse 7,518 kr). Danish teacher notes PDF. Under
-  ``CARRY_PRECISION``, row 4 afdrag is 4,351 computed vs 4,350
-  published — a 1-kr divergence. Pedagogical example (20% rate)
-  with whole-kr rounding. Per no-partial-fixtures, not committed.
+  annual / ydelse 7,518 kr). Danish teacher notes PDF. Retested
+  with ``currency_unit=1`` across all rounding/tracking combos:
+  row 4 diverges by 1 kr in every combination. Per
+  no-partial-fixtures, not committed.
   URL: <https://www.matematikfysik.dk/mat/noter_tillaeg/tillaeg_annuitetsregning.pdf>
 
 ### Sources requiring algorithms the library does not implement
