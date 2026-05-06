@@ -366,10 +366,11 @@ Remaining candidates:
 6. ~~JHF Flat 35~~ — COMMITTED as single-anchor fixture.
 7. ~~LoanKeisan Japan~~ — COMMITTED as full 360-row fixture.
 8. ~~MoneyVox France~~ — COMMITTED with fee_per_period.
-9. **Italian bank transparency PDFs** — Solution Bank, Banca CRS,
-   BCC Brescia, Banca Etica publish payment anchors for €200,000
-   loans at various rates. Standard 30/360 annuity. Require manual
-   PDF download to verify.
+9. ~~Solution Bank IT~~ — COMMITTED as single-anchor fixture.
+10. ~~BCC Brescia IT~~ — COMMITTED as single-anchor fixture.
+11. **Banca Etica / Banca CRS** — remaining Italian bank
+    transparency PDFs with payment anchors. Require manual PDF
+    download to verify.
 
 ### Other sections
 

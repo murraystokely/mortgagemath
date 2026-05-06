@@ -183,8 +183,10 @@ Standing rules from `CLAUDE.md` apply:
 ### Italian bank transparency PDFs
 
 These are useful payment-only anchors because they disclose Italian
-`Francese` amortization and day-count conventions. Each needs local
-simulation before fixture work.
+`Francese` amortization and day-count conventions.
+
+Solution Bank and BCC Brescia have been committed as fixtures; Banca
+Etica and Banca CRS remain as candidates.
 
 - Banca Etica, "FIMU_1S0244 - Mutuo fondiario CONSAP Soci - Fondo di
   garanzia prima casa"
@@ -195,16 +197,10 @@ simulation before fixture work.
   - Fixed anchor: `€200,000`, `3.50%`, `20 anni`, monthly payment
     `€1,159.92`; `3.60%`, `30 anni`, monthly payment `€909.29`.
 
-- Solution Bank, "Informazioni Generali sul Credito Immobiliare - Mutuo
-  Fondiario MCD Prima Casa"
-  - URL:
-    <https://solution.bank/wp-content/uploads/2024/06/Informazioni-Credito-Immobiliare-Consumatori-Mutuo-Fondario-Prima-Casa-MCD.pdf>
-  - Document code: `ZF/000004812`, updated `04/04/2026`, page 4 of 7.
-  - Details: `Tipo piano Francese`, monthly/trimestral/semestral/annual
-    frequencies, `Giorni commerciali / 360`.
-  - Fixed anchors for `€200,000`: `7%`, 10 years `€2,322.17`; 15 years
-    `€1,797.66`; 20 years `€1,550.60`; 25 years `€1,413.56`; 30 years
-    `€1,330.60`.
+- Solution Bank — **COMMITTED** as
+  `solution_bank_it_200k_7pct_360mo`. Single-anchor fixture matching
+  the 30yr rata mensile €1,330.60. The same PDF publishes anchors for
+  10/15/20/25yr; all match the library.
 
 - Banca CRS, "Foglio Informativo Mutuo Ipotecario Ordinario Imprese"
   - URL:
@@ -216,13 +212,10 @@ simulation before fixture work.
     `€2,121.31`; 15 years `€1,581.59`; 20 years `€1,319.91`; 25 years
     `€1,169.18`.
 
-- BCC Brescia, "Foglio Informativo Mutuo Fondiario Agrario Tasso
-  Variabile Euribor"
-  - URL: <https://www.bccbrescia.it/umbraco/surface/transparency/ShowFile/67119>
-  - Document code: `ZF/000011881`, updated `01/04/2026`, page 7 of 10.
-  - Details: `Francese`, monthly, `Giorni commerciali / 360`.
-  - Variable payment anchors for `€200,000`, `5.65%`: 5 years
-    `€3,834.09`; 10 years `€2,185.42`; 15 years `€1,650.13`.
+- BCC Brescia — **COMMITTED** as
+  `bcc_brescia_it_200k_565pct_120mo`. Single-anchor fixture matching
+  the 10yr rata mensile €2,185.42. The same PDF publishes anchors for
+  5/15yr; both match the library.
 
 ## Denmark
 
