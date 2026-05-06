@@ -160,9 +160,6 @@ blocked on source retrieval.
 - **Bausparvertrag / Bauspardarlehen** (Germany/Austria) — complex
   product with a savings-phase transition. The library could handle
   the loan phase, but no specific worked example identified.
-- **CLI ``summary`` subcommand** — output total interest, payoff
-  date, APR. Low priority; the information is derivable from
-  ``schedule`` output.
 - **Cadence/compounding validation** — review whether any
   combinations (e.g. ``ANNUAL`` frequency with ``MONTHLY``
   compounding) are financially invalid and should raise a
