@@ -5,14 +5,27 @@ build-backend = "hatchling.build"
 [project]
 name = "mortgagemath"
 version = "0.7.0"
-description = "Cent-accurate mortgage amortization for Python, validated against 45 published regulatory, textbook, and lender examples"
+description = "Cent-accurate mortgage amortization for Python — validated against 46 published sources across 6 countries. Zero dependencies."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
+keywords = [
+    "mortgage",
+    "amortization",
+    "loan",
+    "payment",
+    "interest",
+    "finance",
+    "decimal",
+    "amortization-schedule",
+    "mortgage-calculator",
+]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Financial and Insurance Industry",
     "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -20,6 +33,7 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
     "Typing :: Typed",
     "Topic :: Office/Business :: Financial",
+    "Topic :: Scientific/Engineering :: Mathematics",
 ]
 
 [project.scripts]

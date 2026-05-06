@@ -15,12 +15,31 @@ print(sched[-1].balance)             # Decimal("0.00") — exact closure
 
 Returns a cent-accurate periodic payment and a lender-style
 amortization schedule that lands exactly at `$0.00` on the final
-payment.
+payment. The schedule is a plain ``list[Installment]`` —
+``sched[0]`` is the initial balance (no payment), ``sched[1]``
+through ``sched[360]`` are the monthly payments.
+
+```python
+# Useful schedule queries
+print(sched[-1].total_interest)      # Decimal("382628.90") — lifetime interest
+print(len(sched) - 1)               # 360 — number of payments
+```
 
 The convenience constructors return ordinary `LoanParams` objects.
 Use `LoanParams` directly when you need an uncommon configuration,
 or pass optional rounding overrides when a published source requires
 them.
+
+## Pandas integration
+
+```python
+import pandas as pd
+from mortgagemath import us_30_year_fixed, amortization_schedule
+
+loan = us_30_year_fixed("300000", "6.5")
+df = pd.DataFrame(amortization_schedule(loan))
+print(df[["number", "payment", "interest", "principal", "balance"]].head())
+```
 
 ## Canadian semi-annual mortgages
 

@@ -76,12 +76,18 @@ from mortgagemath import us_30_year_fixed, periodic_payment, amortization_schedu
 
 loan = us_30_year_fixed("300000", "6.5")
 
-print(periodic_payment(loan))       # Decimal("1896.21")
+print(periodic_payment(loan))         # Decimal("1896.21")
 sched = amortization_schedule(loan)
-print(sched[1].interest)            # Decimal("1625.00")
-print(sched[1].principal)           # Decimal("271.21")
-print(sched[-1].balance)            # Decimal("0.00")
+print(sched[1].interest)              # Decimal("1625.00")  — payment #1
+print(sched[1].principal)             # Decimal("271.21")
+print(sched[-1].balance)              # Decimal("0.00")     — exact zero
+print(sched[-1].total_interest)       # Decimal("382628.90") — lifetime interest
 ```
+
+The schedule is a plain `list` — `sched[0]` is the initial balance
+(no payment), `sched[1]` through `sched[360]` are the monthly
+payments. `sched[-1].total_interest` gives the cumulative interest
+over the life of the loan.
 
 Convenience constructors like `us_30_year_fixed`, `us_15_year_fixed`,
 `canada_fixed_j2`, `canada_accelerated_biweekly`, and
