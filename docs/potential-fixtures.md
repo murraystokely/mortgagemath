@@ -1,10 +1,10 @@
 # Potential International Fixtures
 
 This file records source-backed candidate amortization examples found during
-the May 2026 international fixture search. None of these have been committed
-as fixtures yet. Each candidate still needs source re-retrieval, local
-Decimal simulation, and exact reconciliation against every published value
-selected from the source.
+the May 2026 international fixture search. Some candidates have since been
+committed as fixtures and are marked inline; uncommitted candidates still
+need source re-retrieval, local Decimal simulation, and exact reconciliation
+against every published value selected from the source.
 
 Standing rules from `CLAUDE.md` apply:
 
