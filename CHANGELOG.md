@@ -7,81 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-05-05
+
+International and flexible repayment structures. Fixture count
+grows from 36 to 45 with coverage across four new countries.
+
 ### Added
 
-- **2 new Italian fixtures (45 total).** Solution Bank (€200,000 /
-  7% / 30yr) and BCC Brescia (€200,000 / 5.65% / 10yr), both from
-  bank regulatory transparency PDFs (*foglio informativo*). First
-  Italian fixtures in the library.
 - **Currency unit precision.** New ``LoanParams.currency_unit`` field
   (default ``Decimal("0.01")``) controls the quantization unit for all
   monetary amounts. Set to ``Decimal("1")`` for zero-decimal currencies
-  like JPY or KRW. All existing behavior is unchanged.
-- **Interest-Only (IO) Periods.** New ``LoanParams.interest_only_months``
-  field. For the specified number of months the borrower pays only
-  accrued interest; after the IO period the loan recasts and fully
-  amortizes over the remaining term. Validated against the CFPB sample
-  Loan Estimate for an Interest-Only loan ($211,000 / 4% / 5-yr IO).
-- **Zero-Interest Loan Support.** ``annual_rate=0`` is now accepted
+  like JPY or KRW.
+- **``ROUND_DOWN`` rounding mode.** ``PaymentRounding.ROUND_DOWN``
+  truncates monetary values to the configured currency unit, matching
+  yen/won-style floor conventions.
+- **Interest-only (IO) periods.** New ``LoanParams.interest_only_months``
+  field. The borrower pays only accrued interest for the specified
+  period; after the IO period the loan recasts and fully amortizes
+  over the remaining term.
+- **Zero-interest loan support.** ``annual_rate=0`` is now accepted
   (previously raised ``ValueError``). Payment is ``principal / n``
   rounded to the currency unit.
-- **Canadian Accelerated Bi-Weekly.** New convenience constructor
-  ``canada_accelerated_biweekly(...)`` that derives the accelerated
-  bi-weekly payment (monthly / 2) used by major Canadian banks.
 - **Flat per-period fees.** New ``LoanParams.fee_per_period`` field
-  and ``Installment.fee`` output model fee-loaded schedules such as
-  French *assurance emprunteur*. Validated by extending the MoneyVox
-  France fixture to match its published assurance and total mensualité
-  columns.
-- **5 new fixtures (41 total).** MoneyVox France (€10,000 / 5% /
-  12mo, full schedule), JHF Flat 35 Japan (¥20M / 1.5% / 30yr,
-  single-anchor), CFPB IO Sample ($211K / 4% / 5yr IO,
-  single-anchor), RBC Accelerated Bi-Weekly ($350K / 5% / 25yr,
-  single-anchor), Zero-Interest Promo ($999 / 0% / 24mo, synthetic).
-- **Texas Instruments BA II PLUS fixture (42 total).** Adds the
-  official guidebook's $120,000 / 6.125% / 30-year amortization
-  worksheet example, including aggregate principal, interest, and
-  balance anchors for the first three calendar years.
-- **ROUND_DOWN rounding mode and LoanKeisan Japan fixture (43 total).**
-  `PaymentRounding.ROUND_DOWN` truncates monetary values to the configured
-  currency unit, matching yen/won-style floor conventions. The new
-  LoanKeisan fixture reproduces every published row in a ¥30,000,000 /
-  1.000% / 30-year Japanese schedule.
-- **Pandas and Data Visualization vignette.** A new documentation vignette
-  (`docs/vignettes/pandas.qmd`) demonstrating how to convert amortization
-  schedules into `pandas.DataFrame` objects for vectorized analysis and
-  plotting with `matplotlib`.
-- **Optional `examples` dependency extra.** Added `[project.optional-dependencies]`
-  extra `examples` including `matplotlib`, `pandas`, and `numpy` to support
-  the visualization and data science integration examples.
-- **Plot generation script.** A utility at `docs/vignettes/scripts/generate_plot.py`
-  that uses the library and pandas to generate the `pandas_plot.png`
-  demonstration image used in the README.
-- **SUGGESTIONS.md moved to docs/.** Relocated the architecture review and
-  global mortgage research suggestions to `docs/SUGGESTIONS.md`.
-- **Convenience constructors for common mortgage configurations.**
-  `fixed_rate_mortgage(...)`, `us_30_year_fixed(...)`,
-  `us_15_year_fixed(...)`, `canada_fixed_j2(...)`,
-  `us_actual_360_commercial(...)`, and
-  `fixed_payment_mortgage(...)` return ordinary validated
-  `LoanParams` objects while choosing the fixture-backed defaults
-  most users need first.
-- **Agent guidance now requires changelog entries for changes.**
-  `CLAUDE.md` documents that branch changes should update
-  `CHANGELOG.md` under `[Unreleased]` before review, and that PRs
-  should run the same formatting, lint, type-check, and test gates
-  expected by pre-commit/CI.
+  and ``Installment.fee`` attribute model fee-loaded schedules such
+  as French *assurance emprunteur*. The fee rides on top of the
+  P+I schedule without affecting balance accounting.
+- **Canadian accelerated bi-weekly.** New convenience constructor
+  ``canada_accelerated_biweekly(...)`` derives the accelerated
+  bi-weekly payment (monthly / 2) used by major Canadian banks.
+- **Convenience constructors.** ``fixed_rate_mortgage()``,
+  ``us_30_year_fixed()``, ``us_15_year_fixed()``,
+  ``canada_fixed_j2()``, ``us_actual_360_commercial()``, and
+  ``fixed_payment_mortgage()`` return ordinary validated
+  ``LoanParams`` objects with fixture-backed defaults.
+- **9 new fixtures (45 total).** MoneyVox France (first French
+  fixture, with *assurance emprunteur* fee loading); JHF Flat 35
+  and LoanKeisan Japan (first Japanese fixtures, full 360-row
+  ``ROUND_DOWN`` schedule); CFPB Interest-Only sample; RBC Canadian
+  Accelerated Bi-Weekly; TI BA II Plus guidebook; Solution Bank
+  and BCC Brescia Italy (first Italian fixtures); Zero-Interest
+  Promo (synthetic).
+- **Pandas vignette.** New ``docs/vignettes/pandas.qmd``
+  demonstrating DataFrame conversion and matplotlib plotting.
+- **Optional ``examples`` dependency extra.** ``matplotlib``,
+  ``pandas``, and ``numpy`` for the visualization examples.
 
 ### Fixed
 
 - **Validation vignette fixture smoke test.** Added pytest coverage
-  for the Python chunks in `docs/vignettes/validation.qmd` so missing
-  display-map entries for new enum values fail during normal tests.
-- **Corrected the Canadian `j_2` quickstart payment.** The
-  25-year, monthly-payment example now shows `Decimal("1744.81")`,
-  matching the semi-annual-compounding calculation and the new
-  `canada_fixed_j2(...)` regression test. The previous
-  `Decimal("1747.45")` value was stale documentation.
+  for the Python chunks in ``validation.qmd`` so missing display-map
+  entries for new enum values fail during normal tests.
+- **Corrected the Canadian ``j_2`` quickstart payment.** The
+  25-year monthly-payment example now shows ``Decimal("1744.81")``,
+  matching the semi-annual-compounding calculation.
 
 ## [0.6.1] - 2026-05-03
 
