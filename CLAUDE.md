@@ -292,6 +292,25 @@ opening or updating a PR. All commands above assume ``uv sync
   in §"Development environment setup" above. If ``pre-commit`` is
   installed, ``uv run pre-commit run --all-files`` covers everything
   in one command.
+- **Pre-PR quality checklist.** Before opening a PR, verify each
+  of the following. These are the most common review failures:
+  1. **Tests for new public API.** Every new function, field,
+     enum value, CLI subcommand, or constructor must have at least
+     one direct test. Check both the happy path and at least one
+     error/edge case.
+  2. **Grep for stale references after renames.** If you rename
+     a field, function, or constant, grep the entire repo for the
+     old name — docstrings, CLI output strings, test assertions,
+     CHANGELOG, README, quickstart, and vignettes all drift.
+  3. **Run doc code examples.** Copy-paste every Python and CLI
+     snippet from README.md and quickstart.md into a shell and
+     verify they produce the claimed output. Broken examples are
+     the #1 source of review rounds.
+  4. **Check deferred-features list.** If you implement something
+     from ``docs/future-work.md``, remove it from the deferred
+     list in the same commit.
+  5. **Verify fixture counts.** If fixtures were added or removed,
+     grep for the old count across all docs.
 - **CLI before Python in examples.** When documentation shows
   both a command-line invocation and a Python code block for the
   same operation, the CLI example comes first. This applies to
