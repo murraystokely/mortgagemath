@@ -6,45 +6,23 @@ committed as fixtures and are marked inline; uncommitted candidates still
 need source re-retrieval, local Decimal simulation, and exact reconciliation
 against every published value selected from the source.
 
-Standing rules from `CLAUDE.md` apply:
-
-- Start from the retrieved source; do not invent parameters and search for a
-  matching citation later.
-- A fixture must reproduce every published value it claims to validate.
-- Sources with missing parameters, approximate values, whole-currency-only
-  rounding where cents are required, or internally inconsistent rows belong
-  here or in `future-work.md`, not in `tests/schedules/`.
+This project maintains a rigorous collection of precisely validated
+amortization schedules. Every fixture must reproduce every published
+value it claims to validate, starting from the retrieved source (not
+the other way around). Sources with missing parameters, approximate
+values, or internally inconsistent rows belong here or in
+``future-work.md``, not in ``tests/schedules/``.
 
 ## Japan
 
-### JHF / Flat35 equal-payment table
+### JHF / Flat35 equal-payment table — COMMITTED (single-anchor)
 
-- Source: Japan Housing Finance Agency / Flat35, "元利均等返済・元金均等返済"
-- URL: <https://www.flat35.com/loan/lineup/kinto/index.html>
-- Type: official JHF/Flat35 page; copyright/license not stated.
-- Location: section `元利均等返済と元金均等返済の比較（参考）`.
-- Published parameters: `借入額 2,000万円`, fixed annual rate `年1.5%`,
-  term `30年`.
-- Published level-payment rows, in yen:
-
-| Payment | Payment | Principal | Interest | Balance |
-|---:|---:|---:|---:|---:|
-| 12 | 69,024 | 44,634 | 24,390 | 19,468,058 |
-| 60 | 69,024 | 47,392 | 21,632 | 17,258,727 |
-| 120 | 69,024 | 51,081 | 17,943 | 14,304,092 |
-| 180 | 69,024 | 55,056 | 13,968 | 11,119,489 |
-| 240 | 69,024 | 59,342 | 9,682 | 7,687,015 |
-| 300 | 69,024 | 63,960 | 5,064 | 3,987,379 |
-
-- Published totals: total payment `24,848,426`, principal
-  `20,000,000`, interest `4,848,426`.
-- Likely model: fixed-rate monthly level-payment annuity, nominal annual
-  rate divided by 12, yen-rounded row values.
-- Caveats: the page labels the values as approximate/reference (`概算` /
-  `参考`). The current library quantizes to cents (`0.01`), while this
-  source publishes integer-yen rows. The same page also publishes a
-  constant-principal (`元金均等返済`) table, which is outside the current
-  `mortgagemath` surface.
+- **COMMITTED** as ``jhf_flat35_20m_150_360mo``. Single-anchor fixture
+  matching the payment ¥69,024 with ``currency_unit=1``.
+- The page also publishes year-level snapshot rows labeled as
+  approximate (概算), so only the payment anchor is committed.
+- The same page publishes a constant-principal (元金均等返済) table,
+  which is outside the current library surface.
 
 ### LoanKeisan full 360-row calculator schedule — committed
 
@@ -75,7 +53,7 @@ Standing rules from `CLAUDE.md` apply:
 
 ## South Korea
 
-### Tistory worked Korean mortgage table
+### Tistory worked Korean mortgage table — COMMITTED
 
 - Source: "2025년 주택담보대출 3억! 월 상환금은 얼마일까? 금리별 실전 비교표"
 - URL:
@@ -105,10 +83,10 @@ Standing rules from `CLAUDE.md` apply:
 | 3 | 1,432,246 | 997,114 | 435,132 | 298,698,935 |
 
 - Likely model: monthly level-payment annuity, nominal annual rate divided
-  by 12, integer-won payment and interest rounding.
-- Caveats: self-published source and only the first three rows are
-  published. Current `mortgagemath` is cents-oriented, not integer-won
-  oriented.
+  by 12, integer-won rounding with ``ROUND_HALF_UP``.
+- Status: **COMMITTED** as ``tistory_kr_300m_4pct_360mo``. First
+  Korean fixture. All 6 payment anchors and 3 published rows match
+  the library exactly with ``currency_unit=1`` and ``ROUND_HALF_UP``.
 
 ### Rankmin payment-anchor table
 
@@ -135,7 +113,9 @@ Standing rules from `CLAUDE.md` apply:
 | 1,000,000,000 | 4,490,440 |
 
 - Caveats: payment-only anchors, self-published source, integer-won
-  rounding.
+  rounding. The 100M anchor matches with ``ROUND_DOWN``; larger
+  amounts are linearly scaled (449,044 × N) rather than independently
+  computed, so only the 100M anchor is usable.
 
 ### Official Korean near misses
 
@@ -382,15 +362,18 @@ constant-principal/serial-loan examples outside the current package surface.
 
 ## Cross-Cutting Notes
 
-- Japan and Korea produced promising integer-currency schedules, but the
-  package currently assumes a cents-style `0.01` display quantum. Do not
-  add a currency-scale/quantum option unless a verified source is selected
-  and the feature is needed to reproduce it exactly.
-- Netherlands and France produced useful row excerpts with one-cent or
-  larger tensions that must be resolved before fixture work.
-- Italy's bank transparency PDFs may be the best short path to new
-  single-anchor European fixtures because they publish complete parameters
-  and exact euro-cent payments under stated `Francese` conventions.
-- Denmark remains the weakest search result set from this pass; no
-  verified Danish source found both complete mortgage parameters and
-  øre-precision amortization rows for the current annuity surface.
+- ``currency_unit=Decimal("1")`` and ``ROUND_DOWN`` are now shipped.
+  The LoanKeisan Japan fixture validates the full 360-row truncation
+  convention, and the Korean Tistory source matches with
+  ``ROUND_HALF_UP`` + ``currency_unit=1``.
+- Netherlands and France produced useful row excerpts with one-cent
+  tensions that could not be resolved with any rounding/tracking
+  combination. These remain in ``future-work.md`` as rejected.
+- Italy's bank transparency PDFs produced the first Italian fixtures
+  (Solution Bank and BCC Brescia); Banca Etica and Banca CRS remain
+  as candidates.
+- Denmark remains the weakest search result set; no verified Danish
+  source found both complete mortgage parameters and øre-precision
+  amortization rows for the current annuity surface.
+- The MutuiOnline Italian row excerpt (€200K / 3.40% / 20yr) has a
+  1-cent divergence in row 2 under both balance-tracking modes.

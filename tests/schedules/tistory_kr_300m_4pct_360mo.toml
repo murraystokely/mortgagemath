@@ -1,0 +1,21 @@
+[loan]
+principal = "300000000"
+annual_rate = "4"
+term_months = 360
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+currency_unit = "1"
+
+[expected]
+periodic_payment = "1432246"
+
+[source]
+kind = "calculator"
+short_label = "Tistory KR"
+bib_key = "TistoryKR"
+bib_title = "Tistory Korean Mortgage"
+citation = "Korean mortgage blog worked example. ₩300,000,000 at 4.00% over 30 years, 원리금균등상환 (equal total payment / standard annuity). Publishes payment anchors for 10/20/30yr at 4.00% and 4.50%, plus the first 3 monthly rows at 4.00%/30yr. <https://jjonew.tistory.com/entry/2025%EB%85%84-%EC%A3%BC%ED%83%9D%EB%8B%B4%EB%B3%B4%EB%8C%80%EC%B6%9C-3%EC%96%B5-%EC%9B%94-%EC%83%81%ED%99%98%EA%B8%88%EC%9D%80-%EC%96%BC%EB%A7%88%EC%9D%BC%EA%B9%8C-%EA%B8%88%EB%A6%AC%EB%B3%84-%EC%8B%A4%EC%A0%84-%EB%B9%84%EA%B5%90%ED%91%9C-%F0%9F%93%8A>"
+country = "KR"
+license = "all rights reserved (worked numerical values are uncopyrightable facts)"
+url = "https://jjonew.tistory.com/entry/2025%EB%85%84-%EC%A3%BC%ED%83%9D%EB%8B%B4%EB%B3%B4%EB%8C%80%EC%B6%9C-3%EC%96%B5-%EC%9B%94-%EC%83%81%ED%99%98%EA%B8%88%EC%9D%80-%EC%96%BC%EB%A7%88%EC%9D%BC%EA%B9%8C-%EA%B8%88%EB%A6%AC%EB%B3%84-%EC%8B%A4%EC%A0%84-%EB%B9%84%EA%B5%90%ED%91%9C-%F0%9F%93%8A"
+notes = "First Korean fixture. Uses currency_unit=1 for integer-won precision with ROUND_HALF_UP. All 6 payment anchors (3 terms × 2 rates) and the first 3 rows match the library exactly."

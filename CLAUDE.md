@@ -13,7 +13,7 @@ configuration knob unless it unlocks matching a specific, verifiable,
 public-domain or open-licensed published example cell-for-cell.**
 
 This rule is non-negotiable. It is the reason this library has a
-defensible 45-fixture test suite that audits cleanly against external
+defensible 46-fixture test suite that audits cleanly against external
 sources, rather than a sprawling option matrix that produces internally
 consistent but arbitrary outputs.
 
@@ -170,7 +170,7 @@ flat-fee API.
 The clear next step for this library is **finding more real worked
 amortization examples**, not adding more library features.
 
-The current 45-fixture suite has strong U.S. coverage (CFPB regs,
+The current 46-fixture suite has strong U.S. coverage (CFPB regs,
 GSE servicing guides, Reg Z H-14 ARM, ProEducate payment caps,
 FHLBB 1935 given-payment, Geltner CRE, multiple OpenStax problems,
 Skinner 1913 piano), strong Canadian coverage (Olivier, eCampus
