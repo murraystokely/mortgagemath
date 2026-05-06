@@ -1,0 +1,20 @@
+[loan]
+principal = "200000"
+annual_rate = "7"
+term_months = 360
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[expected]
+periodic_payment = "1330.60"
+
+[source]
+kind = "calculator"
+short_label = "Solution Bank IT"
+bib_key = "SolutionBank"
+bib_title = "Solution Bank Italy"
+citation = "Solution Bank S.p.A. foglio informativo 'Mutuo Fondario Prima Casa MCD', Tipo Piano Francese, Giorni Commerciali / 360, rata mensile for €200,000 at 7% fixed over 30 years. <https://solution.bank/wp-content/uploads/2024/06/Informazioni-Credito-Immobiliare-Consumatori-Mutuo-Fondario-Prima-Casa-MCD.pdf>"
+country = "IT"
+license = "all rights reserved (worked numerical values are uncopyrightable facts)"
+url = "https://solution.bank/wp-content/uploads/2024/06/Informazioni-Credito-Immobiliare-Consumatori-Mutuo-Fondario-Prima-Casa-MCD.pdf"
+notes = "First Italian fixture. Single-anchor matching the published rata mensile. The same PDF publishes anchors for 10yr (€2,322.17), 15yr (€1,797.66), 20yr (€1,550.60), and 25yr (€1,413.56); all match the library."

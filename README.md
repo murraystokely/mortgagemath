@@ -48,7 +48,7 @@ conventions actual lenders use:
   `j_2`, Actual/360 commercial, and fixed-payment loans
 - **Exact zero ending balance** — the final row trues up so
   the schedule lands at $0.00
-- **43 validated fixtures** (including 15+ full-schedule cell-for-cell
+- **45 validated fixtures** (including 15+ full-schedule cell-for-cell
   matches) auto-discovered by `pytest`
 
 ## Installation
@@ -154,7 +154,7 @@ See the **[Pandas and Data Visualization](docs/vignettes/rendered/pandas.pdf)** 
 
 ## What's validated
 
-43 fully published amortization tables from government regulatory
+45 fully published amortization tables from government regulatory
 documents, GSE servicing guides, and academic textbooks, exercised
 by a test suite of more than 300 tests that runs on every push and
 every release. Every committed fixture cell reproduces its source
@@ -182,7 +182,7 @@ than forced into the corpus. The sources span:
 
 See the **[Validation
 vignette](docs/vignettes/rendered/validation.pdf)** for the full
-43-fixture × 8-parameter matrix and bibliography, generated
+45-fixture × 8-parameter matrix and bibliography, generated
 directly from the fixture `[source]` blocks.
 
 ## Documentation

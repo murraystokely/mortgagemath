@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **2 new Italian fixtures (45 total).** Solution Bank (€200,000 /
+  7% / 30yr) and BCC Brescia (€200,000 / 5.65% / 10yr), both from
+  bank regulatory transparency PDFs (*foglio informativo*). First
+  Italian fixtures in the library.
 - **Currency unit precision.** New ``LoanParams.currency_unit`` field
   (default ``Decimal("0.01")``) controls the quantization unit for all
   monetary amounts. Set to ``Decimal("1")`` for zero-decimal currencies

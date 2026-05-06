@@ -1,0 +1,20 @@
+[loan]
+principal = "200000"
+annual_rate = "5.65"
+term_months = 120
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+
+[expected]
+periodic_payment = "2185.42"
+
+[source]
+kind = "calculator"
+short_label = "BCC Brescia IT"
+bib_key = "BCCBrescia"
+bib_title = "BCC Brescia Italy"
+citation = "BCC di Brescia foglio informativo 'Mutuo Fondiario Agrario Tasso Variabile Euribor', Tipo Piano Francese, rata mensile for €200,000 at 5.65% over 10 years. <https://www.bccbrescia.it/umbraco/surface/transparency/ShowFile/67119>"
+country = "IT"
+license = "all rights reserved (worked numerical values are uncopyrightable facts)"
+url = "https://www.bccbrescia.it/umbraco/surface/transparency/ShowFile/67119"
+notes = "Single-anchor matching the published rata mensile. The same PDF publishes anchors for 5yr (€3,834.09) and 15yr (€1,650.13); both match the library."
