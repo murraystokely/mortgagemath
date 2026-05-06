@@ -63,7 +63,13 @@ python -m mortgagemath   # self-check against reference values
 
 ## Quick example
 
-A standard 30-year fixed-rate mortgage:
+A standard 30-year fixed-rate mortgage from the command line:
+
+```sh
+mortgagemath schedule --principal 300000 --rate 6.5 --term-months 360
+```
+
+The same loan from Python:
 
 ```python
 from mortgagemath import us_30_year_fixed, periodic_payment, amortization_schedule
@@ -75,12 +81,6 @@ sched = amortization_schedule(loan)
 print(sched[1].interest)            # Decimal("1625.00")
 print(sched[1].principal)           # Decimal("271.21")
 print(sched[-1].balance)            # Decimal("0.00")
-```
-
-From the command line:
-
-```sh
-mortgagemath schedule --principal 300000 --rate 6.5 --term-months 360
 ```
 
 Convenience constructors like `us_30_year_fixed`, `us_15_year_fixed`,
@@ -152,8 +152,10 @@ sources span six countries and a wide range of loan structures:
 - **Italy** — Solution Bank and BCC Brescia regulatory
   transparency documents
 - **South Korea** — Tistory worked mortgage with won-precision
+- **Reference works** — TI BA II Plus official guidebook,
+  Wikipedia mortgage calculator
 - **Synthetic** — half-cent rounding boundaries, zero-interest
-  edge case, TI BA II Plus guidebook
+  edge case
 
 See the **[Validation vignette](docs/vignettes/rendered/validation.pdf)**
 for the full 46-fixture parameter matrix and bibliography.
