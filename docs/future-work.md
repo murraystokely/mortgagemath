@@ -116,16 +116,16 @@ These features have been investigated but not shipped, either because
 no verifiable published source was found or because the feature is
 blocked on source retrieval.
 
-- **Extra payments / prepayments** — the most common consumer
-  feature request: "what if I pay $200 extra per month?" Requires
-  a mechanism to specify additional principal payments (either a
-  flat monthly extra or a schedule of one-time payments) and recast
-  the remaining schedule accordingly. The library's current
-  ``payment_override`` field pins a fixed payment but does not model
-  mid-schedule extras with recast. Blocked on finding a published
-  source with a worked prepayment schedule to validate against —
-  most online calculators use float arithmetic and don't publish
-  row-level data suitable for cent-accurate fixtures.
+- **Lump-sum prepayments at specific months** — constant extra
+  payments are already supported via ``payment_override`` (set the
+  payment to ``regular + extra``; the schedule truncates and trues
+  up automatically). What is NOT supported is one-time lump-sum
+  prepayments at specific months (e.g., "pay $10,000 extra at month
+  24, then resume normal payments"). This would require a
+  ``prepayment_schedule`` parameter — a tuple of ``(month, amount)``
+  entries — with the schedule recasting the remaining balance after
+  each lump-sum. Blocked on finding a published source with a
+  worked lump-sum prepayment schedule to validate against.
 - **Constant principal / serial loans** — common in Nordic countries
   (Swedish "rak amortering", Norwegian/Danish "serielån"). The
   borrower pays a fixed amount of principal each month plus accrued
