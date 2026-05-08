@@ -18,6 +18,11 @@ and validated against 46 published worked examples from government
 regulators, bank servicing guides, and academic textbooks across
 six countries. Zero runtime dependencies.
 
+<p align="center">
+  ⭐ If <code>mortgagemath</code> helps your work, please
+  <a href="https://github.com/murraystokely/mortgagemath">star the project on GitHub</a>.
+</p>
+
 ## Why mortgagemath?
 
 Most mortgage libraries get the monthly payment right but diverge
