@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`AmortizationMethod.ITALIAN` — constant-principal schedules.**
+  The *ammortamento italiano* / *quota capitale costante*
+  convention: every installment repays the same principal quota
+  and interest accrues on the outstanding balance, so the
+  installment decreases over the term. Set
+  ``LoanParams.amortization_method=AmortizationMethod.ITALIAN``
+  or pass ``--amortization-method italian`` on the CLI.
+  ``AmortizationMethod.FRENCH`` (level payment) remains the
+  default and is unchanged.
+- **`principal_quota()`.** Returns the constant *quota capitale*
+  (``principal / total_payments``, rounded with
+  ``payment_rounding``) for ITALIAN loans. Raises ``ValueError``
+  for FRENCH loans, where the level payment is the meaningful
+  anchor instead.
+- **`PaymentFrequency.SEMI_ANNUAL`.** Two payments per year.
+  Motivated by the Italian *rata semestrale* fixtures; also
+  available to level-payment loans.
+- **Four Italian constant-principal fixtures (50 total).**
+  Università di Cagliari (Erdas) €600,000 / 7% effective annual /
+  8 semesters — a full 8-row table whose semi-annual rate is the
+  *equivalent* rate ``(1.07)^(1/2) - 1``, pinning the
+  ``Compounding.ANNUAL`` conversion; telemutuo.it €50,000 / 6% /
+  10 semesters (nominal annual/2); Younited €10,000 / 4% / 5 annual
+  installments, published by a licensed consumer-credit institution;
+  Andrea il Matematico €50,000 / 10% / 4 annual installments. Every
+  printed cell in all four matches.
+- **`LoanSummary.first_payment`.** The first scheduled
+  installment. Equal to ``periodic_payment`` for FRENCH loans and
+  the largest installment for ITALIAN loans.
+
+### Changed
+
+- **`LoanSummary.periodic_payment` is now `Decimal | None`.** It
+  is ``None`` for ITALIAN loans, which have no level payment;
+  ``repr()`` and the CLI ``summary`` subcommand print the
+  principal quota and first installment instead. FRENCH loans are
+  unaffected.
+- **`periodic_payment()` raises `ValueError` for ITALIAN loans**,
+  pointing at ``principal_quota()`` and ``amortization_schedule()``.
+
+### Notes
+
+- ITALIAN is deliberately restricted to the parameter
+  combinations the published fixtures exercise: 30/360,
+  ``ROUND_EACH`` balance tracking, no ARM rate schedule, no
+  ``payment_override``, no ``interest_only_months``, no
+  ``fee_per_period``, and no balloon. Each rejected combination
+  raises a specific ``ValueError``. These stay closed until a
+  real worked example motivates them.
+
 ## [0.7.1] - 2026-05-06
 
 ### Added

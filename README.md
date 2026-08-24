@@ -14,7 +14,7 @@
 
 **Cent-accurate mortgage amortization for Python.** Every payment,
 interest charge, and balance is computed with `Decimal` arithmetic
-and validated against 46 published worked examples from government
+and validated against 50 published worked examples from government
 regulators, bank servicing guides, and academic textbooks across
 six countries. Zero runtime dependencies.
 
@@ -41,7 +41,9 @@ lenders use:
 - **International compounding** — monthly (US), semi-annual
   (Canadian *Interest Act* j₂), and effective-annual
 - **Flexible payment frequency** — monthly, bi-weekly, weekly,
-  quarterly, semi-monthly, or annual
+  quarterly, semi-monthly, semi-annual, or annual
+- **Two amortization methods** — level-payment *French* and
+  constant-principal *ammortamento italiano*
 - **Adjustable-rate mortgages** with rate schedules, payment
   caps, and negative amortization
 - **Interest-only periods** with automatic recast
@@ -51,7 +53,7 @@ lenders use:
   or `Decimal("1")` for yen/won
 - **Exact zero ending balance** — the final row trues up so
   the schedule lands at exactly zero
-- **46 validated fixtures** from the US, Canada, France, Japan,
+- **50 validated fixtures** from the US, Canada, France, Japan,
   Italy, and South Korea
 
 ## Installation
@@ -159,7 +161,7 @@ See the **[Pandas and Data Visualization](docs/vignettes/rendered/pandas.pdf)** 
 
 ## What's validated
 
-46 published amortization tables exercised by a test suite of more
+50 published amortization tables exercised by a test suite of more
 than 400 tests that runs on every push and release. Every committed
 fixture cell reproduces its source value to the cent (or yen). The
 sources span six countries and a wide range of loan structures:
@@ -178,7 +180,9 @@ sources span six countries and a wide range of loan structures:
 - **Japan** — JHF Flat 35 and LoanKeisan full 360-row schedule
   with yen-precision truncation rounding
 - **Italy** — Solution Bank and BCC Brescia regulatory
-  transparency documents
+  transparency documents, plus four *ammortamento italiano*
+  constant-principal schedules (Università di Cagliari,
+  Younited, telemutuo.it, Andrea il Matematico)
 - **South Korea** — Tistory worked mortgage with won-precision
 - **Reference works** — TI BA II Plus official guidebook,
   Wikipedia mortgage calculator
@@ -186,7 +190,7 @@ sources span six countries and a wide range of loan structures:
   edge case
 
 See the **[Validation vignette](docs/vignettes/rendered/validation.pdf)**
-for the full 46-fixture parameter matrix and bibliography.
+for the full 50-fixture parameter matrix and bibliography.
 
 ## Documentation
 

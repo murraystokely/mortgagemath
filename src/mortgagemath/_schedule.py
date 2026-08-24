@@ -5,8 +5,14 @@ import decimal
 import warnings
 from decimal import Decimal, localcontext
 
-from mortgagemath._payment import _periodic_rate, _periodic_rate_for, periodic_payment
+from mortgagemath._payment import (
+    _periodic_rate,
+    _periodic_rate_for,
+    periodic_payment,
+    principal_quota,
+)
 from mortgagemath._types import (
+    AmortizationMethod,
     BalanceTracking,
     DayCount,
     EarlyPayoffWarning,
@@ -110,7 +116,15 @@ def amortization_schedule(loan: LoanParams) -> list[Installment]:
        rounded to the cent; the running balance internally is unrounded.
     4. The final payment is adjusted to land balance at exactly zero.
 
-    Both modes guarantee ``principal + interest == payment`` for every
+    When ``loan.amortization_method`` is
+    :attr:`AmortizationMethod.ITALIAN` the 30/360 path instead holds the
+    *principal* constant at ``principal / total_payments`` and lets the
+    installment decrease as interest accrues on a shrinking balance —
+    the *ammortamento italiano* convention.  The final row repays the
+    exact remaining balance, absorbing any residual left by rounding
+    the quota.
+
+    All modes guarantee ``principal + interest == payment`` for every
     installment and a final balance of exactly ``$0.00``.
 
     For very small principals the cent-rounded periodic payment can
@@ -170,9 +184,60 @@ def amortization_schedule(loan: LoanParams) -> list[Installment]:
 
 
 def _schedule_thirty_360(loan: LoanParams) -> list[Installment]:
+    if loan.amortization_method == AmortizationMethod.ITALIAN:
+        return _schedule_thirty_360_italian(loan)
     if loan.balance_tracking == BalanceTracking.CARRY_PRECISION:
         return _schedule_thirty_360_carry_precision(loan)
     return _schedule_thirty_360_round_each(loan)
+
+
+def _schedule_thirty_360_italian(loan: LoanParams) -> list[Installment]:
+    """Constant-principal (*ammortamento italiano*) schedule.
+
+    Every installment repays the same principal quota; interest is
+    computed on the outstanding balance and rounded to the currency
+    unit, so the installment decreases over the term.  The final row
+    repays whatever balance remains, absorbing any residual left by
+    rounding the quota.
+    """
+    interest_rounding = _ROUNDING_MAP[loan.interest_rounding]
+    periodic_rate = _periodic_rate(loan)
+    total_payments = loan._total_payments
+    quota = principal_quota(loan)
+    unit = loan.currency_unit
+    balance = loan.principal
+    total_interest = _ZERO
+
+    schedule: list[Installment] = [
+        Installment(
+            number=0,
+            payment=_ZERO,
+            interest=_ZERO,
+            principal=_ZERO,
+            total_interest=_ZERO,
+            balance=balance,
+        )
+    ]
+
+    for i in range(1, total_payments + 1):
+        interest = (balance * periodic_rate).quantize(unit, rounding=interest_rounding)
+        # The final row trues up: it repays the exact remaining balance
+        # rather than the rounded quota, so the schedule lands at zero.
+        principal_pmt = balance if i == total_payments else min(quota, balance)
+        balance -= principal_pmt
+        total_interest += interest
+        schedule.append(
+            Installment(
+                number=i,
+                payment=principal_pmt + interest,
+                interest=interest,
+                principal=principal_pmt,
+                total_interest=total_interest,
+                balance=balance,
+            )
+        )
+
+    return schedule
 
 
 def _schedule_thirty_360_round_each(loan: LoanParams) -> list[Installment]:

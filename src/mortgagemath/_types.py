@@ -96,6 +96,7 @@ class PaymentFrequency(Enum):
     BIWEEKLY = "biweekly"
     WEEKLY = "weekly"
     QUARTERLY = "quarterly"
+    SEMI_ANNUAL = "semi_annual"
     ANNUAL = "annual"
 
     @property
@@ -107,8 +108,34 @@ class PaymentFrequency(Enum):
             PaymentFrequency.BIWEEKLY: 26,
             PaymentFrequency.WEEKLY: 52,
             PaymentFrequency.QUARTERLY: 4,
+            PaymentFrequency.SEMI_ANNUAL: 2,
             PaymentFrequency.ANNUAL: 1,
         }[self]
+
+
+class AmortizationMethod(Enum):
+    """How principal is allocated across the schedule.
+
+    ``FRENCH`` (the default) is the level-payment annuity used by
+    essentially every modern residential lender: the installment is
+    constant and the principal share grows over the term.  Every
+    fixture in the suite before v0.8.0 uses this method.
+
+    ``ITALIAN`` is the *ammortamento italiano* / *quota capitale
+    costante* convention: the principal quota is constant at
+    ``principal / total_payments`` and interest accrues on the
+    outstanding balance, so the installment *decreases* over the term.
+    It remains standard in Italian academic finance and is used in
+    practice for some secured credit lines (*apertura di credito con
+    garanzia ipotecaria*).
+
+    Validated against the Università di Cagliari (Erdas) and
+    telemutuo.it published schedules; see
+    ``tests/schedules/unica_erdas_it_600k_7pct_8sem.toml``.
+    """
+
+    FRENCH = "french"
+    ITALIAN = "italian"
 
 
 class BalanceTracking(Enum):
@@ -307,6 +334,7 @@ class LoanParams:
     currency_unit: Decimal = _PENNY
     interest_only_months: int = 0
     fee_per_period: Decimal = Decimal("0")
+    amortization_method: AmortizationMethod = AmortizationMethod.FRENCH
 
     def __post_init__(self) -> None:
         """Validate cross-field invariants."""
@@ -408,6 +436,49 @@ class LoanParams:
                         f"{total_payments}"
                     )
                 prev = rc.effective_payment_number
+
+        # ITALIAN (constant-principal) amortization is deliberately
+        # restricted to the parameter combinations the published
+        # fixtures actually exercise.  Every other combination stays
+        # closed until a real worked example motivates it, per the
+        # project's complexity-threshold rule.
+        if self.amortization_method == AmortizationMethod.ITALIAN:
+            if self.day_count != DayCount.THIRTY_360:
+                raise ValueError(
+                    f"AmortizationMethod.ITALIAN requires DayCount.THIRTY_360, got {self.day_count}"
+                )
+            if self.balance_tracking != BalanceTracking.ROUND_EACH:
+                raise ValueError(
+                    "AmortizationMethod.ITALIAN requires BalanceTracking.ROUND_EACH, "
+                    f"got {self.balance_tracking}"
+                )
+            if self.rate_schedule:
+                raise ValueError(
+                    "AmortizationMethod.ITALIAN with a rate_schedule is not supported; "
+                    "no published constant-principal ARM schedule motivates it yet."
+                )
+            if self.payment_override is not None:
+                raise ValueError(
+                    "payment_override is incompatible with AmortizationMethod.ITALIAN: "
+                    "the installment is derived from the constant principal quota "
+                    "and cannot be pinned."
+                )
+            if self.interest_only_months:
+                raise ValueError(
+                    "interest_only_months is not supported with "
+                    "AmortizationMethod.ITALIAN; no published example combines them."
+                )
+            if self.fee_per_period:
+                raise ValueError(
+                    "fee_per_period is not supported with AmortizationMethod.ITALIAN; "
+                    "no published example combines them."
+                )
+            amort = self.amortization_period_months
+            if amort is not None and amort != self.term_months:
+                raise ValueError(
+                    "AmortizationMethod.ITALIAN with a balloon "
+                    "(amortization_period_months != term_months) is not supported."
+                )
 
         # currency_unit validation.  Must be a positive power of 10
         # that is at most 1 (e.g. 0.001, 0.01, 0.1, 1).  Values > 1

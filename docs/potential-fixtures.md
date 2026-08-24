@@ -224,7 +224,9 @@ constant-principal/serial-loan examples outside the current package surface.
 
 - Search terms found Danish `serielån` / constant-principal material, but
   no fixture-ready source was verified.
-- Current `mortgagemath` does not model constant-principal/serial loans.
+- As of the Italian work, `mortgagemath` models constant-principal
+  loans via `AmortizationMethod.ITALIAN`; these leads are now fixture
+  candidates rather than feature blockers.
   A Danish or Nordic row-level `serielån` table could become a feature
   trigger only if the source publishes complete parameters and exact rows.
 

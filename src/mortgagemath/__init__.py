@@ -16,10 +16,11 @@ from mortgagemath._constructors import (
     us_30_year_fixed,
     us_actual_360_commercial,
 )
-from mortgagemath._payment import monthly_payment, periodic_payment
+from mortgagemath._payment import monthly_payment, periodic_payment, principal_quota
 from mortgagemath._schedule import amortization_schedule
 from mortgagemath._summary import LoanSummary, loan_summary
 from mortgagemath._types import (
+    AmortizationMethod,
     BalanceTracking,
     Compounding,
     DayCount,
@@ -38,6 +39,7 @@ except PackageNotFoundError:  # pragma: no cover - editable/sdist edge case
 del _version, PackageNotFoundError
 
 __all__ = [
+    "AmortizationMethod",
     "BalanceTracking",
     "Compounding",
     "DayCount",
@@ -57,6 +59,7 @@ __all__ = [
     "loan_summary",
     "monthly_payment",
     "periodic_payment",
+    "principal_quota",
     "us_15_year_fixed",
     "us_30_year_fixed",
     "us_actual_360_commercial",

@@ -578,6 +578,102 @@ administrative loading into the published *annuité* — a
 structure now modeled by the same `fee_per_period` field. See
 *History* §10 for details and remaining historical source gaps.
 
+# Italy
+
+Italian lenders publish *fogli informativi* and *documenti di
+sintesi* under Banca d'Italia transparency rules; those anchor the
+two level-payment (*ammortamento francese*) fixtures. Italy is also
+the home of the constant-principal convention the rest of the world
+names after it.
+
+## Ammortamento italiano — constant principal (Università di Cagliari)
+
+**Scenario.** Under *ammortamento italiano* the *quota capitale* is
+constant at `principal / total_payments` and interest accrues on the
+outstanding balance, so the *rata* **decreases** every period — the
+mirror image of the French level-payment annuity. A Università di
+Cagliari *matematica finanziaria* exercise amortizes €600,000 over 8
+semesters at 7% annual. The exercise derives the semi-annual rate as
+the *equivalent* rate, `(1.07)^(1/2) - 1 = 0.034408`, not as a
+nominal `7/2` — so this fixture pins `Compounding.ANNUAL` on a
+semi-annual cadence. It works in whole euros throughout, which
+`currency_unit=Decimal("1")` reproduces. All 32 printed cells match.
+
+```sh
+mortgagemath schedule --principal 600000 --rate 7 --term-months 48 \
+  --compounding annual --payment-frequency semi_annual \
+  --currency-unit 1 --amortization-method italian
+```
+
+```{python}
+from mortgagemath import AmortizationMethod, principal_quota
+
+it_loan = LoanParams(
+    principal=Decimal("600000"),
+    annual_rate=Decimal("7"),
+    term_months=48,
+    payment_rounding=PaymentRounding.ROUND_HALF_UP,
+    interest_rounding=PaymentRounding.ROUND_HALF_UP,
+    compounding=Compounding.ANNUAL,
+    payment_frequency=PaymentFrequency.SEMI_ANNUAL,
+    currency_unit=Decimal("1"),
+    amortization_method=AmortizationMethod.ITALIAN,
+)
+print(f"Quota capitale: EUR {principal_quota(it_loan)}")
+for row in amortization_schedule(it_loan)[1:]:
+    print(f"  t={row.number}: quota interessi EUR {row.interest}, "
+          f"rata EUR {row.payment}, debito residuo EUR {row.balance}")
+```
+
+Note that `periodic_payment(it_loan)` deliberately raises
+`ValueError`: a constant-principal loan has no level payment. Use
+`principal_quota()` for the constant capital slice, or read the
+schedule. `loan_summary()` reports `periodic_payment=None` and
+exposes `first_payment` instead.
+
+**Source.** [Andrea Erdas, *Matematica finanziaria — Esercitazione 9
+novembre*, Università degli Studi di Cagliari, AA 2013/2014, Esercizio
+1](https://web.unica.it/static/resources/cms/documents/Esercitazione9novembreMATEMATICAFINANZIARIA.pdf).
+Fixture: `unica_erdas_it_600k_7pct_8sem.{toml,csv}`.
+
+## Nominal semi-annual rate (telemutuo.it)
+
+**Scenario.** The same structure with the *other* rate convention:
+€50,000 over 10 semesters where the source states plainly that a 6%
+annual rate gives a 3% period rate — a nominal `annual/2` division
+rather than an equivalent-rate conversion. That is the library
+default, so no `compounding` argument is needed. All 40 printed
+cells match.
+
+```{python}
+tm_loan = LoanParams(
+    principal=Decimal("50000"),
+    annual_rate=Decimal("6"),
+    term_months=60,
+    payment_rounding=PaymentRounding.ROUND_HALF_UP,
+    interest_rounding=PaymentRounding.ROUND_HALF_UP,
+    payment_frequency=PaymentFrequency.SEMI_ANNUAL,
+    amortization_method=AmortizationMethod.ITALIAN,
+)
+sched = amortization_schedule(tm_loan)
+print(f"  Rata 1:  EUR {sched[1].payment} "
+      f"(quota interessi EUR {sched[1].interest})")
+print(f"  Rata 10: EUR {sched[10].payment} "
+      f"(quota interessi EUR {sched[10].interest}), "
+      f"debito residuo EUR {sched[10].balance}")
+```
+
+**Source.** [telemutuo.it, *Piano ammortamento
+italiano*](https://www.telemutuo.it/piano-ammortamento-italiano/).
+Fixture: `telemutuo_it_50k_6pct_10sem.{toml,csv}`.
+
+Two further fixtures cover the annual cadence, where the period rate
+is the quoted rate and no compounding conversion is exercised:
+`younited_it_10k_4pct_5yr.{toml,csv}` (€10,000 at 4% over 5 *rate
+annuali*, published by a licensed consumer-credit institution) and
+`andreailmatematico_it_50k_10pct_4yr.{toml,csv}` (€50,000 at 10% over
+4 *rate annue*).
+
 # United Kingdom
 
 The British **Benefit Building Societies Act 1836** provided the

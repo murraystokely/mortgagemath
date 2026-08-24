@@ -1,0 +1,30 @@
+[loan]
+principal = "50000"
+annual_rate = "6"
+term_months = 60
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+payment_frequency = "semi_annual"
+amortization_method = "italian"
+
+[expected]
+principal_quota = "5000.00"
+
+[source]
+kind = "reference_work"
+short_label = "Telemutuo IT italiano"
+bib_key = "Telemutuo"
+bib_title = "Telemutuo.it"
+citation = "Telemutuo.it, 'Piano ammortamento italiano: cosa è e come funziona', worked example: ammortamento di 50.000 euro in 10 rate semestrali al tasso annuo del 6%. <https://www.telemutuo.it/piano-ammortamento-italiano/>"
+country = "IT"
+license = "all rights reserved (worked numerical values are uncopyrightable facts)"
+url = "https://www.telemutuo.it/piano-ammortamento-italiano/"
+notes = """Ammortamento italiano (quota capitale costante). The page builds the \
+table in three passes; the third and final table under the sentence beginning \
+'Il calcolo delle righe successive avverra con lo stesso procedimento' is the \
+complete one and is the table transcribed here. Columns are N. rata / Quota \
+Capitale / Capitale Residuo / Quota Interessi / Importo rata. The page states \
+the period rate explicitly: 'Considerando un tasso annuo del 6% il tasso di \
+periodo semestrale del piano esaminato ammontera al 3%' — a nominal annual/2 \
+division, hence the default monthly-style compounding rather than an \
+equivalent-rate conversion. All 40 printed cells match."""

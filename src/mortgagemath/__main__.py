@@ -37,6 +37,7 @@ from decimal import Decimal
 from typing import IO
 
 from mortgagemath import (
+    AmortizationMethod,
     BalanceTracking,
     Compounding,
     DayCount,
@@ -49,6 +50,7 @@ from mortgagemath import (
     loan_summary,
     monthly_payment,
     periodic_payment,
+    principal_quota,
 )
 
 # ---------------------------------------------------------------------------
@@ -267,6 +269,15 @@ def _add_loan_args(parser: argparse.ArgumentParser) -> None:
         "convention. Currently incompatible with --rate-change.",
     )
     parser.add_argument(
+        "--amortization-method",
+        choices=[e.value for e in AmortizationMethod],
+        default=AmortizationMethod.FRENCH.value,
+        help="Principal allocation. 'french' (default) is the level-payment "
+        "annuity; 'italian' is the ammortamento italiano constant-principal "
+        "convention, where the principal quota is fixed and the installment "
+        "decreases each period.",
+    )
+    parser.add_argument(
         "--fee-per-period",
         type=Decimal,
         default=Decimal("0"),
@@ -296,6 +307,7 @@ def _params_from_args(args: argparse.Namespace) -> LoanParams:
         currency_unit=args.currency_unit,
         interest_only_months=args.interest_only_months,
         fee_per_period=args.fee_per_period,
+        amortization_method=AmortizationMethod(args.amortization_method),
     )
 
 
@@ -416,12 +428,19 @@ def main(argv: list[str] | None = None) -> int:
     params = _params_from_args(args)
 
     if args.cmd == "payment":
+        if params.amortization_method == AmortizationMethod.ITALIAN:
+            print(principal_quota(params))
+            return 0
         print(periodic_payment(params))
         return 0
 
     if args.cmd == "summary":
         s = loan_summary(params)
-        print(f"Periodic payment:  {s.periodic_payment}")
+        if s.periodic_payment is None:
+            print(f"Principal quota:   {principal_quota(params)}")
+            print(f"First installment: {s.first_payment}")
+        else:
+            print(f"Periodic payment:  {s.periodic_payment}")
         print(f"Number of payments: {s.num_payments}")
         print(f"Total interest:    {s.total_interest}")
         print(f"Total fees:        {s.total_fees}")

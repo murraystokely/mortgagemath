@@ -7,7 +7,7 @@ from decimal import Decimal
 
 from mortgagemath._payment import periodic_payment
 from mortgagemath._schedule import amortization_schedule
-from mortgagemath._types import LoanParams
+from mortgagemath._types import AmortizationMethod, LoanParams
 
 
 @dataclass(frozen=True, slots=True)
@@ -18,8 +18,17 @@ class LoanSummary:
     ``Decimal`` at the loan's currency-unit precision.
     """
 
-    periodic_payment: Decimal
-    """Level payment per period (excludes fee_per_period)."""
+    periodic_payment: Decimal | None
+    """Level payment per period (excludes fee_per_period).
+
+    ``None`` for :attr:`AmortizationMethod.ITALIAN` loans, whose
+    installment decreases every period; read ``first_payment`` or the
+    schedule itself instead."""
+
+    first_payment: Decimal
+    """Amount of the first scheduled installment (excludes
+    fee_per_period). Equal to ``periodic_payment`` for level-payment
+    (French) loans; the largest installment for ITALIAN loans."""
 
     total_paid: Decimal
     """Sum of all scheduled payments over the life of the loan
@@ -53,11 +62,11 @@ class LoanSummary:
 
     def __repr__(self) -> str:
         """Compact repr showing payment, total interest, and total paid."""
-        parts = (
-            f"LoanSummary(payment={self.periodic_payment:,}, "
-            f"total_interest={self.total_interest:,}, "
-            f"total_paid={self.total_paid:,}"
-        )
+        if self.periodic_payment is None:
+            lead = f"LoanSummary(first_payment={self.first_payment:,}, "
+        else:
+            lead = f"LoanSummary(payment={self.periodic_payment:,}, "
+        parts = f"{lead}total_interest={self.total_interest:,}, total_paid={self.total_paid:,}"
         if self.balloon_balance:
             parts += f", balloon={self.balloon_balance:,}"
         parts += f", n={self.num_payments})"
@@ -90,7 +99,8 @@ def loan_summary(loan: LoanParams) -> LoanSummary:
         >>> s.total_cost
         Decimal('682628.90')
     """
-    pmt = periodic_payment(loan)
+    is_italian = loan.amortization_method == AmortizationMethod.ITALIAN
+    pmt = None if is_italian else periodic_payment(loan)
     sched = amortization_schedule(loan)
     # Exclude row 0 (initial balance, no payment).
     payment_rows = sched[1:]
@@ -104,6 +114,7 @@ def loan_summary(loan: LoanParams) -> LoanSummary:
     total_cost = total_paid + balloon_balance
     return LoanSummary(
         periodic_payment=pmt,
+        first_payment=payment_rows[0].payment if payment_rows else _ZERO,
         total_paid=total_paid,
         total_interest=total_interest,
         total_fees=total_fees,

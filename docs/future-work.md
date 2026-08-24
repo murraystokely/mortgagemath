@@ -126,13 +126,14 @@ blocked on source retrieval.
   entries — with the schedule recasting the remaining balance after
   each lump-sum. Blocked on finding a published source with a
   worked lump-sum prepayment schedule to validate against.
-- **Constant principal / serial loans** — common in Nordic countries
-  (Swedish "rak amortering", Norwegian/Danish "serielån"). The
-  borrower pays a fixed amount of principal each month plus accrued
-  interest, so total payment decreases over time. Requires a new
-  schedule path distinct from the closed-form annuity formula.
-  Blocked on finding a verified row-level source (SBAB, Nordea,
-  and Vestergaard all investigated; none matched cell-for-cell).
+- **Nordic serial loans (*rak amortering* / *serielån*)** — the
+  constant-principal schedule path now exists as
+  ``AmortizationMethod.ITALIAN``, unblocked by four published
+  Italian *ammortamento italiano* tables. What remains deferred is
+  Nordic *coverage*: SBAB, Nordea and Vestergaard were all
+  investigated and none published a row-level table that matched
+  cell-for-cell. A verified Swedish or Danish source would add a
+  fixture, not a feature.
 - **Variable / declining-balance fees** — insurance computed on
   remaining balance ("assurance sur le capital restant dû"), stepped
   insurance schedules, or frais de garantie at a different cadence.
@@ -317,10 +318,6 @@ independent search snippets.
 - **Italy — andreailmatematico.it**: €50,000 / 10% / 4yr annual
   = €15,773.54. 2 rows confirmed. URL:
   <https://andreailmatematico.it/matematica-finanziaria/piani-ammortamento/piano-di-ammortamento-francese-rata-costante/>
-- **Italy — Younited Credit (ammortamento italiano / serial)**:
-  €10,000 / 4% / 5yr annual = constant principal €2,000. All 5
-  rows confirmed but this is serial amortization. URL:
-  <https://it.younited-credit.com/glossario/ammortamento-italiano>
 
 ### Tier 4: Promising PDFs needing manual download
 

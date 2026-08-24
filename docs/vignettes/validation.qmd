@@ -51,7 +51,7 @@ RND_SHORT = {
 COMP_SHORT = {"monthly": "M", "semi_annual": "j₂", "annual": "A"}
 FREQ_SHORT = {
     "monthly": "M", "semi_monthly": "SM", "biweekly": "BW",
-    "weekly": "W", "quarterly": "Q", "annual": "A",
+    "weekly": "W", "quarterly": "Q", "semi_annual": "SA", "annual": "A",
 }
 
 
@@ -77,9 +77,11 @@ def fmt_loan(loan):
     rate = loan["annual_rate"]
     term = fmt_term_months(loan["term_months"])
     amort = loan.get("amortization_period_months")
+    method = loan.get("amortization_method", "french")
+    suffix = ", italiano" if method == "italian" else ""
     if amort and amort != loan["term_months"]:
-        return f"{p} / {rate}% / {term}, {fmt_term_months(amort)} amort"
-    return f"{p} / {rate}% / {term}"
+        return f"{p} / {rate}% / {term}, {fmt_term_months(amort)} amort{suffix}"
+    return f"{p} / {rate}% / {term}{suffix}"
 
 
 def fmt_arm(loan):

@@ -4,6 +4,7 @@ import decimal
 from decimal import Decimal, localcontext
 
 from mortgagemath._types import (
+    AmortizationMethod,
     Compounding,
     DayCount,
     LoanParams,
@@ -106,6 +107,13 @@ def periodic_payment(loan: LoanParams) -> Decimal:
         raise ValueError(f"principal must be positive, got {loan.principal}")
     if loan.annual_rate < 0:
         raise ValueError(f"annual_rate must be non-negative, got {loan.annual_rate}")
+    if loan.amortization_method == AmortizationMethod.ITALIAN:
+        raise ValueError(
+            "AmortizationMethod.ITALIAN has no single periodic payment: the "
+            "installment decreases every period. Use principal_quota() for the "
+            "constant principal quota, or amortization_schedule() for the "
+            "per-period installments."
+        )
     # When the user has pinned the payment, return it directly.
     if loan.payment_override is not None:
         return loan.payment_override
@@ -132,6 +140,59 @@ def periodic_payment(loan: LoanParams) -> Decimal:
         payment = loan.principal * r * factor / (factor - _ONE)
 
     return payment.quantize(unit, rounding=rounding)
+
+
+def principal_quota(loan: LoanParams) -> Decimal:
+    """Constant principal quota for an *ammortamento italiano* schedule.
+
+    Under :attr:`AmortizationMethod.ITALIAN` every installment repays
+    the same slice of principal, ``principal / total_payments``,
+    rounded to the loan's currency unit using ``payment_rounding``.
+    Interest accrues on the outstanding balance, so the installment
+    itself decreases over the term.
+
+    This is the *quota capitale* published as the first computed value
+    in Italian worked examples (e.g. ``600.000 / 8 = 75.000`` in the
+    Università di Cagliari exercise).
+
+    Any residual left by rounding the quota is absorbed by the final
+    row of :func:`amortization_schedule`, which repays the exact
+    remaining balance so the schedule lands at zero.
+
+    Args:
+        loan: Loan parameters with
+            ``amortization_method=AmortizationMethod.ITALIAN``.
+
+    Returns:
+        The constant principal quota, rounded to the currency unit.
+
+    Raises:
+        ValueError: If the loan is not an ITALIAN-method loan, or
+            principal is not positive.
+
+    Example::
+
+        >>> from decimal import Decimal
+        >>> from mortgagemath import AmortizationMethod, LoanParams, principal_quota
+        >>> loan = LoanParams(
+        ...     principal=Decimal("50000"),
+        ...     annual_rate=Decimal("10"),
+        ...     term_months=48,
+        ...     payment_frequency=PaymentFrequency.ANNUAL,
+        ...     amortization_method=AmortizationMethod.ITALIAN,
+        ... )
+        >>> principal_quota(loan)
+        Decimal('12500.00')
+    """
+    if loan.amortization_method != AmortizationMethod.ITALIAN:
+        raise ValueError(
+            "principal_quota() applies only to "
+            f"AmortizationMethod.ITALIAN loans, got {loan.amortization_method}"
+        )
+    if loan.principal <= 0:
+        raise ValueError(f"principal must be positive, got {loan.principal}")
+    rounding = _ROUNDING_MAP[loan.payment_rounding]
+    return (loan.principal / loan._total_payments).quantize(loan.currency_unit, rounding=rounding)
 
 
 # Permanent alias preserved from v0.2.x. ``monthly_payment`` is exactly

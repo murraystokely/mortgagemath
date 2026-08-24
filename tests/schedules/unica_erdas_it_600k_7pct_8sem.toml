@@ -1,0 +1,32 @@
+[loan]
+principal = "600000"
+annual_rate = "7"
+term_months = 48
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+compounding = "annual"
+payment_frequency = "semi_annual"
+currency_unit = "1"
+amortization_method = "italian"
+
+[expected]
+principal_quota = "75000"
+
+[source]
+kind = "textbook"
+short_label = "Unica Erdas Es. 1"
+bib_key = "UnicaErdas"
+bib_title = "Università di Cagliari, Erdas"
+citation = "Andrea Erdas, *Matematica finanziaria — Esercitazione 9 novembre*, Università degli Studi di Cagliari, Anno Accademico 2013/2014, Esercizio 1: 'Piano di ammortamento Italiano', slides 2-5. <https://web.unica.it/static/resources/cms/documents/Esercitazione9novembreMATEMATICAFINANZIARIA.pdf>"
+country = "IT"
+license = "all rights reserved (worked numerical values are uncopyrightable facts)"
+url = "https://web.unica.it/static/resources/cms/documents/Esercitazione9novembreMATEMATICAFINANZIARIA.pdf"
+notes = """Ammortamento italiano (quota capitale costante). Slide 5 prints the \
+complete 8-row table with columns t / Ch / Ih / Rh / Dh; slide 4 shows the \
+derivation of the semi-annual rate as the *equivalent* rate \
+i_(1/2) = (1 + 0.07)^(1/2) - 1 = 0.034408, which is why compounding = "annual" \
+(effective annual) and not the nominal annual/2 convention. The exercise works \
+in whole euros throughout — every printed figure is an integer — so \
+currency_unit = "1" reproduces the published display precision. All 32 printed \
+cells (8 rows x 4 columns) match. The header row also prints Dh = 600.000,00, \
+iANNUALE = 7,00% and 'Durata in semestri 8'."""

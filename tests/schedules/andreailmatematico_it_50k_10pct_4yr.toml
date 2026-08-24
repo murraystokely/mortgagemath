@@ -1,0 +1,30 @@
+[loan]
+principal = "50000"
+annual_rate = "10"
+term_months = 48
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+payment_frequency = "annual"
+amortization_method = "italian"
+
+[expected]
+principal_quota = "12500.00"
+
+[source]
+kind = "reference_work"
+short_label = "Andrea il Matematico"
+bib_key = "AndreaIlMatematico"
+bib_title = "Andrea il Matematico"
+citation = "Andrea il Matematico, 'Piano di ammortamento italiano — quota capitale costante', Matematica Finanziaria, worked example: 'Redigere un piano di ammortamento italiano di un prestito di 50.000 euro da restituire in 4 rate annue al tasso del 10%'. <https://andreailmatematico.it/matematica-finanziaria/piani-ammortamento/ammortamento-italiano-quota-capitale-costante/>"
+country = "IT"
+license = "all rights reserved (worked numerical values are uncopyrightable facts)"
+url = "https://andreailmatematico.it/matematica-finanziaria/piani-ammortamento/ammortamento-italiano-quota-capitale-costante/"
+notes = """Ammortamento italiano (quota capitale costante), annual cadence. The \
+page renders the summary table as an image, but every value in it is also \
+published in the text as a worked LaTeX derivation under the headings QUOTA \
+CAPITALE COSTANTE (Q = 50.000/4 = 12.500), DEBITO RESIDUO (D_k), QUOTA \
+INTERESSI (I_k) and RATA (R_k) — those text values are what is transcribed \
+here, not the image. The page derives each rata twice, once as Q + I_k and \
+once via R_k = (S/n)[1 + (n - k + 1) i], and both give the same four values. \
+Annual cadence at a 10% annual rate means the period rate is the quoted rate, \
+so no compounding conversion is exercised."""

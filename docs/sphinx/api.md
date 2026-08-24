@@ -30,6 +30,7 @@ when you need every parameter explicitly.
 ```{eval-rst}
 .. autofunction:: mortgagemath.periodic_payment
 .. autofunction:: mortgagemath.monthly_payment
+.. autofunction:: mortgagemath.principal_quota
 .. autofunction:: mortgagemath.amortization_schedule
 .. autofunction:: mortgagemath.loan_summary
 ```
@@ -72,6 +73,9 @@ when you need every parameter explicitly.
    :members:
 
 .. autoclass:: mortgagemath.PaymentFrequency
+   :members:
+
+.. autoclass:: mortgagemath.AmortizationMethod
    :members:
 ```
 

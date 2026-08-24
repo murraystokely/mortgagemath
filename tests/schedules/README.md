@@ -72,7 +72,8 @@ independently verified.
 | `amortization_period_months` | integer | Optional. Set when `>= term_months` for balloon loans (the amortization basis the closed-form payment uses, with a balloon at term). |
 | `balance_tracking` | `"round_each"` (default) or `"carry_precision"` | Round-each-balance is the US-residential-lender convention; carry-precision is Excel-default and used by graduate CRE finance textbooks. Ignored for `actual/360` (always carry-precision). |
 | `compounding` | `"monthly"` (default), `"semi_annual"`, or `"annual"` | How the annual rate compounds. `"semi_annual"` is the Canadian *Interest Act* §6 convention — quoted `j_2` is per year compounded semi-annually. |
-| `payment_frequency` | `"monthly"` (default), `"semi_monthly"`, `"biweekly"`, `"weekly"`, `"quarterly"`, `"annual"` | Cadence of payments. `term_months * payments_per_year` must be divisible by 12. |
+| `payment_frequency` | `"monthly"` (default), `"semi_monthly"`, `"biweekly"`, `"weekly"`, `"quarterly"`, `"semi_annual"`, `"annual"` | Cadence of payments. `term_months * payments_per_year` must be divisible by 12. |
+| `amortization_method` | `"french"` (default) or `"italian"` | How principal is allocated. `"french"` is the level-payment annuity used by every fixture before v0.8.0. `"italian"` is the *ammortamento italiano* constant-principal convention: the principal quota is fixed at `principal / total_payments` and the installment decreases each period. ITALIAN requires `day_count = "30/360"` and `balance_tracking = "round_each"`, and rejects `rate_schedule`, `payment_override`, `interest_only_months`, `fee_per_period`, and balloons. |
 | `rate_schedule` | array of tables (optional) | ARM rate-change schedule; see below. |
 | `payment_override` | string (Decimal, optional) | Pin the periodic payment to this value; the schedule's final row absorbs the residual. Reproduces the historical "given-payment, find-term" convention (FHLBB 1935 *Review*). Currently incompatible with `rate_schedule`. |
 | `interest_only_months` | integer (optional) | Number of months at the start of the loan where only interest is paid. After this period the loan recasts and amortizes over the remaining term. Default 0. Must be less than `term_months`. |
@@ -117,6 +118,15 @@ end_payment = 9
 balance = "118928.63"
 principal = "1071.37"
 interest = "5490.80"
+```
+
+For `amortization_method = "italian"` fixtures there is no level
+payment, so `[expected]` must declare `principal_quota` instead — the
+constant *quota capitale* the source publishes:
+
+```toml
+[expected]
+principal_quota = "75000"
 ```
 
 `periodic_payment` is the closed-form annuity payment value the library

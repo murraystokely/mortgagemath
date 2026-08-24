@@ -1,0 +1,30 @@
+[loan]
+principal = "10000"
+annual_rate = "4"
+term_months = 60
+payment_rounding = "ROUND_HALF_UP"
+interest_rounding = "ROUND_HALF_UP"
+payment_frequency = "annual"
+amortization_method = "italian"
+
+[expected]
+principal_quota = "2000.00"
+
+[source]
+kind = "reference_work"
+short_label = "Younited IT italiano"
+bib_key = "Younited"
+bib_title = "Younited"
+citation = "Younited, 'Ammortamento italiano: cos'e, come funziona il calcolo e vantaggi', Educazione finanziaria — Glossario, worked example: prestito di 10.000 euro in 5 rate annuali al tasso annuo del 4%. <https://younited.com/it/educazione-finanziaria/glossario/ammortamento-italiano/>"
+country = "IT"
+license = "all rights reserved (worked numerical values are uncopyrightable facts)"
+url = "https://younited.com/it/educazione-finanziaria/glossario/ammortamento-italiano/"
+notes = """Ammortamento italiano (quota capitale costante) published by a \
+licensed European consumer-credit institution rather than a teaching site. \
+The complete 5-row table appears under the heading 'Ecco come apparirebbe il \
+piano di ammortamento italiano completo per questo esempio', with columns \
+N. Rata / Quota Capitale / Quota Interessi / Rata Totale / Debito Residuo, \
+plus a row 0 showing the opening debt of 10.000,00. The prose above the table \
+also derives rate 1 and rate 2 independently. All 20 printed cells match. \
+Retrieved 2026-08-22: the older it.younited-credit.com/glossario URL cited in \
+docs/future-work.md now 301-redirects to the younited.com path cited here."""

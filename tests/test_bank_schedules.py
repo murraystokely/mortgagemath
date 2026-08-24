@@ -8,6 +8,7 @@ from datetime import date
 from decimal import Decimal
 
 from mortgagemath import (
+    AmortizationMethod,
     BalanceTracking,
     Compounding,
     DayCount,
@@ -17,6 +18,7 @@ from mortgagemath import (
     RateChange,
     amortization_schedule,
     periodic_payment,
+    principal_quota,
 )
 
 
@@ -40,6 +42,7 @@ def _loan_from_toml(toml_data: dict) -> LoanParams:
         )
         for rc in loan.get("rate_schedule", ())
     )
+    amortization_method_str = loan.get("amortization_method", "french")
     payment_override = loan.get("payment_override")
     currency_unit_str = loan.get("currency_unit")
     fee_per_period = loan.get("fee_per_period")
@@ -62,6 +65,7 @@ def _loan_from_toml(toml_data: dict) -> LoanParams:
         else Decimal("0.01"),
         interest_only_months=loan.get("interest_only_months", 0),
         fee_per_period=(Decimal(fee_per_period) if fee_per_period is not None else Decimal("0")),
+        amortization_method=AmortizationMethod(amortization_method_str),
     )
 
 
@@ -75,6 +79,14 @@ class TestBankSchedules:
         """
         toml_data, _ = bank_schedule
         loan = _loan_from_toml(toml_data)
+        if loan.amortization_method == AmortizationMethod.ITALIAN:
+            # Constant-principal loans have no level payment; the
+            # published anchor is the quota capitale instead.
+            expected_quota = toml_data["expected"].get("principal_quota")
+            if expected_quota is None:
+                raise AssertionError("ITALIAN fixture must declare expected.principal_quota")
+            assert principal_quota(loan) == Decimal(expected_quota)
+            return
         expected_str = toml_data["expected"].get("periodic_payment") or toml_data["expected"].get(
             "monthly_payment"
         )
